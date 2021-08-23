@@ -286,8 +286,15 @@ class cAppdynUtil {
 		return $oTime;
 	}
 	//*****************************************************************
+	public static function controller_time_beforenow($piMinutes=60){
+		return "time-range-type=BEFORE_NOW&duration-in-mins=$piMinutes";
+	}
+	//*****************************************************************
 	public static function controller_time_command($poTime, $psKey="time-range-type"){
-		return "$psKey=BETWEEN_TIMES&start-time=".$poTime->start."&end-time=".$poTime->end;
+		if ($poTime->time_type == cAppDynTimes::BEFORE_NOW)
+			return "$psKey=BEFORE_NOW&duration-in-mins=".$poTime->duration;
+		else
+			return "$psKey=BETWEEN_TIMES&start-time=".$poTime->start."&end-time=".$poTime->end;
 	}
 	//*****************************************************************
 	public static function controller_short_time_command($poTime,$psKey="timeRange"){

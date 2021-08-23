@@ -311,6 +311,7 @@ class cAppDynMetric{
 	const EXT_CALLS = "External Calls";
 	const BASE_PAGES = "Base Pages";
 	const AJAX_REQ = "AJAX Requests";
+
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Module Usage
@@ -542,6 +543,40 @@ class cAppDynMetric{
 		return self::InfrastructureNode($psTier, $psNode)."|$psMetric";
 	}
 	
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Servers
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function serverRoot(){
+		return self::INFRASTRUCTURE."|Root";
+	}
+	public static function serverIndividualNodes($psNodeName=null){
+		$sMetricPath = self::serverRoot()."|Individual Nodes";
+		if ($psNodeName) $sMetricPath.= "|$psNodeName";
+		return $sMetricPath;
+	}
+	
+	public static function serverNodesWithMQ(){
+		return self::serverIndividualNodes()."|*|Custom Metrics|WebsphereMQ|Metrics Uploaded";
+	}
+	
+	public static function serverMQManagers($psNode){
+		return self::serverIndividualNodes($psNode)."|Custom Metrics|WebsphereMQ";
+	}
+	
+	public static function serverMQQueues($psNode, $psManager){
+		return self::serverMQManagers($psNode)."|$psManager|Queues";
+	}
+
+	public static function serverMQQueue($psNode, $psManager, $psQueue){
+		return self::serverMQQueues($psNode, $psManager)."|$psQueue";
+	}
+	public static function serverMQQueueCurrent($psNode, $psManager, $psQueue){
+		return self::serverMQQueue($psNode, $psManager, $psQueue)."|Current Queue Depth";
+	}
+	public static function serverMQQueueMax($psNode, $psManager, $psQueue){
+		return self::serverMQQueue($psNode, $psManager, $psQueue)."|Max Queue Depth";
+	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* tiers

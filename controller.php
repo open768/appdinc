@@ -21,49 +21,62 @@ require_once("$appdlib/appdynamics.php");
 class cAppDynController{		
 	//****************************************************************
 	public static function GET_Controller_version(){
+		cDebug::enter();
 		$aConfig = self::GET_configuration();
 		foreach ($aConfig as $oItem)
 			if ($oItem->name === "schema.version"){
 				$sVersion = preg_replace("/^0*/","",$oItem->value);
 				$sVersion = preg_replace("/-0+(\d+)/",'.$1',$sVersion);
 				$sVersion = preg_replace("/-0+/",'.0',$sVersion);
+				cDebug::leave();
 				return $sVersion;
 			}
+		cDebug::leave();
 	}
 
 	//****************************************************************
 	public static function GET_configuration(){
+		cDebug::enter();
 		$old_prefix = cAppDynCore::$URL_PREFIX;
 		cAppDynCore::$URL_PREFIX = cAppDynCore::CONFIG_METRIC_PREFIX ;
 		$oData = cAppDynCore::GET("?");
 		cAppDynCore::$URL_PREFIX = $old_prefix ;
+		cDebug::leave();
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public static function GET_Applications(){
+		cDebug::enter();
 		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Applications();
 		
 		$aData = cAppDynCore::GET('?');
 		if ($aData)	uasort($aData,"ad_sort_by_name");
-		
 		$aOut = [];
 		foreach ($aData as $oItem){
-			$oApp = new cAppDApp($oItem->name, $oItem->id);
-			$aOut[] = $oApp;
+			if ($oItem->name !== null){
+				$oApp = new cAppDApp($oItem->name, $oItem->id);
+				$aOut[] = $oApp;
+			}
 		}
 		
-		return ($aOut);		
+		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
+		cDebug::leave();
+		return $aOut;		
 	}
 	
 	//*****************************************************************
 	public static function GET_Databases(){
+		cDebug::enter();
 		$sMetricPath= cAppDynMetric::databases();
-		return  cAppdynCore::GET_Metric_heirarchy(cAppDynCore::DATABASE_APPLICATION, $sMetricPath, false);
+		$oData = cAppdynCore::GET_Metric_heirarchy(cAppDynCore::DATABASE_APPLICATION, $sMetricPath, false);
+		cDebug::leave();
+		return $oData;
 	}
 
 	//*****************************************************************
 	public static function GET_allBackends(){
+		cDebug::enter();
 		$aServices = [];
 		
 		$oApps = self::GET_Applications();
@@ -76,8 +89,39 @@ class cAppDynController{
 			}
 		}
 		ksort($aServices);
+		cDebug::leave();
 		return $aServices;
 	}
-
+	
+	//*****************************************************************
+	public static function GET_server_nodes_with_MQ(){
+		cDebug::enter();
+		
+		$oTime = new cAppDynTimes();
+		$oTime->time_type = cAppDynTimes::BEFORE_NOW;
+		$oTime->duration = 5;
+		
+		//fetch the data
+		$sMetricPath= cAppDynMetric::serverNodesWithMQ();  
+		$oApp = new cAppdApp(cAppDynCore::SERVER_APPLICATION, cAppDynCore::SERVER_APPLICATION);
+		$oData = cAppDynCore::GET_MetricData($oApp, $sMetricPath, $oTime, false,true,true);
+		if (gettype($oData) === "NULL")		cDebug::error("no data returned");
+		cDebug::extra_debug("type of data returned is :". gettype($oData));
+		cDebug::vardump($oData);
+		
+		//parse the data
+		$aOut = [];
+		foreach ($oData as $oItem){
+			
+			if ($oItem->metricName !== cAppDynCore::METRIC_NOT_FOUND){
+				$sMetric = $oItem->metricPath;
+				$sMetric = preg_replace("/^.*Nodes\|(.*)\|Custom.*$/", "$1", $sMetric);
+				$aOut[] = $sMetric;
+			}
+		}
+		asort($aOut, SORT_FLAG_CASE  | SORT_STRING);
+		cDebug::leave();
+		return $aOut;
+	}
 }
 ?>

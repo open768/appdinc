@@ -24,8 +24,16 @@ require_once("$phpinc/ckinc/common.php");
 //# 
 //#################################################################
 class cAppDynTimes{
+	const BEFORE_NOW = 1;
+	const BETWEEN = 2;
+	public $time_type;
 	public $start;
 	public $end;
+	public $duration;
+	
+	function __construct() {	
+		$this->time_type = self::BETWEEN;
+	}
 }
 
 class cAppdynMetricRow{
@@ -45,8 +53,12 @@ class cAppDynCore{
 	const DB_METRIC_PREFIX = "/rest/applications/Database%20Monitoring/metric-data?metric-path=";
 	const RESTUI_PREFIX = "/restui/";
 	const DATABASE_APPLICATION = "Database Monitoring";
+	const SERVER_APPLICATION = "Server & Infrastructure Monitoring";
+	const ENCODED_SERVER_APPLICATION = "Server%20&%20Infrastructure%20Monitoring";
 	const LOGIN_URL = "/auth?action=login";
 	const DEMO_HOST = "demo";
+	const BEFORE_NOW_TIME = "bn";
+	const METRIC_NOT_FOUND = "METRIC DATA NOT FOUND";
 	
 	public static $URL_PREFIX = self::USUAL_METRIC_PREFIX;
 	
@@ -89,6 +101,21 @@ class cAppDynCore{
 	}
 	
 	//*****************************************************************
+	private static function pr__get_extra_header(){
+		//-------------- get authentication info
+		$oCred = new cAppDynCredentials();
+		$oCred->check();
+
+		$sExtraHeader= "Content-Type: application/json";
+		$sExtraHeader.= "\r\nAccept: application/json, text/plain, */*";
+		$sExtraHeader.= "\r\nUser-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36";
+		$sExtraHeader = "\r\nX-CSRF-TOKEN: $oCred->csrftoken";
+		$sExtraHeader.= "\r\nCookie: JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN: $oCred->csrftoken;";	
+		
+		return $sExtraHeader;
+	}
+	
+	//*****************************************************************
 	public static function  GET_restUI_with_payload($psCmd,  $psPayload, $pbCacheable = false){
 		global $oData;
 
@@ -102,20 +129,11 @@ class cAppDynCore{
 			cDebug::leave();
 			return $oData;
 		}
-			
-		
-		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
-		$oCred->check();
+		$sExtraHeader = self::pr__get_extra_header();
 
-		$sAD_REST = self::GET_controller().self::RESTUI_PREFIX;
-		$sExtraHeader= "Content-Type: application/json";
-		$sExtraHeader.= "\r\nAccept: application/json, text/plain, */*";
-		$sExtraHeader.= "\r\nUser-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36";
-		$sExtraHeader = "\r\nX-CSRF-TOKEN: $oCred->csrftoken";
-		$sExtraHeader.= "\r\nCookie: JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN: $oCred->csrftoken;";
 		
 		//----- actually do it
+		$sAD_REST = self::GET_controller().self::RESTUI_PREFIX;
 		$url = $sAD_REST.$psCmd;
 		cDebug::extra_debug("Url: $url");
 		cDebug::extra_debug("header: $sExtraHeader");
@@ -174,6 +192,8 @@ class cAppDynCore{
 		cDebug::extra_debug("Url: $url");
 		
 		$oHttp = new cHttp();
+		//$sExtraHeader = self::pr__get_extra_header();
+		//$oHttp->extra_header = $sExtraHeader;
 		$oHttp->USE_CURL = false;
 		
 		$oHttp->set_credentials($sCred,$oCred->get_password());
@@ -191,7 +211,7 @@ class cAppDynCore{
 	//*****************************************************************
 	//*
 	//*****************************************************************
-	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $psRollup=false, $pbCacheable=false, $pbMulti = false)
+	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $psRollup="false", $pbCacheable=false, $pbMulti = false)
 	{
 		cDebug::enter();
 		if ($poTimes == null) cDebug::error("times are missing");
@@ -202,14 +222,17 @@ class cAppDynCore{
 		
 		$encoded = rawurlencode($psMetricPath);
 		$encoded = str_replace(rawurlencode("*"),"*",$encoded);
-		$sApp=rawurlencode($sApp);
+		
+		if ($sApp === self::SERVER_APPLICATION)
+			$sApp = self::ENCODED_SERVER_APPLICATION;		//special case
+		else
+			$sApp = rawurlencode($sApp);
 		
 		$url = "$sApp/metric-data?metric-path=$encoded&$sTimeCmd&rollup=$psRollup";
 		$oData = self::GET( $url ,$pbCacheable);
 		
 		$aOutput = $oData;
-		if (!$pbMulti && (count($oData) >0))
-			$aOutput = $oData[0]->metricValues;
+		if (!$pbMulti && (count($oData) >0)) $aOutput = $oData[0]->metricValues; //watch out this will knobble the data
 		
 		cDebug::leave();
 		return $aOutput;		
@@ -222,14 +245,24 @@ class cAppDynCore{
 		cDebug::enter();
 		cDebug::extra_debug("get Heirarchy: $psMetricPath");
 		$encoded=rawurlencode($psMetricPath);	
-		$psApp = rawurlencode($psApp);
-		$sCommand = "$psApp/metrics?metric-path=$encoded";
+		$encoded = str_replace("%2A","*",$encoded);			//decode wildcards
+		
+		if ($psApp === self::SERVER_APPLICATION)
+			$sApp = self::ENCODED_SERVER_APPLICATION;		//special case
+		else
+			$sApp = rawurlencode($psApp);
+
+		$sCommand = "$sApp/metrics?metric-path=$encoded";
 		if ($poTimes !== null){
-			$sTimeCmd=cAppdynUtil::controller_time_command($poTimes);
+			if ( $poTimes === self::BEFORE_NOW_TIME)
+				$sTimeCmd=cAppdynUtil::controller_time_beforenow();
+			else
+				$sTimeCmd=cAppdynUtil::controller_time_command($poTimes);
 			$sCommand .= "&$sTimeCmd";
 		}
 		
 		$oData = self::GET($sCommand, $pbCached);
+		cDebug::extra_debug("count of rows: ".count($oData));
 		cDebug::leave();
 		return $oData;
 	}

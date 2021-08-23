@@ -219,13 +219,27 @@ class cAppDynCredentials{
 	
 	//**************************************************************************************
 	function check(){
-		if(!$this->account) cDebug::error("Couldnt get account from session");
-		if(!$this->encrypted_username ) cDebug::error("Couldnt get username from session");
-		if(!$this->encrypted_password) cDebug::error("Couldnt get password from session");
+		global $_SESSION;
+		//cDebug::enter();
+		try{
+			if(!$this->account) cDebug::error("Couldnt get account from session");
+			if(!$this->encrypted_username ) cDebug::error("Couldnt get username from session");
+			if(!$this->encrypted_password) cDebug::error("Couldnt get password from session");
 
-		if (!$this->is_demo()){
-			if(!$this->host) cDebug::error("Couldnt get host from session");
+			if (!$this->is_demo()){
+				if(!$this->host) cDebug::error("Couldnt get host from session");
+			}
+		}	
+		catch (Exception $e){
+			$sMsg = $e->getMessage();
+			if (cDebug::is_extra_debugging()){
+				cDebug::extra_debug("session:");
+				cDebug::vardump($_SESSION);
+			}
+			cDebug::error($sMsg);
 		}
+		//cDebug::leave();
+		
 	}
 	
 	//**************************************************************************************
@@ -322,6 +336,7 @@ class cAppDynCredentials{
 
 	//**************************************************************************************
 	function __construct() {
+		//cDebug::enter();
 		//retrieves stored values from the session $_SESSION
 		$this->account = cCommon::get_session(self::ACCOUNT_KEY);
 		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
@@ -334,11 +349,13 @@ class cAppDynCredentials{
 		$this->mbLogged_in = cCommon::get_session(self::LOGGEDIN_KEY);  
 		$this->jsessionid = cCommon::get_session(self::JSESSION_KEY);  
 		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
+		//if (cDebug::is_extra_debugging()) cDebug::vardump($this);
+		//cDebug::leave();
 	}
 	
 	//**************************************************************************************
 	public function is_demo(){
-		cDebug::enter();
+		//cDebug::enter();
 		if ($this->account == self::DEMO_ACCOUNT){
 			if (($this->get_username() == self::DEMO_USER) && ( $this->get_password() == self::DEMO_PASS)){
 				cDebug::write("this is a demo login");
@@ -346,22 +363,16 @@ class cAppDynCredentials{
 			}else
 				cDebug::error("wrong demo login details");
 		}
-		cDebug::write("this is not a demo login");
-		cDebug::leave();
+		//cDebug::leave();
 		return false;
 	}
 	
 	//**************************************************************************************
 	//* STATICS
 	//**************************************************************************************	
-	public static function clear_session(){
-		@session_destroy ();
-		session_start ();
-	}
-	
 	//**************************************************************************************
 	public static function get_login_token(){
-		cDebug::ENTER();
+		cDebug::enter();
 		
 		//------------- check login credentials --------------------------
 		$oCred = new cAppDynCredentials;

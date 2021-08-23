@@ -62,6 +62,12 @@ class cAppDynControllerUI{
 	}
 		
 	//###############################################################################################
+	//# servers
+	public static function servers(){
+		return  self::pr__get_location("SERVER_LIST_PAGINATED");
+	}
+	
+	//###############################################################################################
 	//# Databases
 	public static function databases(){
 		return  self::pr__get_location("DB_MONITORING_SERVER_LIST");
@@ -149,7 +155,7 @@ class cAppDynControllerUI{
 	//# snapshots
 	
 	public static function snapshot($poApp, $piTransID, $psGuid, $poTimes){
-		$sURL = self::pr__get_app_location($poApp, "");
+		$sURL = self::pr__get_app_location($poApp, "APP_BT_DETAIL");
 		$sTimeRange = self::time_command($poTimes);
 		$sTimeRSD = self::time_command($poTimes, "rsdTime");
 		return $sURL."&$sTimeRange&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$piTransID&requestGUID=$psGuid&$sTimeRSD&dashboardMode=force";
