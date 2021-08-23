@@ -50,7 +50,7 @@ class cAppDynController{
 		cDebug::enter();
 		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Applications();
 		
-		$aData = cAppDynCore::GET('?');
+		$aData = cAppDynCore::GET('?',true);
 		if ($aData)	uasort($aData,"ad_sort_by_name");
 		$aOut = [];
 		foreach ($aData as $oItem){

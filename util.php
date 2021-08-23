@@ -113,6 +113,16 @@ class cAppdynUtil {
 	public static $SHOW_PROGRESS = true;
 	
 	//*****************************************************************
+	public static function get_application_ids(){
+		$aApps = cAppDynController::GET_Applications();
+		$aOutput = [];
+		foreach ($aApps as $oApp){
+			$aOutput[ $oApp->id] = $oApp->name;
+		}
+		return $aOutput;
+	}
+	
+	//*****************************************************************
 	public static function get_trans_assoc_array($poApp)
 	{	
 		$aData = [];

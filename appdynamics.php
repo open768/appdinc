@@ -37,9 +37,7 @@ require_once("$appdlib/trans.php");
 //# 
 //#################################################################
 
-cAppDApp::$null_app = new cAppDApp(null,null);
 cAppDApp::$db_app = new cAppDApp(cAppDynCore::DATABASE_APPLICATION,cAppDynCore::DATABASE_APPLICATION);
-
 
 
 

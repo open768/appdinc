@@ -168,13 +168,17 @@ class cAppDynCore{
 	}
 
 	//*****************************************************************
-	public static function  GET($psCmd, $pbCacheable = false){
+	public static function  GET($psCmd, $pbCacheable = false, $pbPrefix=true, $pbSuffix=true){
 		global $oData;
 
 		cDebug::enter();
 		cDebug::write("getting $psCmd");
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($psCmd)){
+			cDebug::extra_debug("cached");
+			$iOld = cHash::$CACHE_EXPIRY;
+			cHash::$CACHE_EXPIRY = 600; //10 mins
 			$oData = cHash::get($psCmd);
+			cHash::$CACHE_EXPIRY = $iOld; //whatever it was
 			cDebug::leave();
 			return $oData;
 		}
@@ -184,11 +188,13 @@ class cAppDynCore{
 		$oCred->check();
 		$sCred=$oCred->encode();
 
-		$sAD_REST = self::GET_controller().self::$URL_PREFIX;
+		$sAD_REST = self::GET_controller();
+		if ($pbPrefix) $sAD_REST.=self::$URL_PREFIX;
 		
 		
 		//----- actually do it
-		$url = $sAD_REST.$psCmd.self::$SUFFIX;
+		$url = $sAD_REST.$psCmd;
+		if ($pbSuffix) $url.=self::$SUFFIX;
 		cDebug::extra_debug("Url: $url");
 		
 		$oHttp = new cHttp();

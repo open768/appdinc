@@ -19,47 +19,40 @@ require_once("$appdlib/appdynamics.php");
 //# 
 //#################################################################
 class cAppDApp{
-	public static $null_app = null;
 	public static $db_app = null;
 	public $name, $id;
-	function __construct($psAppName, $psAppId) {	
+	function __construct($psAppName, $psAppId=null) {	
+		if ($psAppName == null) cDebug::error("null app name");
+
 		$this->name = $psAppName;
-		$this->id = $psAppId;
+		if ($psAppId == null)
+			$this->pr__get_id();
+		else
+			$this->id = $psAppId;
 	}
    
 	//*****************************************************************
-	public function GET_Tiers(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Tiers($this);
-		$sApp = rawurlencode($this->name);
-		$aData = cAppdynCore::GET("$sApp/tiers?" );
-		if ($aData) uasort($aData,"ad_sort_by_name");
+	public function pr__get_id(){
+		$aApps = cAppDynController::GET_Applications();
+		$sID = null;
 		
-		$aOutTiers = [];
-
-		//convert to tier objects and populate the app
-		foreach ($aData as $oInTier){
-			$oOutTier = new cAppDTier($this, $oInTier->name, $oInTier->id);
-			$aOutTiers[] = $oOutTier;
+		foreach ($aApps as $oApp){
+			if  ($oApp->name === $this->name){
+				$sID = $oApp->id;
+				break;
+			}
 		}
 		
-		return $aOutTiers;
+		if ($sID == null) cDebug::error("unable to find appid for $this->name");
+		$this->id = $sID;
+		return $sID;
 	}
 	
 	//*****************************************************************
-	public function GET_ExtTiers(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppExtTiers(null);
-		cDebug::enter();
-		$sMetricPath= cAppDynMetric::appBackends();
-		$aMetrics = cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricPath,false); //dont cache
-		if ($aMetrics) uasort($aMetrics,"ad_sort_by_name");
-		cDebug::leave();
-		return $aMetrics;
-	}
-
-	//*****************************************************************
-	public function GET_InfoPoints($poTimes){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppInfoPoints(null);
-		return cAppdynCore::GET_Metric_heirarchy($this->name,cAppDynMetric::INFORMATION_POINTS, false, $poTimes);
+	public function GET_Backends(){
+		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Backends(null);
+		$sMetricpath= cAppDynMetric::backends();
+		return cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricpath, false); //dont cache
 	}
 
 	//*****************************************************************
@@ -78,7 +71,35 @@ class cAppDApp{
 	}
 
 	//*****************************************************************
+	public function GET_ExtTiers(){
+		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppExtTiers(null);
+		cDebug::enter();
+		$sMetricPath= cAppDynMetric::appBackends();
+		$aMetrics = cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricPath,false); //dont cache
+		if ($aMetrics) uasort($aMetrics,"ad_sort_by_name");
+		cDebug::leave();
+		return $aMetrics;
+	}
+
+	//*****************************************************************
+	public function GET_HealthRules(){
+		cDebug::enter();
+		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
+		$aData = cAppDynCore::GET($sUrl,true,false,false);
+		cDebug::leave();
+		return $aData;
+	}
+	
+	//*****************************************************************
+	public function GET_InfoPoints($poTimes){
+		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppInfoPoints(null);
+		return cAppdynCore::GET_Metric_heirarchy($this->name,cAppDynMetric::INFORMATION_POINTS, false, $poTimes);
+	}
+
+	//*****************************************************************
 	public function GET_Nodes(){
+		cDebug::enter();
+		
 		$sID = $this->id;
 		
 		$aResponse = cAppDynCore::GET("$sID/nodes?",true);
@@ -91,20 +112,8 @@ class cAppDApp{
 		}
 		ksort($aOutput );
 		
+		cDebug::leave();
 		return $aOutput;
-	}
-
-	//*****************************************************************
-	public function GET_Transactions(){		
-		$sApp = rawurlencode($this->name);
-		return cAppDynCore::GET("$sApp/business-transactions?" );
-	}
-
-	//*****************************************************************
-	public function GET_Backends(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Backends(null);
-		$sMetricpath= cAppDynMetric::backends();
-		return cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricpath, false); //dont cache
 	}
 
 	//*****************************************************************
@@ -121,6 +130,32 @@ class cAppDApp{
 		$sUrl = cHttp::build_url($sUrl, "output", "JSON");
 		return cAppDynCore::GET($sUrl);
 	}
+	
+	//*****************************************************************
+	public function GET_Tiers(){
+		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Tiers($this);
+		$sApp = rawurlencode($this->name);
+		$aData = cAppdynCore::GET("$sApp/tiers?" );
+		if ($aData) uasort($aData,"ad_sort_by_name");
+		
+		$aOutTiers = [];
+
+		//convert to tier objects and populate the app
+		foreach ($aData as $oInTier){
+			$oOutTier = new cAppDTier($this, $oInTier->name, $oInTier->id);
+			$aOutTiers[] = $oOutTier;
+		}
+		
+		return $aOutTiers;
+	}
+
+
+	//*****************************************************************
+	public function GET_Transactions(){		
+		$sApp = rawurlencode($this->name);
+		return cAppDynCore::GET("$sApp/business-transactions?" );
+	}
+
 }
 
 ?>

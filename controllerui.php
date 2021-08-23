@@ -81,7 +81,15 @@ class cAppDynControllerUI{
 
 	public static function event_detail($piEventID){
 		$sURL = self::pr__get_location("APP_EVENT_VIEWER_MODAL");	
-		return $sURL."&eventSummary=$piEventID";
+		$sUrl = cHttp::build_qs($sUrl, "eventSummary", $piEventID);
+		return $sURL;
+	}
+	public static function app_health_rules($poApp){
+		$sUrl = self::pr__get_location("ALERT_RESPOND_HEALTH_RULES");	
+		$sUrl = $sUrl."&application=$poApp->id";
+		//$sUrl = cHttp::build_url($sUrl, "application", $poApp->id);
+		
+		return $sUrl;
 	}
 	
 	//###############################################################################################

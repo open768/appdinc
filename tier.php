@@ -19,7 +19,6 @@ require_once("$appdlib/appdynamics.php");
 //# 
 //#################################################################
 class cAppDTier{
-   public static $null_app = null;
    public static $db_app = null;
    public $name, $id, $app;
    function __construct($poApp, $psTierName, $psTierId) {	
