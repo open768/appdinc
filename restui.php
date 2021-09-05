@@ -12,6 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 require_once("$appdlib/core.php");
+require_once("$appdlib/flowmap.php");
 
 class cAppdynRestUISynthList{
 	public $applicationId= -1;
@@ -67,6 +68,25 @@ class cAppdSynthResponse{
 class cAppDynRestUI{
 	public static $oTimes = null;
 	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Application
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_app_flowmap($poApp){
+		cDebug::enter();
+		$sTime = cAppdynTime::last_hour();
+		$sUrl = "applicationFlowMapUiService/application/$poApp->id?$sTime&mapId=-1&baselineId=-1";
+		$oData = cAppdynCore::GET_restUI($sUrl);
+		
+		$oFlowMap = new cAppdFlowMap;
+		$oFlowMap->parse($oData);
+		
+		cDebug::leave();
+		return $oFlowMap;
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Nodes  
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_database_agents(){
 		$sURL = "agent/setting/getDBAgents";
 		return  cAppdynCore::GET_restUI($sURL);
@@ -96,7 +116,7 @@ class cAppDynRestUI{
 	public static function GET_snapshot_segments($psGUID, $piSnapTime){
 		cDebug::enter();
 			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynUtil::controller_short_time_command( $oTime);
+			$sTimeUrl = cAppdynTime::make_short( $oTime);
 			$sURL = "snapshot/getRequestSegmentData?requestGUID=$psGUID&$sTimeUrl";
 			$aResult = cAppdynCore::GET_restUI($sURL);
 		cDebug::leave();
@@ -107,7 +127,7 @@ class cAppDynRestUI{
 	public static function GET_snapshot_problems($poApp,$psGUID, $piSnapTime){
 		cDebug::enter();
 			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynUtil::controller_short_time_command( $oTime, "time-range");
+			$sTimeUrl = cAppdynTime::make_short( $oTime, "time-range");
 			$sURL = "snapshot/potentialProblems?request-guid=$psGUID&applicationId=$poApp->id&$sTimeUrl&max-problems=50&max-rsds=30&exe-time-threshold=5";
 			$aResult = cAppdynCore::GET_restUI($sURL);
 		cDebug::leave();
@@ -121,7 +141,7 @@ class cAppDynRestUI{
 			$sAid = $poSnapShot->applicationId;
 			$sBtID = $poSnapShot->businessTransactionId;
 			$sGUID = $poSnapShot->requestGUID;
-			$sTimeUrl = cAppdynUtil::controller_short_time_command( $oTime);
+			$sTimeUrl = cAppdynTime::make_short( $oTime);
 			$sURL = "snapshotFlowmap/distributedSnapshotFlow?applicationId=$sAid&businessTransactionId=$sBtID&requestGUID=$sGUID&eventType=&$sTimeUrl&mapId=-1";
 			$oResult = cAppdynCore::GET_restUI($sURL);
 		cDebug::leave();
@@ -133,7 +153,7 @@ class cAppDynRestUI{
 	public static function GET_snapshot_expensive_methods($psGUID, $piSnapTime){
 		cDebug::enter();
 			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynUtil::controller_short_time_command( $oTime);
+			$sTimeUrl = cAppdynTime::make_short( $oTime);
 			$sURL = "snapshot/getMostExpensiveMethods?limit=30&max-rsds=30&$sTimeUrl&mapId=-1";
 			$oResult = cAppdynCore::GET_restUI_with_payload($sURL,$psGUID);
 		cDebug::leave();
@@ -159,7 +179,7 @@ class cAppDynRestUI{
 				$aEndPoints[] = $oItem;
 			} 
 		}
-		uasort($aEndPoints,"ad_sort_by_name");
+		uasort($aEndPoints,"Appd_name_sort_fn");
 		cDebug::leave();
 		return $aEndPoints;
 	}
@@ -191,7 +211,7 @@ class cAppDynRestUI{
 		cDebug::enter();
 		$oRequest = new cAppdynRestUISynthList;
 		$oRequest->applicationId = (int)$poApp->id;
-		$oRequest->timeRangeString = cAppdynUtil::controller_short_time_command( $oTime,null);
+		$oRequest->timeRangeString = cAppdynTime::make_short( $oTime,null);
 		$sURL = "synthetic/schedule/getJobList";
 		$sPayload = json_encode($oRequest);
 		

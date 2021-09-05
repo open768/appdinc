@@ -13,28 +13,17 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
+require_once("$phpinc/ckinc/debug.php");
+require_once("$phpinc/ckinc/common.php");
 require_once("$phpinc/ckinc/hash.php");
 require_once("$phpinc/ckinc/http.php");
 require_once("$appdlib/common.php");
-require_once("$phpinc/ckinc/debug.php");
-require_once("$phpinc/ckinc/common.php");
+require_once("$appdlib/time.php");
 
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDynTimes{
-	const BEFORE_NOW = 1;
-	const BETWEEN = 2;
-	public $time_type;
-	public $start;
-	public $end;
-	public $duration;
-	
-	function __construct() {	
-		$this->time_type = self::BETWEEN;
-	}
-}
 
 class cAppdynMetricRow{
 	public $value;
@@ -121,11 +110,17 @@ class cAppDynCore{
 
 		cDebug::enter();
 		
+		//-------------- get authentication info
+		$oCred = new cAppDynCredentials();
+		$oCred->check();
+		
+		//-------------- check the cache
 		cDebug::write("getting $psCmd with payload $psPayload");
-		$sHashKey = $psCmd.$psPayload;
-		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sHashKey)){
+		$sCacheCmd = $oCred->host.$oCred->account.$psCmd.$psPayload;
+		
+		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
 			cDebug::extra_debug("getting cached response");
-			$oData = cHash::get($sHashKey);
+			$oData = cHash::get($sCacheCmd);
 			cDebug::leave();
 			return $oData;
 		}
@@ -156,7 +151,7 @@ class cAppDynCore{
 		
 		//----- 
 		if ($pbCacheable)	
-			cHash::put($sHashKey, $oData,true);
+			cHash::put($sCacheCmd, $oData,true);
 
 		cDebug::leave();
 		return $oData;
@@ -172,30 +167,34 @@ class cAppDynCore{
 		global $oData;
 
 		cDebug::enter();
+		//-------------- get authentication info
+		$oCred = new cAppDynCredentials();
+		$oCred->check();
+		
+		//-------------- check the cache
 		cDebug::write("getting $psCmd");
-		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($psCmd)){
+		$sCacheCmd = $oCred->host.$oCred->account.$psCmd;
+		
+		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
 			cDebug::extra_debug("cached");
-			$iOld = cHash::$CACHE_EXPIRY;
+			$iOld = cHash::$CACHE_EXPIRY;		//TBD to replace with cache instance
 			cHash::$CACHE_EXPIRY = 600; //10 mins
-			$oData = cHash::get($psCmd);
+			$oData = cHash::get($sCacheCmd); 
 			cHash::$CACHE_EXPIRY = $iOld; //whatever it was
 			cDebug::leave();
 			return $oData;
 		}
 		
-		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
-		$oCred->check();
+		//-------------- build the url
 		$sCred=$oCred->encode();
-
 		$sAD_REST = self::GET_controller();
 		if ($pbPrefix) $sAD_REST.=self::$URL_PREFIX;
 		
 		
 		//----- actually do it
-		$url = $sAD_REST.$psCmd;
-		if ($pbSuffix) $url.=self::$SUFFIX;
-		cDebug::extra_debug("Url: $url");
+		$sUrl = $sAD_REST.$psCmd;
+		if ($pbSuffix) $sUrl.=self::$SUFFIX;
+		cDebug::extra_debug("Url: $sUrl");
 		
 		$oHttp = new cHttp();
 		//$sExtraHeader = self::pr__get_extra_header();
@@ -204,10 +203,10 @@ class cAppDynCore{
 		
 		$oHttp->set_credentials($sCred,$oCred->get_password());
 		//$oHttp->extra_header = "";	//TODO dont use the password here use the tokens
-		$oData = $oHttp->getjson($url);
+		$oData = $oHttp->getjson($sUrl);
 		
 		//----- 
-		if ($pbCacheable)	cHash::put($psCmd, $oData,true);
+		if ($pbCacheable)	cHash::put($sCacheCmd, $oData,true);
 
 		cDebug::leave();
 		return $oData;
@@ -224,7 +223,7 @@ class cAppDynCore{
 		$sApp = $poApp->name;
 		
 		$sRangeType = "";
-		$sTimeCmd=cAppdynUtil::controller_time_command($poTimes);
+		$sTimeCmd=cAppdynTime::make($poTimes);
 		
 		$encoded = rawurlencode($psMetricPath);
 		$encoded = str_replace(rawurlencode("*"),"*",$encoded);
@@ -261,9 +260,9 @@ class cAppDynCore{
 		$sCommand = "$sApp/metrics?metric-path=$encoded";
 		if ($poTimes !== null){
 			if ( $poTimes === self::BEFORE_NOW_TIME)
-				$sTimeCmd=cAppdynUtil::controller_time_beforenow();
+				$sTimeCmd=cAppdynTime::beforenow();
 			else
-				$sTimeCmd=cAppdynUtil::controller_time_command($poTimes);
+				$sTimeCmd=cAppdynTime::make($poTimes);
 			$sCommand .= "&$sTimeCmd";
 		}
 		

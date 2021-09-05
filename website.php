@@ -32,7 +32,7 @@ class cAppDynWebsite{
 				$sUrl = null;
 		}
 		
-		uasort($aData,"ad_sort_downloads");
+		uasort($aData,"Appd_title_sort_fn");
 		return $aData;
 	}
 }

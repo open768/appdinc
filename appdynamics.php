@@ -23,6 +23,7 @@ require_once("$appdlib/auth.php");
 require_once("$appdlib/core.php");
 require_once("$appdlib/account.php");
 require_once("$appdlib/util.php");
+require_once("$appdlib/time.php");
 require_once("$appdlib/metrics.php");
 require_once("$appdlib/controllerui.php");
 require_once("$appdlib/restui.php");

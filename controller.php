@@ -51,7 +51,7 @@ class cAppDynController{
 		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Applications();
 		
 		$aData = cAppDynCore::GET('?',true);
-		if ($aData)	uasort($aData,"ad_sort_by_name");
+		if ($aData)	uasort($aData,"Appd_name_sort_fn");
 		$aOut = [];
 		foreach ($aData as $oItem){
 			if ($oItem->name !== null){

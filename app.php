@@ -59,7 +59,7 @@ class cAppDApp{
 	//see events reference at https://docs.appdynamics.com/display/PRO14S/Events+Reference
 	public function GET_Events($poTimes, $psEventType = null){
 		$sApp = rawurlencode($this->name);
-		$sTimeQs = cAppdynUtil::controller_time_command($poTimes);
+		$sTimeQs = cAppdynTime::make($poTimes);
 		if ($psEventType== null) $psEventType = cAppDyn::ALL_EVENT_TYPES;
 		$sSeverities = cAppDyn::ALL_SEVERITIES;
 		
@@ -76,7 +76,7 @@ class cAppDApp{
 		cDebug::enter();
 		$sMetricPath= cAppDynMetric::appBackends();
 		$aMetrics = cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricPath,false); //dont cache
-		if ($aMetrics) uasort($aMetrics,"ad_sort_by_name");
+		if ($aMetrics) uasort($aMetrics,"Appd_name_sort_fn");
 		cDebug::leave();
 		return $aMetrics;
 	}
@@ -123,7 +123,7 @@ class cAppDApp{
 		*/
 		
 		$sApp = rawurlencode($this->name);
-		$sUrl = cHttp::build_url("$sApp/request-snapshots", cAppdynUtil::controller_time_command($poTimes));
+		$sUrl = cHttp::build_url("$sApp/request-snapshots", cAppdynTime::make($poTimes));
 		$sUrl = cHttp::build_url($sUrl, "application_name", $sApp);
 		//$sUrl = cHttp::build_url($sUrl, "application-component-ids", $psTierID);
 		$sUrl = cHttp::build_url($sUrl, "business-transaction-ids", $psTransID);
@@ -136,7 +136,7 @@ class cAppDApp{
 		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Tiers($this);
 		$sApp = rawurlencode($this->name);
 		$aData = cAppdynCore::GET("$sApp/tiers?" );
-		if ($aData) uasort($aData,"ad_sort_by_name");
+		if ($aData) uasort($aData,"Appd_name_sort_fn");
 		
 		$aOutTiers = [];
 

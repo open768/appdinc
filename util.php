@@ -23,7 +23,7 @@ require_once("$appdlib/account.php");
 //#################################################################
 //# 
 //#################################################################
-function AD_sort_fn($a,$b)
+function Appd_startTime_sort_fn($a, $b)
 {
     $v1 = $a->startTimeInMillis;
     $v2 = $b->startTimeInMillis;
@@ -32,7 +32,7 @@ function AD_sort_fn($a,$b)
 }
 
 
-function ad_sort_by_name($po1, $po2){
+function Appd_name_sort_fn($po1, $po2){
 	return strcasecmp ($po1->name, $po2->name);
 }
 
@@ -46,7 +46,7 @@ function sort_appserver_agents( $po1, $po2){
 	);	
 }
 
-function ad_sort_downloads($po1, $po2){
+function Appd_title_sort_fn($po1, $po2){
 	return strcasecmp ($po1->title, $po2->title);	
 }
 
@@ -289,37 +289,6 @@ class cAppdynUtil {
 			cDebug::error("no match");
 	}
 
-	public static function make_time_obj($piTimeinMs){
-		$oTime = new cAppDynTimes;
-		$oTime->start = $piTimeinMs-5000;
-		$oTime->end = $piTimeinMs+5000;
-		return $oTime;
-	}
-	//*****************************************************************
-	public static function controller_time_beforenow($piMinutes=60){
-		return "time-range-type=BEFORE_NOW&duration-in-mins=$piMinutes";
-	}
-	//*****************************************************************
-	public static function controller_time_command($poTime, $psKey="time-range-type"){
-		if ($poTime->time_type == cAppDynTimes::BEFORE_NOW)
-			return "$psKey=BEFORE_NOW&duration-in-mins=".$poTime->duration;
-		else
-			return "$psKey=BETWEEN_TIMES&start-time=".$poTime->start."&end-time=".$poTime->end;
-	}
-	//*****************************************************************
-	public static function controller_short_time_command($poTime,$psKey="timeRange"){
-		$sTime = "Custom_Time_Range.BETWEEN_TIMES.".$poTime->end.".".$poTime->start.".60";
-		if ($psKey)
-			return "$psKey=$sTime";
-		else
-			return $sTime;
-	}
-	
-	//*****************************************************************
-	public static function timestamp_to_date( $piMs){
-		$iEpoch = (int) ($piMs/1000);
-		return date(cCommon::ENGLISH_DATE_FORMAT, $iEpoch);
-	}
 	
 	//*****************************************************************
 	public static function extract_agent_version($psInput){

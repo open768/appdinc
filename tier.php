@@ -52,7 +52,7 @@ class cAppDTier{
 				$aResults[] = $oDetail;
 			}
 			
-			uasort($aResults, 'ad_sort_by_name');
+			uasort($aResults, 'Appd_name_sort_fn');
 		}
 		catch (Exception $e){
 			$aResults = null;
@@ -111,7 +111,7 @@ class cAppDTier{
 		cDebug::enter();
 			$metricPath = "Overall Application Performance|$sTier|External Calls";
 			$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $metricPath, false);
-			uasort ($aData, "ad_sort_by_name");
+			uasort ($aData, "Appd_name_sort_fn");
 		cDebug::leave();
 		return $aData;
 	}
@@ -140,7 +140,7 @@ class cAppDTier{
 		cDebug::enter();
 		$sMetricpath=cAppDynMetric::InfrastructureNodes($this->name);
 		$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, false);
-		uasort($aData, 'ad_sort_by_name');
+		uasort($aData, 'Appd_name_sort_fn');
 		cDebug::leave();
 		return  $aData;
 	}
@@ -162,7 +162,7 @@ class cAppDTier{
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "leaf") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'ad_sort_by_name');
+		uasort($aOut, 'Appd_name_sort_fn');
 		cDebug::leave();
 		return  $aOut;
 	}
@@ -176,7 +176,7 @@ class cAppDTier{
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "folder") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'ad_sort_by_name');
+		uasort($aOut, 'Appd_name_sort_fn');
 		cDebug::leave();
 		return  $aOut;
 	}
