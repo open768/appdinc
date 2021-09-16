@@ -12,9 +12,9 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 
-require_once("$appdlib/common.php");
+require_once("$ADlib/common.php");
 
-class cAppDynTimes{
+class cADTimes{
 	const BEFORE_NOW = 1;
 	const BETWEEN = 2;
 	public $time_type;
@@ -27,7 +27,7 @@ class cAppDynTimes{
 	}
 }
 
-class cAppdynTime {
+class cADTime {
 	public static function last_hour(){
 		return "time-range=last_1_hour.BEFORE_NOW.-1.-1.60";
 	}
@@ -38,7 +38,7 @@ class cAppdynTime {
 	}
 	//*****************************************************************
 	public static function make($poTime, $psKey="time-range-type"){
-		if ($poTime->time_type == cAppDynTimes::BEFORE_NOW)
+		if ($poTime->time_type == cADTimes::BEFORE_NOW)
 			return "$psKey=BEFORE_NOW&duration-in-mins=".$poTime->duration;
 		else
 			return "$psKey=BETWEEN_TIMES&start-time=".$poTime->start."&end-time=".$poTime->end;

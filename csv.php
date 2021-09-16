@@ -13,11 +13,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 
-require_once("$appdlib/appdynamics.php");
+require_once("$ADlib/appdynamics.php");
 require_once("$phpinc/ckinc/header.php");
 
 
-$duration = cAppDynCommon::get_duration();
+$duration = cADCommon::get_duration();
 $aData=array();
 $CSV_HEADER=true;
 
@@ -25,7 +25,7 @@ class cData {
 	public $label, $data, $count;
 }
 
-class cAppDynCSV{
+class cADCSV{
 	//**************************************************************************
 	private static function pr__has_data($poData){
 		$bHasData = false;
@@ -91,7 +91,7 @@ class cAppDynCSV{
 	//###########################################################################
 	public static function push_data( &$paData, $psLabel, $poDataset){
 		if (self::pr__has_data($poDataset)){
-			usort($poDataset, "Appd_startTime_sort_fn");
+			usort($poDataset, "AD_startTime_sort_fn");
 			$oInst = new cData();
 			$oInst->label = $psLabel;
 			$oInst->data = $poDataset;

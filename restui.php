@@ -11,15 +11,20 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
-require_once("$appdlib/core.php");
-require_once("$appdlib/flowmap.php");
+require_once("$ADlib/core.php");
+require_once("$ADlib/flowmap.php");
 
-class cAppdynRestUISynthList{
+class cAD_RestUISynthList{
 	public $applicationId= -1;
 	public $timeRangeString ="";	
 }
+class cADUsageRequest{
+	public $allocationId = null;
+    public $packageId = null;
+	public $hostIds = null;
+}
 
-class cAppdynRestUITime{
+class cAD_RestUITime{
 	public $type="BETWEEN_TIMES";
 	public $durationInMinutes = 60;
 	public $endTime = -1;
@@ -29,28 +34,28 @@ class cAppdynRestUITime{
 }
 
 
-class cAppdynRestUISnapshotFilter{
+class cAD_RestUISnapshotFilter{
 	public $applicationIds = [];
 	public $applicationComponentIds = [];
 	public $sepIds = [];
 	public $rangeSpecifier = null;
 	
 	function __construct() {
-		$this->rangeSpecifier = new cAppdynRestUITime;
+		$this->rangeSpecifier = new cAD_RestUITime;
 	}
 }
-class cAppdynRestUIRequest{
+class cAD_RestUIRequest{
 	public $applicationIds = [];
 	public $guids = [];
 	public $rangeSpecifier = null;
 	public $needExitCalls = true;
 	
 	function __construct(){
-		$this->rangeSpecifier = new cAppdynRestUITime;
+		$this->rangeSpecifier = new cAD_RestUITime;
 	}
 }
 
-class cAppdSynthResponse{
+class cADSynthResponse{
 	public $id;
 	public $name;
 	public $app;
@@ -61,23 +66,64 @@ class cAppdSynthResponse{
 	public $raw_data;
 }
 
+class cADCorrelatedEventRequest{
+	public $type = "EVENT";
+	public $id = "";
+
+	function __construct($psID) {
+		$this->id = $psID;
+	}
+}
+
+class cADCorrelatedEvent{
+	public $type= "";
+	public $summary= "";
+	public $id = "";
+}
+
 
 //#####################################################################################
 //#
 //#####################################################################################
-class cAppDynRestUI{
-	public static $oTimes = null;
+class cAD_RestUI{
+	private static $iAccount = null;
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* init data
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_init_data(){
+		cDebug::enter();
+		$sUrl = "user/initData";
+		$oData = cADCore::GET_restUI($sUrl);
+		cDebug::leave();
+		return $oData;
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* account
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_account(){
+		cDebug::enter();
+		if (!self::$iAccount){
+			$oData = self::GET_init_data();
+			$iAccount = $oData->accountUI->account->id;
+			self::$iAccount = $iAccount;
+		}else
+			cDebug::extra_debug("cached");
+		cDebug::leave();
+		return self::$iAccount;
+	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Application
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_app_flowmap($poApp){
 		cDebug::enter();
-		$sTime = cAppdynTime::last_hour();
+		$sTime = cADTime::last_hour();
 		$sUrl = "applicationFlowMapUiService/application/$poApp->id?$sTime&mapId=-1&baselineId=-1";
-		$oData = cAppdynCore::GET_restUI($sUrl);
+		$oData = cADCore::GET_restUI($sUrl);
 		
-		$oFlowMap = new cAppdFlowMap;
+		$oFlowMap = new cADFlowMap;
 		$oFlowMap->parse($oData);
 		
 		cDebug::leave();
@@ -85,29 +131,139 @@ class cAppDynRestUI{
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* Nodes  
+	//* Agents 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_database_agents(){
+		cDebug::enter();	
 		$sURL = "agent/setting/getDBAgents";
-		return  cAppdynCore::GET_restUI($sURL);
+		$aAgents = cADCore::GET_restUI($sURL);
+		cDebug::leave();	
+		return  $aAgents;
 	}
 	public static function GET_machine_agents(){
-		$aAgents = cAppdynCore::GET_restUI("agent/setting/allMachineAgents");
+		cDebug::enter();	
+		$aAgents = cADCore::GET_restUI("agent/setting/allMachineAgents");
+		cDebug::extra_debug("sorting");
 		uasort($aAgents,"sort_machine_agents");
+		cDebug::extra_debug("finished sorting");
+		cDebug::leave();	
 		return  $aAgents;
 	}
 	public static function GET_appserver_agents(){
-		$aAgents = cAppdynCore::GET_restUI("agent/setting/getAppServerAgents");
+		cDebug::enter();	
+		$aAgents = cADCore::GET_restUI("agent/setting/getAppServerAgents");
 		uasort($aAgents,"sort_appserver_agents");
+		cDebug::leave();	
 		return  $aAgents;
 	}
 
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* backends  
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_tier_backends($poTier){
+		cDebug::enter();
+		$sUrl = "backendUiService/resolvedBackendsForTier/$poTier->id";
+		$aAgents = cADCore::GET_restUI($sUrl);
+		cDebug::leave();
+		return $aAgents;
+	}
+	
+	public static function DELETE_backend($piID){
+		cDebug::enter();
+		$sUrl = "backendUiService/deleteBackends";
+		$sPayload = json_encode([$piID]);
+		cADCore::GET_restUI_with_payload($sUrl,$sPayload);
+		cDebug::leave();
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Events
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_correlatedEvents($paEvents){
+		cDebug::enter();
+		
+		$aRequest = [];
+		foreach ($paEvents as $oEvent){
+			$aRequest[] = new cADCorrelatedEventRequest($oEvent->id);
+		}
+		//$sTime = cADTime::beforenow(60);
+		$sTime = "timeRangeString=last_1_hour.BEFORE_NOW.-1.-1.60";
+		$sUrl = "events/correlatedEvents?$sTime";
+		$aResponse = cADCore::GET_restUI_with_payload($sUrl,$aRequest);
+		//cDebug::vardump($aResponse);
+		
+		//
+		$aOutput = [];
+		foreach ( $aResponse as $aItem)
+			foreach ($aItem as $oItem)
+			{
+				$oObj = new cADCorrelatedEvent;
+				$oObj->type = $oItem->eventType;
+				$oObj->summary = $oItem->summary;
+				
+				$sID = strval($oItem->id);
+				$oObj->id = $sID;
+				$aOutput[$sID] = $oObj;
+			}
+		//cDebug::vardump($aOutput);
+		
+		cDebug::leave();
+		return $aOutput;
+	}
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Licenses
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_allocationRules(){
+		cDebug::enter();
+		$iAccount = self::GET_account();
+		$sDate=date(cCommon::UTC_DATE_FORMAT);
+		$sUrl ="license/accounts/$iAccount/allocations?dateFrom=$sDate&dateTo=$sDate&granularityMinutes=0";
+		$oData = cADCore::GET_restUI($sUrl);
+		$aRules = $oData->allocationRules;
+		cDebug::extra_debug("count of allocation rules:". count($aRules));
+		cDebug::leave();
+		return $aRules;
+	}
+	public static function GET_allocationID($piRuleID){
+		cDebug::enter();
+		$aRules = self::GET_allocationRules();
+		$iAllocationID = $aRules[$piRuleID]->allocationId;
+		cDebug::leave();
+		return $iAllocationID ;
+	}
+	public static function GET_allocationHosts($psAllocationID){
+		cDebug::enter();
+		$iAccount = self::GET_account();
+		$sUrl = "license/accounts/$iAccount/allocations/$psAllocationID/hosts?offset=0&max=1000";
+		$aData = cADCore::GET_restUI($sUrl);
+		cDebug::extra_debug("count of hosts:". count($aData));
+		cDebug::leave();
+		return $aData;
+	}
+
+	public static function GET_license_usage($psAllocationID, $paHostIds){
+		cDebug::enter();
+		
+		$iAccount = self::GET_account();
+		
+		$sUrl = "license/accounts/$iAccount/activeLicenseEntities";
+		$oReq = new cADUsageRequest;
+		$oReq->allocationId = $psAllocationID;
+		$oReq->hostIds = $paHostIds;
+		
+		$oData = cADCore::GET_restUI_with_payload($sUrl, $oReq);
+		
+		cDebug::leave();
+		return $oData;
+	}
+	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Nodes  
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_Node_details($piAppID, $piNodeID){
 		$sURL = "dashboardNodeViewData/$piAppID/$piNodeID";
-		return  cAppdynCore::GET_restUI($sURL);
+		return  cADCore::GET_restUI($sURL);
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -115,10 +271,10 @@ class cAppDynRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_snapshot_segments($psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynTime::make_short( $oTime);
+			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getRequestSegmentData?requestGUID=$psGUID&$sTimeUrl";
-			$aResult = cAppdynCore::GET_restUI($sURL);
+			$aResult = cADCore::GET_restUI($sURL);
 		cDebug::leave();
 		return  $aResult;
 	}
@@ -126,10 +282,10 @@ class cAppDynRestUI{
 	//************************************************************************************
 	public static function GET_snapshot_problems($poApp,$psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynTime::make_short( $oTime, "time-range");
+			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$sTimeUrl = cADTime::make_short( $oTime, "time-range");
 			$sURL = "snapshot/potentialProblems?request-guid=$psGUID&applicationId=$poApp->id&$sTimeUrl&max-problems=50&max-rsds=30&exe-time-threshold=5";
-			$aResult = cAppdynCore::GET_restUI($sURL);
+			$aResult = cADCore::GET_restUI($sURL);
 		cDebug::leave();
 		return  $aResult;
 	}
@@ -137,13 +293,13 @@ class cAppDynRestUI{
 	//************************************************************************************
 	public static function GET_snapshot_flow($poSnapShot){
 		cDebug::enter();
-			$oTime = cAppdynUtil::make_time_obj($poSnapShot->serverStartTime);
+			$oTime = cADUtil::make_time_obj($poSnapShot->serverStartTime);
 			$sAid = $poSnapShot->applicationId;
 			$sBtID = $poSnapShot->businessTransactionId;
 			$sGUID = $poSnapShot->requestGUID;
-			$sTimeUrl = cAppdynTime::make_short( $oTime);
+			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshotFlowmap/distributedSnapshotFlow?applicationId=$sAid&businessTransactionId=$sBtID&requestGUID=$sGUID&eventType=&$sTimeUrl&mapId=-1";
-			$oResult = cAppdynCore::GET_restUI($sURL);
+			$oResult = cADCore::GET_restUI($sURL);
 		cDebug::leave();
 		
 		return $oResult;
@@ -152,34 +308,36 @@ class cAppDynRestUI{
 	//************************************************************************************
 	public static function GET_snapshot_expensive_methods($psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cAppdynUtil::make_time_obj($piSnapTime);
-			$sTimeUrl = cAppdynTime::make_short( $oTime);
+			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getMostExpensiveMethods?limit=30&max-rsds=30&$sTimeUrl&mapId=-1";
-			$oResult = cAppdynCore::GET_restUI_with_payload($sURL,$psGUID);
+			$oResult = cADCore::GET_restUI_with_payload($sURL,$psGUID);
 		cDebug::leave();
 		
 		return $oResult;
 	}
 	
-	//************************************************************************************
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* service end points
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_service_end_points($poTier){
 		cDebug::enter();
 		//serviceEndpoint/list2/1424/1424/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60
 		$iTid = $poTier->id;
 		$iAid = $poTier->app->id;
 		$sURL = "serviceEndpoint/list2/$iAid/$iAid/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60";
-		$oResult = cAppdynCore::GET_restUI($sURL);
+		$oResult = cADCore::GET_restUI($sURL);
 		
 		//now filter the results for the tier id
 		$aEndPoints = [];
 		foreach( $oResult->serviceEndpointListEntries as $oService){
 			if ($oService->applicationComponentId == $iTid){
-				$oItem = new cAppDDetails($oService->name, $oService->id, null,null);
+				$oItem = new cADDetails($oService->name, $oService->id, null,null);
 				$oItem->type = $oService->type;
 				$aEndPoints[] = $oItem;
 			} 
 		}
-		uasort($aEndPoints,"Appd_name_sort_fn");
+		uasort($aEndPoints,"AD_name_sort_fn");
 		cDebug::leave();
 		return $aEndPoints;
 	}
@@ -190,7 +348,7 @@ class cAppDynRestUI{
 		//{"applicationIds":[1424],"applicationComponentIds":[4561],"sepIds":[6553581],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":60},"maxRows":600}
 		
 		$sURL = "snapshot/snapshotListDataWithFilterHandle";
-		$oFilter = new cAppdynRestUISnapshotFilter;
+		$oFilter = new cAD_RestUISnapshotFilter;
 		$oFilter->applicationIds[] = intval($poTier->app->id);
 		$oFilter->applicationComponentIds[] = intval($poTier->id);
 		$oFilter->sepIds[] = intval($piServiceEndPointID);
@@ -200,30 +358,32 @@ class cAppDynRestUI{
 
 		$sPayload = json_encode($oFilter);
 		cDebug::extra_debug($sPayload);
-		$oResult = cAppdynCore::GET_restUI_with_payload($sURL,$sPayload);
+		$oResult = cADCore::GET_restUI_with_payload($sURL,$sPayload);
 		
 		cDebug::leave();
 		return $oResult;
 	}
 	
-	//************************************************************************************
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* synthetics
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_Synthetic_jobs($poApp, $oTime, $pbDetails){
 		cDebug::enter();
-		$oRequest = new cAppdynRestUISynthList;
+		$oRequest = new cAD_RestUISynthList;
 		$oRequest->applicationId = (int)$poApp->id;
-		$oRequest->timeRangeString = cAppdynTime::make_short( $oTime,null);
+		$oRequest->timeRangeString = cADTime::make_short( $oTime,null);
 		$sURL = "synthetic/schedule/getJobList";
 		$sPayload = json_encode($oRequest);
 		
 		try{
-			$oResult = cAppdynCore::GET_restUI_with_payload($sURL,$sPayload,true);
+			$oResult = cADCore::GET_restUI_with_payload($sURL,$sPayload,true);
 		}catch (Exception $e){
 			$oResult = null;
 		}
 		
 		$aSyth = [];
 		foreach ($oResult->jobListDatas as $oJob){
-			$oSummary = new cAppdSynthResponse;
+			$oSummary = new cADSynthResponse;
 			$oSummary->app = $poApp;
 			$oSummary->id = $oJob->config->id;
 			$oSummary->rate = $oJob->config->rate;

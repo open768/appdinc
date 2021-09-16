@@ -20,7 +20,7 @@ class cTransExtCalls{
     public $trans1, $trans2, $calls, $times;
 }
 
-class cAppdObj{
+class cADObj{
 	public $application;
 	public $tier;
 	public $business_transaction;
@@ -29,7 +29,7 @@ class cAppdObj{
 	public $data = null;
 }
 
-class cAppdMetricLeaf{
+class cADMetricLeaf{
 	public $tier = null;
 	public $name = null;
 	public $metric = null;
@@ -53,7 +53,7 @@ class cAppdMetricLeaf{
 	}
 }
 
-class cAppDDetails extends cAppdObj{
+class cADDetails extends cADObj{
    public $name, $id, $calls, $times, $type;
    function __construct($psName, $psId, $poCalls, $poTimes) {
 		$this->name = $psName;

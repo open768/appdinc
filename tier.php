@@ -13,12 +13,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$appdlib/appdynamics.php");
+require_once("$ADlib/appdynamics.php");
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDTier{
+class cADTier{
    public static $db_app = null;
    public $name, $id, $app;
    function __construct($poApp, $psTierName, $psTierId) {	
@@ -35,12 +35,12 @@ class cAppDTier{
 		$aResults = []; 
 		
 		try{
-			$metricPath = cAppDynMetric::tierTransactions($this->name);
-			$aTierTransactions = cAppdynCore::GET_Metric_heirarchy($this->app->name, $metricPath, false);	
+			$metricPath = cADMetric::tierTransactions($this->name);
+			$aTierTransactions = $this->app->GET_Metric_heirarchy($metricPath, false);	
 			if (!$aTierTransactions) return null;
 			
 			//so get the transaction IDs
-			$aAppTrans= cAppdynUtil::get_trans_assoc_array($this->app);
+			$aAppTrans= cADUtil::get_trans_assoc_array($this->app);
 			
 			// and combine the two
 
@@ -48,11 +48,11 @@ class cAppDTier{
 				if (!isset($aAppTrans[$oTierTrans->name])) continue;
 				
 				$sTransID = $aAppTrans[$oTierTrans->name];
-				$oDetail = new cAppDDetails($oTierTrans->name, $sTransID, null, null);
+				$oDetail = new cADDetails($oTierTrans->name, $sTransID, null, null);
 				$aResults[] = $oDetail;
 			}
 			
-			uasort($aResults, 'Appd_name_sort_fn');
+			uasort($aResults, 'AD_name_sort_fn');
 		}
 		catch (Exception $e){
 			$aResults = null;
@@ -70,7 +70,7 @@ class cAppDTier{
 		
 		cDebug::write("<h3>getting details for $sTier</h3>");
 		//first get the metric heirarchy
-		cAppdynUtil::flushprint(".");
+		cADUtil::flushprint(".");
 		$oHeirarchy = $this->GET_ext_calls();
 			
 		//get the transaction IDs TBD
@@ -79,24 +79,24 @@ class cAppDTier{
 		//for each row in the browser get external calls per minute
 		$aResults = array();
 		foreach ($oHeirarchy as $row){
-			cAppdynUtil::flushprint(".");
+			cADUtil::flushprint(".");
 			$sOtherTier=$row->name;
 			
 			cDebug::write("<h4>other tier is $sOtherTier</h4>");
 			cDebug::write("<b>Calls per min</b>");
 			$oCalls = null;
 			$oData = $this->GET_ExtCallsPerMin( $sOtherTier, $poTimes, "true");
-			if ($oData)	$oCalls = cAppdynUtil::Analyse_Metrics( $oData);
+			if ($oData)	$oCalls = cADUtil::Analyse_Metrics( $oData);
 				
 			cDebug::write("<b>response times</b>");
 			$oTimes = null;
 			$oData = $this->GET_ExtResponseTimes($sOtherTier, $poTimes, "true");
 			if ($oData)	
-				$oTimes = cAppdynUtil::Analyse_Metrics( $oData);
+				$oTimes = cADUtil::Analyse_Metrics( $oData);
 			
 			cDebug::write("<b>done</b>");
 			
-			$oDetails = new cAppDDetails($sOtherTier, $trid, $oCalls,  $oTimes);
+			$oDetails = new cADDetails($sOtherTier, $trid, $oCalls,  $oTimes);
 
 			array_push($aResults, $oDetails);
 		}
@@ -110,73 +110,73 @@ class cAppDTier{
 		$sTier = $this->name;
 		cDebug::enter();
 			$metricPath = "Overall Application Performance|$sTier|External Calls";
-			$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $metricPath, false);
-			uasort ($aData, "Appd_name_sort_fn");
+			$aData = $this->app->GET_Metric_heirarchy($metricPath, false);
+			uasort ($aData, "AD_name_sort_fn");
 		cDebug::leave();
 		return $aData;
 	}
 
 	//*****************************************************************
 	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $psRollup){
-		$sMetricpath= cAppDynMetric::tierExtCallsPerMin($this->name, $psTier2);
-		return cAppdynCore::GET_MetricData($this->app, $sMetricpath, $poTimes, $psRollup);
+		$sMetricpath= cADMetric::tierExtCallsPerMin($this->name, $psTier2);
+		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
 	}	
 
 	//*****************************************************************
 	public function GET_ExtResponseTimes($psTier2, $poTimes, $psRollup){
-		$sMetricpath= cAppDynMetric::tierExtResponseTimes($this->name, $psTier2);
-		return cAppdynCore::GET_MetricData($this->app, $sMetricpath, $poTimes, $psRollup);
+		$sMetricpath= cADMetric::tierExtResponseTimes($this->name, $psTier2);
+		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
 	}
 	//*****************************************************************
 	public  function GET_ServiceEndPoints(){
-		if ( cAppdyn::is_demo()) return cAppDynDemo::GET_TierServiceEndPoints(null,null);
-		$sMetricpath= cAppDynMetric::tierServiceEndPoints($this->name);
-		$oData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, false);
+		if ( cAD::is_demo()) return cADDemo::GET_TierServiceEndPoints(null,null);
+		$sMetricpath= cADMetric::tierServiceEndPoints($this->name);
+		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public function GET_Nodes(){
 		cDebug::enter();
-		$sMetricpath=cAppDynMetric::InfrastructureNodes($this->name);
-		$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, false);
-		uasort($aData, 'Appd_name_sort_fn');
+		$sMetricpath=cADMetric::InfrastructureNodes($this->name);
+		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
+		uasort($aData, 'AD_name_sort_fn');
 		cDebug::leave();
 		return  $aData;
 	}
 
 	public function GET_JDBC_Pools($psNode=null){
 		cDebug::enter();
-		$sMetricpath=cAppDynMetric::InfrastructureJDBCPools($this->name, $psNode);
-		$oData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, false);
+		$sMetricpath=cADMetric::InfrastructureJDBCPools($this->name, $psNode);
+		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		cDebug::leave();
 		return  $oData;
 	}
 	
 	public function GET_DiskMetrics(){
 		cDebug::enter();
-		$sMetricpath=cAppDynMetric::InfrastructureNodeDisks($this->name, null);
-		$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, true);
+		$sMetricpath=cADMetric::InfrastructureNodeDisks($this->name, null);
+		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "leaf") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'Appd_name_sort_fn');
+		uasort($aOut, 'AD_name_sort_fn');
 		cDebug::leave();
 		return  $aOut;
 	}
 	
 	public function GET_NodeDisks($psNode){
 		cDebug::enter();
-		$sMetricpath=cAppDynMetric::InfrastructureNodeDisks($this->name, $psNode);
-		$aData = cAppdynCore::GET_Metric_heirarchy($this->app->name, $sMetricpath, true);
+		$sMetricpath=cADMetric::InfrastructureNodeDisks($this->name, $psNode);
+		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "folder") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'Appd_name_sort_fn');
+		uasort($aOut, 'AD_name_sort_fn');
 		cDebug::leave();
 		return  $aOut;
 	}

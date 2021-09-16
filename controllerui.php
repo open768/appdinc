@@ -15,9 +15,9 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //#################################################################
 //# CLASSES
 //#################################################################
-class cAppDynControllerUI{
+class cADControllerUI{
 	private static function pr__get_location($psLocation){
-		$sBaseUrl = cAppDynCore::GET_controller();
+		$sBaseUrl = cADCore::GET_controller();
 		return $sBaseUrl."/#/location=$psLocation";		
 	}
 	
@@ -46,7 +46,7 @@ class cAppDynControllerUI{
 
 	}
 	public static function licenses(){
-		$sURL = self::pr__get_location("SETTINGS_LICENSE");	
+		$sURL = cADCore::GET_controller()."#/licensing/summary";
 		return $sURL;
 	}
 	
@@ -80,14 +80,20 @@ class cAppDynControllerUI{
 	}
 
 	public static function event_detail($piEventID){
-		$sURL = self::pr__get_location("APP_EVENT_VIEWER_MODAL");	
+		$sUrl = self::pr__get_location("APP_EVENT_VIEWER_MODAL");	
 		$sUrl = cHttp::build_qs($sUrl, "eventSummary", $piEventID);
-		return $sURL;
+		return $sUrl;
 	}
 	public static function app_health_rules($poApp){
 		$sUrl = self::pr__get_location("ALERT_RESPOND_HEALTH_RULES");	
 		$sUrl = $sUrl."&application=$poApp->id";
-		//$sUrl = cHttp::build_url($sUrl, "application", $poApp->id);
+		
+		return $sUrl;
+	}
+	
+	public static function app_health_policies($poApp){
+		$sUrl = self::pr__get_location("ALERT_RESPOND_POLICIES");	
+		$sUrl = $sUrl."&application=$poApp->id";
 		
 		return $sUrl;
 	}

@@ -16,64 +16,33 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/cached_http.php");
 require_once("$phpinc/pubsub/pub-sub.php");
-require_once("$appdlib/objects.php");
-require_once("$appdlib/demo.php");
-require_once("$appdlib/common.php");
-require_once("$appdlib/auth.php");
-require_once("$appdlib/core.php");
-require_once("$appdlib/account.php");
-require_once("$appdlib/util.php");
-require_once("$appdlib/time.php");
-require_once("$appdlib/metrics.php");
-require_once("$appdlib/controllerui.php");
-require_once("$appdlib/restui.php");
-require_once("$appdlib/website.php");
+require_once("$ADlib/objects.php");
+require_once("$ADlib/demo.php");
+require_once("$ADlib/common.php");
+require_once("$ADlib/auth.php");
+require_once("$ADlib/core.php");
+require_once("$ADlib/account.php");
+require_once("$ADlib/util.php");
+require_once("$ADlib/time.php");
+require_once("$ADlib/metrics.php");
+require_once("$ADlib/controllerui.php");
+require_once("$ADlib/restui.php");
+require_once("$ADlib/website.php");
 
-require_once("$appdlib/controller.php");
-require_once("$appdlib/app.php");
-require_once("$appdlib/tier.php");
-require_once("$appdlib/trans.php");
-
-//#################################################################
-//# 
-//#################################################################
-
-cAppDApp::$db_app = new cAppDApp(cAppDynCore::DATABASE_APPLICATION,cAppDynCore::DATABASE_APPLICATION);
-
+require_once("$ADlib/controller.php");
+require_once("$ADlib/app.php");
+require_once("$ADlib/tier.php");
+require_once("$ADlib/trans.php");
 
 
 //#################################################################
 //# CLASSES
 //#################################################################
-class cAppDyn{
-	const APPDYN_LOGO = 'adlogo.jpg';
-	const APPDYN_OVERFLOWING_BT = "_APPDYNAMICS_DEFAULT_TX_";
-	const ALL_EVENT_TYPES = "POLICY_OPEN_CRITICAL,POLICY_OPEN_WARNING,POLICY_CLOSE,POLICY_CLOSE_CRITICAL,POLICY_CLOSE_WARNING,POLICY_CONTINUES_CRITICAL";
-	const ALL_SEVERITIES = "WARN,ERROR,INFO";
-	
-	private static $maAppNodes = null;
-	
-	
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* All
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	
-	
+class cAD{
 	public static function is_demo(){
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$oCred->check();
 		return $oCred->is_demo();
 	}
-	
-		
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* Databases
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	
-	public static function GET_Database_ServerStats($psDB){
-		$sMetricPath= cAppDynMetric::databaseServerStats($psDB);
-		return  cAppdynCore::GET_Metric_heirarchy(cAppDynCore::DATABASE_APPLICATION, $sMetricPath, false);
-	}
-				
 }
 ?>

@@ -15,7 +15,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //#####################################################################################
 //#
 //#####################################################################################
-class cAppdFlowMapStats{
+class cADFlowMapStats{
 	public $callsPerMin = 0;
 	public $avgResponse = 0;
 	public $errors = 0;
@@ -26,7 +26,7 @@ class cAppdFlowMapStats{
 	}
 }
 
-class cAppdFlowMapNode{
+class cADFlowMapNode{
 	public $id = "not set";
 	public $name = "not set";
 	public $type;
@@ -34,23 +34,23 @@ class cAppdFlowMapNode{
 	public $stats = null;
 	
     public function __construct(){
-		$this->stats = new cAppdFlowMapStats;
+		$this->stats = new cADFlowMapStats;
 	}
 }
-class cAppdFlowMapLink{
+class cADFlowMapLink{
 	public $source = null;
 	public $target = null;
 	public $stats = null;
 	
     public function __construct(){
-		$this->stats = new cAppdFlowMapStats;
+		$this->stats = new cADFlowMapStats;
 	}
 }
 
 //#####################################################################################
 //#
 //#####################################################################################
-class cAppdFlowMap{
+class cADFlowMap{
 	public $nodes = [];
 	public $links = [];
 	
@@ -70,7 +70,7 @@ class cAppdFlowMap{
 				cDebug::vardump($poEdge);
 				$bDumped = true;
 			}
-			$oLink = new cAppdFlowMapLink;
+			$oLink = new cADFlowMapLink;
 			$id = $poEdge->sourceNodeDefinition->entityId;
 			$oLink->source = $this->nodes[$id];
 			$id = $poEdge->targetNodeDefinition->entityId;
@@ -90,7 +90,7 @@ class cAppdFlowMap{
 				cDebug::vardump($poNode);
 				$bDumped = true;
 			}
-			$oNode = new cAppdFlowMapNode;
+			$oNode = new cADFlowMapNode;
 			$oNode->id = $poNode->idNum;
 			$oNode->name = $poNode->name;
 			$oNode->type = $poNode->entityType;

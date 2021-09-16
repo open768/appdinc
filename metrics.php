@@ -11,7 +11,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
-require_once("$appdlib/core.php");
+require_once("$ADlib/core.php");
 
 //#################################################################
 //# CLASSES
@@ -41,7 +41,7 @@ class cMetricOutput{
 	}
 }
 
-class cAppDynInfraMetricTypeDetails{
+class cADInfraMetricTypeDetails{
 	public $type;
 	public $metric;
 }
@@ -51,7 +51,7 @@ function ad_sort_by_metric_short($po1, $po2){
 }
 
 //######################################################################
-class cAppDynInfraMetric{
+class cADInfraMetric{
 	const METRIC_TYPE_INFR_AVAIL = "mtia";
 	const METRIC_TYPE_INFR_AGENT_METRICS = "mtiam";
 	const METRIC_TYPE_INFR_AGENT_INVALID_METRICS = "mtiaim";
@@ -73,8 +73,8 @@ class cAppDynInfraMetric{
 		$aTypes = self::getInfrastructureMetricTypes();
 		$aOut = [];
 		foreach ( $aTypes as $sType){
-			$oMetric = cAppDynInfraMetric::getInfrastructureMetric($poTier->name,null,$sType);
-			$oDetails = new cAppDynInfraMetricTypeDetails;
+			$oMetric = cADInfraMetric::getInfrastructureMetric($poTier->name,null,$sType);
+			$oDetails = new cADInfraMetricTypeDetails;
 			$oDetails->type = $sType;
 			$oDetails->metric = $oMetric;
 			$aOut[] = $oDetails;
@@ -84,7 +84,7 @@ class cAppDynInfraMetric{
 	}
 		
 	public static function getInfrastructureMetricTypes(){
-		$aMetricTypes = [cAppDynMetric::METRIC_TYPE_ACTIVITY, cAppDynMetric::METRIC_TYPE_RESPONSE_TIMES];
+		$aMetricTypes = [cADMetric::METRIC_TYPE_ACTIVITY, cADMetric::METRIC_TYPE_RESPONSE_TIMES];
 		$aMiscInfraMetricTypes = self::getInfrastructureMiscMetricTypes();
 		$aAgentMetricTypes = self::getInfrastructureAgentMetricTypes();
 		$aMemoryMetricTypes = self::getInfrastructureMemoryMetricTypes();
@@ -170,102 +170,102 @@ class cAppDynInfraMetric{
 	//**************************************************************************
 	public static function getInfrastructureMetric($psTier, $psNode=null, $psMetricType){			
 			switch($psMetricType){
-				case cAppDynMetric::METRIC_TYPE_ERRORS:
+				case cADMetric::METRIC_TYPE_ERRORS:
 					if ($psTier)
-						$sMetricUrl = cAppDynMetric::tierErrorsPerMin($psTier,$psNode);
+						$sMetricUrl = cADMetric::tierErrorsPerMin($psTier,$psNode);
 					else
-						$sMetricUrl = cAppDynMetric::appErrorsPerMin();
+						$sMetricUrl = cADMetric::appErrorsPerMin();
 					$sCaption = "Errors per min";
 					$sShortCaption = "Errors";
 					break;
-				case cAppDynMetric::METRIC_TYPE_ACTIVITY:
+				case cADMetric::METRIC_TYPE_ACTIVITY:
 					if ($psTier)
-						$sMetricUrl = cAppDynMetric::tierNodeCallsPerMin($psTier,$psNode);
+						$sMetricUrl = cADMetric::tierNodeCallsPerMin($psTier,$psNode);
 					else
-						$sMetricUrl = cAppDynMetric::appCallsPerMin();
+						$sMetricUrl = cADMetric::appCallsPerMin();
 					$sCaption = "Calls per min";
 					$sShortCaption = "Activity";
 					break;
-				case cAppDynMetric::METRIC_TYPE_RESPONSE_TIMES:
+				case cADMetric::METRIC_TYPE_RESPONSE_TIMES:
 					if ($psTier)
-						$sMetricUrl = cAppDynMetric::tierNodeResponseTimes($psTier,$psNode);
+						$sMetricUrl = cADMetric::tierNodeResponseTimes($psTier,$psNode);
 					else
-						$sMetricUrl = cAppDynMetric::appResponseTimes();
+						$sMetricUrl = cADMetric::appResponseTimes();
 					$sCaption = "response times in ms";
 					$sShortCaption = "Response";
 					break;
 				case self::METRIC_TYPE_INFR_AVAIL:
-					$sMetricUrl = cAppDynMetric::InfrastructureAgentAvailability($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureAgentAvailability($psTier,$psNode);
 					$sCaption = "Agent Availailability";
 					$sShortCaption = "Availability";
 					break;
 				case self::METRIC_TYPE_INFR_CPU_BUSY:
-					$sMetricUrl = cAppDynMetric::InfrastructureCpuBusy($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureCpuBusy($psTier,$psNode);
 					$sCaption = "CPU Busy";
 					$sShortCaption = "CPU Busy";
 					break;
 				case self::METRIC_TYPE_INFR_MEM_FREE:
-					$sMetricUrl = cAppDynMetric::InfrastructureMemoryFree($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureMemoryFree($psTier,$psNode);
 					$sCaption = "Server memory free in MB";
 					$sShortCaption = "Server Memory free (MB)";
 					break;
 				case self::METRIC_TYPE_INFR_NETWORK_IN:
-					$sMetricUrl = cAppDynMetric::InfrastructureNetworkIncoming($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureNetworkIncoming($psTier,$psNode);
 					$sCaption = "incoming network traffic in KB/sec ";
 					$sShortCaption = "Network-in";
 					break;
 				case self::METRIC_TYPE_INFR_NETWORK_OUT:
-					$sMetricUrl = cAppDynMetric::InfrastructureNetworkOutgoing($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureNetworkOutgoing($psTier,$psNode);
 					$sCaption = "outgoing network traffic in KB/sec ";
 					$sShortCaption = "Network-out";
 					break;
 				case self::METRIC_TYPE_INFR_JAVA_HEAP_USED:
-					$sMetricUrl = cAppDynMetric::InfrastructureJavaHeapUsed($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureJavaHeapUsed($psTier,$psNode);
 					$sCaption = "memory - Java Heap used ";
 					$sShortCaption = "Java Heap used";
 					break;
 				case self::METRIC_TYPE_INFR_JAVA_HEAP_USEDPCT:
-					$sMetricUrl = cAppDynMetric::InfrastructureJavaHeapUsedPct($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureJavaHeapUsedPct($psTier,$psNode);
 					$sCaption = "memory - Java Heap %Used ";
 					$sShortCaption = "Java Heap %Used";
 					break;
 				case self::METRIC_TYPE_INFR_JAVA_GC_TIME:
-					$sMetricUrl = cAppDynMetric::InfrastructureJavaGCTime($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureJavaGCTime($psTier,$psNode);
 					$sCaption = "Java GC Time ";
 					$sShortCaption = "Java GC Time";
 					break;
 				case self::METRIC_TYPE_INFR_JAVA_CPU_USAGE:
-					$sMetricUrl = cAppDynMetric::InfrastructureJavaCPUUsage($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureJavaCPUUsage($psTier,$psNode);
 					$sCaption = "CPU - Java Usage ";
 					$sShortCaption = "Java CPU";
 					break;
 				case self::METRIC_TYPE_INFR_DOTNET_HEAP_USED:
-					$sMetricUrl = cAppDynMetric::InfrastructureDotnetHeapUsed($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureDotnetHeapUsed($psTier,$psNode);
 					$sCaption = "memory - dotNet heap used ";
 					$sShortCaption = ".Net heap used";
 					break;
 				case self::METRIC_TYPE_INFR_DOTNET_GC_PCT:
-					$sMetricUrl = cAppDynMetric::InfrastructureDotnetGCTime($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureDotnetGCTime($psTier,$psNode);
 					$sCaption = "percent DotNet GC time  ";
 					$sShortCaption = ".Net-GC";
 					break;
 				case self::METRIC_TYPE_INFR_DOTNET_ANON_REQ:
-					$sMetricUrl = cAppDynMetric::InfrastructureDotnetAnonRequests($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureDotnetAnonRequests($psTier,$psNode);
 					$sCaption = "DotNet Anonymous Requests  ";
 					$sShortCaption = ".Net-Anonymous";
 					break;
 				case self::METRIC_TYPE_INFR_AGENT_METRICS:
-					$sMetricUrl = cAppDynMetric::InfrastructureAgentMetricsUploaded($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureAgentMetricsUploaded($psTier,$psNode);
 					$sCaption = "Agent - Metrics uploaded  ";
 					$sShortCaption = "Agent-Metrics";
 					break;
 				case self::METRIC_TYPE_INFR_AGENT_INVALID_METRICS:
-					$sMetricUrl = cAppDynMetric::InfrastructureAgentInvalidMetrics($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureAgentInvalidMetrics($psTier,$psNode);
 					$sCaption = "Agent - Invalid Metrics  ";
 					$sShortCaption = "Agent-Invalid Metrics";
 					break;
 				case self::METRIC_TYPE_INFR_AGENT_LICENSE_ERRORS:
-					$sMetricUrl = cAppDynMetric::InfrastructureAgentMetricsLicenseErrors($psTier,$psNode);
+					$sMetricUrl = cADMetric::InfrastructureAgentMetricsLicenseErrors($psTier,$psNode);
 					$sCaption = "Agent - License Errors ";
 					$sShortCaption = "Agent-License errors";
 					break;
@@ -278,7 +278,7 @@ class cAppDynInfraMetric{
 }
 
 //######################################################################
-class cAppDynMetric{
+class cADMetric{
 	const METRIC_TYPE_QS ="mt";
 	const METRIC_TYPE_RUMCALLS = "mrc";
 	const METRIC_TYPE_RUMRESPONSE = "mrr";
@@ -687,15 +687,15 @@ class cAppDynMetric{
 	}
 }
 
-class cAppDynWebRumMetric{
+class cADWebRumMetric{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* webrum
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function jobs(){
-		return cAppDynMetric::END_USER."|Synthetic Jobs";
+		return cADMetric::END_USER."|Synthetic Jobs";
 	}
 	public static function App(){
-		return cAppDynMetric::END_USER."|App";
+		return cADMetric::END_USER."|App";
 	}
 	public static function CallsPerMin(){
 		return self::App()."|Page Requests per Minute";
@@ -717,22 +717,22 @@ class cAppDynWebRumMetric{
 	}
 
 	public static function Ajax(){
-		return cAppDynMetric::END_USER."|AJAX Requests";
+		return cADMetric::END_USER."|AJAX Requests";
 	}
 	public static function Pages(){
-		return cAppDynMetric::END_USER."|Base Pages";
+		return cADMetric::END_USER."|Base Pages";
 	}
 	
 	public Static function Metric($psKind, $psPage, $psMetric)
 	{
 		switch ($psKind){
-			case cAppDynMetric::BASE_PAGES:
-			case cAppDynMetric::AJAX_REQ:
+			case cADMetric::BASE_PAGES:
+			case cADMetric::AJAX_REQ:
 				break;
 			default:
 				cDebug::error("unknown kind");
 		}
-		return cAppDynMetric::END_USER."|$psKind|$psPage|$psMetric";
+		return cADMetric::END_USER."|$psKind|$psPage|$psMetric";
 	}
 	
 	

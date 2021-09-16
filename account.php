@@ -15,14 +15,14 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //see 
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/common.php");
-require_once("$appdlib/common.php");
-require_once("$appdlib/core.php");
+require_once("$ADlib/common.php");
+require_once("$ADlib/core.php");
 
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDynAccountData{
+class cADAccountData{
 	public $value;
 	public $date;
 	
@@ -32,7 +32,7 @@ class cAppDynAccountData{
 	}
 }
 
-class cAppDynAccount{
+class cADAccount{
 	public static $account_id = null;
 	
 	//*****************************************************************
@@ -40,10 +40,10 @@ class cAppDynAccount{
 		cDebug::enter();
 
 		if (!self::$account_id){
-			cAppDynCore::$URL_PREFIX="/api/accounts";
-			cAppDynCore::$CONTROLLER_PREFIX=null;
+			cADCore::$URL_PREFIX="/api/accounts";
+			cADCore::$CONTROLLER_PREFIX=null;
 			
-			$oJson = cAppDynCore::GET("/myaccount?");
+			$oJson = cADCore::GET("/myaccount?");
 			self::$account_id = $oJson->id;
 			
 			cDebug::write("accountID is ".self::$account_id);
@@ -71,8 +71,8 @@ class cAppDynAccount{
 		
 		cDebug::write("looking for usage of $psModule for $piMonths months");
 		
-		$dStart = date(cAppDynCore::DATE_FORMAT, time()-($piMonths*cCommon::SECONDS_IN_MONTH));
-		$dEnd = date(cAppDynCore::DATE_FORMAT, time());
+		$dStart = date(cADCore::DATE_FORMAT, time()-($piMonths*cCommon::SECONDS_IN_MONTH));
+		$dEnd = date(cADCore::DATE_FORMAT, time());
 
 		$oJson = self::pr__get("/licensemodules/$psModule/usages?startdate=$dStart&enddate=$dEnd");
 		
@@ -80,7 +80,7 @@ class cAppDynAccount{
 		if ($oJson && property_exists($oJson,"usages")){
 			//cDebug::vardump($oJson);
 			foreach ($oJson->usages as $oData)
-				$aUsages[] = new cAppDynAccountData($oData->createdOnIsoDate, $oData->maxUnitsUsed);
+				$aUsages[] = new cADAccountData($oData->createdOnIsoDate, $oData->maxUnitsUsed);
 		}
 		
 		cDebug::leave();
@@ -92,9 +92,9 @@ class cAppDynAccount{
 		cDebug::enter();
 		$sID = self::GET_account_id();
 		
-		cAppDynCore::$URL_PREFIX="/api/accounts/$sID";
-		cAppDynCore::$CONTROLLER_PREFIX=null;
-		$oJson = cAppDynCore::GET($psURLAdd);
+		cADCore::$URL_PREFIX="/api/accounts/$sID";
+		cADCore::$CONTROLLER_PREFIX=null;
+		$oJson = cADCore::GET($psURLAdd);
 
 		
 		cDebug::leave();

@@ -13,19 +13,19 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$appdlib/common.php");
-require_once("$appdlib/metrics.php");
+require_once("$ADlib/common.php");
+require_once("$ADlib/metrics.php");
 
 //#################################################################
 //# CLASSES
 //#################################################################
 
-class cAppDynDemo{
+class cADDemo{
 	
 	private static function pr__gimme5($psCaption){
 		$aData = [];
 		for ($i=1; $i<6; $i++){
-			$oInfo = new cAppDDetails("$psCaption - $i", $i, null,null);
+			$oInfo = new cADDetails("$psCaption - $i", $i, null,null);
 			array_push($aData, $oInfo);
 		}
 		return $aData;
@@ -41,7 +41,7 @@ class cAppDynDemo{
 	public static function GET_Applications(){
 		$aData = [];
 		for ($i=1; $i<5; $i++){
-			$oApp = new cAppDApp("Application ".$i, $i);
+			$oApp = new cADApp("Application ".$i, $i);
 			array_push($aData, $oApp);
 		}
 		return $aData;
@@ -66,7 +66,7 @@ class cAppDynDemo{
 		for ($i = $epoch_start; $i<=$epoch_end; $i+=$iDTime){
 		
 			$iVal = $a + ($b*$x) + ($c*pow($x,2)) + ($d*pow($x,3));
-			$oRow = new cAppdynMetricRow;
+			$oRow = new cADMetricRow;
 			$oRow->startTimeInMillis = $i;
 			$oRow->value = $iVal;
 			$oRow->max = $iVal;

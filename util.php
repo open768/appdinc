@@ -15,15 +15,15 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //see 
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/array.php");
-require_once("$appdlib/common.php");
-require_once("$appdlib/core.php");
-require_once("$appdlib/account.php");
+require_once("$ADlib/common.php");
+require_once("$ADlib/core.php");
+require_once("$ADlib/account.php");
 
 
 //#################################################################
 //# 
 //#################################################################
-function Appd_startTime_sort_fn($a, $b)
+function AD_startTime_sort_fn($a, $b)
 {
     $v1 = $a->startTimeInMillis;
     $v2 = $b->startTimeInMillis;
@@ -32,12 +32,15 @@ function Appd_startTime_sort_fn($a, $b)
 }
 
 
-function Appd_name_sort_fn($po1, $po2){
+function AD_name_sort_fn($po1, $po2){
 	return strcasecmp ($po1->name, $po2->name);
 }
 
 function sort_machine_agents( $po1, $po2){
-	return strcasecmp ($po1->applicationIds[0].".".$po1->hostName, $po2->applicationIds[0].".".$po2->hostName);	
+	$sApp1 = ($po1->applicationIds == null? "none" : $po1->applicationIds[0]);
+	$sApp2 = ($po2->applicationIds == null? "none" : $po2->applicationIds[0]);
+		
+	return strcasecmp ("$sApp1.".$po1->hostName, "$sApp1.".$po2->hostName);	
 }
 function sort_appserver_agents( $po1, $po2){
 	return strcasecmp (
@@ -46,9 +49,22 @@ function sort_appserver_agents( $po1, $po2){
 	);	
 }
 
-function Appd_title_sort_fn($po1, $po2){
+function AD_title_sort_fn($po1, $po2){
 	return strcasecmp ($po1->title, $po2->title);	
 }
+
+function get_BT_from_event($poEvent){
+	$sBT = "";
+	
+	foreach ($poEvent->affectedEntities as $oItem){
+		if ($oItem->entityType == "BUSINESS_TRANSACTION"){
+			$sBT = $oItem->name;
+			break;
+		}
+	}
+	return $sBT;
+}
+
 
 //#################################################################
 //# 
@@ -59,40 +75,71 @@ class cCallsAnalysis{
 class cExtCallsAnalysis{
     public $count=0, $totalTime=0, $exitPointName, $toComponentID;
 }
+class cEventAnalysis{
+	public $typeCount = null;
+	public $name = "";
+	public $id = -1;
+	public $link = "";
+	
+	function __construct() {
+		$this->typeCount = [];
+	}
+	public function add($psType){
+		if (!array_key_exists($psType, $this->typeCount)) 
+			$this->typeCount[$psType] = 0;
+		$this->typeCount[$psType]++;
+	}
+}
+
+class cEventAnalysisOutput{
+	public $types = null;
+	public $analysis = null;
+}
+
+class CAD_CorrelatedEvent{
+	public $id;
+	public $type;
+	public $bt;
+	public $eventTime;
+	public $severity;
+	public $action = null;
+	public $deepLinkUrl;
+}
+
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDynTransFlow{
+class cADTransFlow{
 	public $name = null;
 	public $children = [];
 	
 	//*****************************************************************
-	public function walk($psApp, $psTier, $psTrans){
+	public function walk($poApp, $psTier, $psTrans){
 		cDebug::enter();
 		
-		$sMetricPath = cAppDynMetric::transExtNames($psTier, $psTrans);
-		$this->walk_metric($psApp, $sMetricPath);
+		$sMetricPath = cADMetric::transExtNames($psTier, $psTrans);
+		$this->walk_metric($poApp, $sMetricPath);
 		$this->name = $psTrans;
 		
 		cDebug::leave();
 	}
 
 	//*****************************************************************
-	protected function walk_metric($psApp, $psMetricPath){
+	protected function walk_metric($poApp, $psMetricPath){
 		cDebug::enter();
 
-		$aCalls = cAppdynCore::GET_Metric_heirarchy($psApp, $psMetricPath, false);
+		$aCalls = $poApp->GET_Metric_heirarchy($psMetricPath, false);
 		cDebug::write($psMetricPath);
 		
 		foreach ($aCalls as $oCall)
 			if ($oCall->type == "folder") {
-				$sMetricPath = $psMetricPath . "|".$oCall->name."|".cAppDynMetric::EXT_CALLS;
+				$sMetricPath = $psMetricPath . "|".$oCall->name."|".cADMetric::EXT_CALLS;
 				
-				$oChild = new cAppDynTransFlow();
+				$oChild = new cADTransFlow();
 				$this->children[] = $oChild;
 				$oChild->name = $oCall->name;
-				$oChild->walk_metric($psApp, $sMetricPath);
+				$oChild->walk_metric($poApp, $sMetricPath);
 				
 			}
 			
@@ -108,13 +155,13 @@ class cAppDynTransFlow{
 //# CLASSES
 //#################################################################
 
-class cAppdynUtil {
+class cADUtil {
 	private static $maAppnodes = null;
 	public static $SHOW_PROGRESS = true;
 	
 	//*****************************************************************
 	public static function get_application_ids(){
-		$aApps = cAppDynController::GET_Applications();
+		$aApps = cADController::GET_Applications();
 		$aOutput = [];
 		foreach ($aApps as $oApp){
 			$aOutput[ $oApp->id] = $oApp->name;
@@ -155,7 +202,24 @@ class cAppdynUtil {
 		}
 	}
 
-
+	//*****************************************************************
+	public static function analyse_app_nodes($paNodes){
+		cDebug::enter();
+		$aTierData = [];
+		
+		foreach ($paNodes as $aNodes)
+			foreach ($aNodes as $oNode){
+				$sTier = $oNode ->tierName;
+				
+				if (!isset($aTierData[$sTier]))	$aTierData[$sTier] = new cAgentTotals();
+				$aTierData[$sTier]->total ++;
+				if ($oNode->machineAgentPresent) $aTierData[$sTier]->machine ++;
+				if ($oNode->appAgentPresent) $aTierData[$sTier]->appserver++;
+			}
+		cDebug::leave();
+		return $aTierData;
+	}
+	
 	//*****************************************************************
 	public static function Analyse_Metrics($poData)
 	{
@@ -242,10 +306,121 @@ class cAppdynUtil {
 	}
 	
 	//*****************************************************************
+	public static function analyse_license_usage( $poData){
+		cDebug::enter();
+		
+		$aUsageData = get_object_vars($poData);	
+		$aKeys = array_keys($aUsageData);
+		cDebug::extra_debug("number of entries:". count($aKeys));
+		
+		//build up the typedata
+		$aTypeData = [];
+		foreach ($aKeys  as $sKey){
+			$aItem = $aUsageData[$sKey];
+			foreach ($aItem as $oEntry){
+				$sType = $oEntry->agentType;
+				$sHost = $oEntry->hostId;
+				if (!array_key_exists($sType, $aTypeData)) $aTypeData[$sType] = [];
+				$aTypeData[$sType][] = $sHost;
+			}
+		}
+		cDebug::leave();
+		return $aTypeData;
+	}
+	
+	//*****************************************************************
+	public static function get_event_policy($poEvent){
+		$sPolicy = null;
+		$sId = null;
+		
+		$aAffected = $poEvent->affectedEntities;
+		foreach ($aAffected as $oEntity)
+			if ($oEntity->entityType === "POLICY"){
+				$sPolicy = $oEntity->name;
+				$sId = $oEntity->entityId;
+			}
+		return ["policy"=>$sPolicy, "id"=>$sId];
+	}
+	
+	//*****************************************************************
+	public static function analyse_CorrelatedEvents($paEvents, $paCorrelated)
+	{
+		cDebug::enter();
+		$aOutput=[];
+		$iActionCount = 0;
+		
+		foreach ($paEvents as $oEvent){
+			$aPolicy = cADUtil::get_event_policy($oEvent);
+			$sPolicy  = $aPolicy["policy"];
+			$sType = $oEvent->type;
+			$sType = str_replace("_"," ",$sType);
+			$sID = strval($oEvent->id);
+			
+			$oOut = new CAD_CorrelatedEvent;
+			$oOut->severity = $oEvent->severity;
+			$oOut->eventTime = $oEvent->eventTime;
+			$oOut->id = $sID;
+			$oOut->type = $sType;
+			$oOut->policy = $sPolicy;
+			$oOut->deepLinkUrl = $oEvent->deepLinkUrl;
+			$oOut->bt = get_BT_from_event($oEvent);
+			if (array_key_exists($sID, $paCorrelated)){
+				$oOut->action = $paCorrelated[$sID];
+				$iActionCount ++;
+			}
+			
+			
+			$aOutput[] = $oOut;
+		}
+		if ($iActionCount  == 0) cDebug::write("no actions");
+		
+		cDebug::leave();
+		return $aOutput;
+	}
+	
+	//*****************************************************************
+	public static function analyse_events($paEvents){
+		cDebug::enter();
+		$aAnalysed = [];
+		$aTypes = [];
+		
+		foreach ($paEvents as $oEvent){
+			//--find the policy name
+			$aResult = self::get_event_policy($oEvent);
+			$sPolicy = $aResult["policy"];
+			$sId = $aResult["id"];
+			
+			//add the event to the analysis	
+			if (array_key_exists($sPolicy, $aAnalysed))
+				$oItem = $aAnalysed[$sPolicy];
+			else{
+				$oItem = new cEventAnalysis;
+				$oItem->name = $sPolicy;
+				$oItem->id = $sId;
+				$aAnalysed[$sPolicy] = $oItem;
+			}
+			$oItem->add($oEvent->type);
+			
+			//add the type to the array
+			if (!array_key_exists($oEvent->type, $aTypes)) 
+				$aTypes[$oEvent->type] = 1;
+		}
+		
+		ksort($aAnalysed);
+		ksort($aTypes);
+		$oOutput = new cEventAnalysisOutput;
+		$oOutput->analysis = $aAnalysed;
+		$oOutput->types = $aTypes;
+		
+		cDebug::leave();
+		return $oOutput;
+	}
+	
+	//*****************************************************************
 	public static function extract_bt_name($psMetric, $psTier){
-		$sLeft = cAppdynMetric::tierTransactions($psTier);
+		$sLeft = cADMetric::tierTransactions($psTier);
 		$sOut = substr($psMetric, strlen($sLeft)+1);
-		$iPos = strpos($sOut, cAppdynMetric::RESPONSE_TIME);
+		$iPos = strpos($sOut, cADMetric::RESPONSE_TIME);
 		$sOut = substr($sOut, 0, $iPos -1);
 		return $sOut;
 	}
@@ -273,7 +448,7 @@ class cAppdynUtil {
 	//*****************************************************************
 	public static function extract_RUM_id($psType, $psMetricName){
 		$sType="Base Page";
-		if ($psType == cAppdynMetric::AJAX_REQ) $sType="AJAX Request";
+		if ($psType == cADMetric::AJAX_REQ) $sType="AJAX Request";
 		$sPattern = "/\|$sType:(\d+)\|/";
 		if (preg_match($sPattern, $psMetricName, $aMatches))
 			return $aMatches[1];
@@ -401,7 +576,7 @@ class cAppdynUtil {
 		
 		//---------------- get the flow
 		try{
-			$oFlow = cAppDynRestUI::GET_snapshot_flow($poShapshot);
+			$oFlow = cAD_RestUI::GET_snapshot_flow($poShapshot);
 		}catch (Exception $e){
 			return null;
 		}

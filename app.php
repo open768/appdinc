@@ -13,13 +13,15 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$appdlib/appdynamics.php");
+require_once("$ADlib/appdynamics.php");
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDApp{
+class cADApp{
 	public static $db_app = null;
+	public static $server_app = null;
+	
 	public $name, $id;
 	function __construct($psAppName, $psAppId=null) {	
 		if ($psAppName == null) cDebug::error("null app name");
@@ -33,7 +35,7 @@ class cAppDApp{
    
 	//*****************************************************************
 	public function pr__get_id(){
-		$aApps = cAppDynController::GET_Applications();
+		$aApps = cADController::GET_Applications();
 		$sID = null;
 		
 		foreach ($aApps as $oApp){
@@ -43,40 +45,44 @@ class cAppDApp{
 			}
 		}
 		
-		if ($sID == null) cDebug::error("unable to find appid for $this->name");
-		$this->id = $sID;
+		if ($sID !== null)	$this->id = $sID;
 		return $sID;
 	}
 	
 	//*****************************************************************
 	public function GET_Backends(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Backends(null);
-		$sMetricpath= cAppDynMetric::backends();
-		return cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricpath, false); //dont cache
+		if ( cAD::is_demo()) return cADDemo::GET_Backends(null);
+		$sMetricpath= cADMetric::backends();
+		return $this->GET_Metric_heirarchy($sMetricpath, false); //dont cache
 	}
 
 	//*****************************************************************
 	//see events reference at https://docs.appdynamics.com/display/PRO14S/Events+Reference
+	/*
+	but the UI uses restui https://xxxx.saas.appdynamics.com/controller/restui/events/query
+	//with payload:	//{"queryCursor":{"timeRange":{"type":"BEFORE_NOW","durationInMinutes":60}},"eventStreamItemFilter":{"applicationIds":[354],"policyViolationStartedWarning":true,"policyViolationStartedCritical":true,"machineLearningStartedWarning":true,"machineLearningStartedCritical":true,"codeDeadlock":true,"resourcePoolLimit":true,"applicationDeployment":true,"appServerRestart":true,"appConfigChange":true,"applicationCrash":true,"clrCrash":true,"license":true,"controllerDiskSpaceLow":true,"agentVersionNewerThanController":true,"agentConfigurationError":true,"controllerMetricRegistrationLimitReached":true,"agentMetricRegistrationLimitReached":true,"devModeConfigUpdate":true,"syntheticAvailabilityHealthy":true,"syntheticAvailabilityWarning":true,"syntheticAvailabilityConfirmedWarning":true,"syntheticAvailabilityOngoingWarning":true,"syntheticAvailabilityError":true,"syntheticAvailabilityConfirmedError":true,"syntheticAvailabilityOngoingError":true,"syntheticPerformanceHealthy":true,"syntheticPerformanceWarning":true,"syntheticPerformanceConfirmedWarning":true,"syntheticPerformanceOngoingWarning":true,"syntheticPerformanceCritical":true,"syntheticPerformanceConfirmedCritical":true,"syntheticPerformanceOngoingCritical":true,"mobileNewCrash":true,"customEventFilters":[],"networkIncluded":true,"clusterEvents":false,"businessTransactionIds":[],"applicationComponentIds":[],"applicationComponentNodeIds":[],"timeRange":{"type":"BEFORE_NOW","durationInMinutes":60}}}
+	*/
 	public function GET_Events($poTimes, $psEventType = null){
 		$sApp = rawurlencode($this->name);
-		$sTimeQs = cAppdynTime::make($poTimes);
-		if ($psEventType== null) $psEventType = cAppDyn::ALL_EVENT_TYPES;
-		$sSeverities = cAppDyn::ALL_SEVERITIES;
+		$sTimeQs = cADTime::make($poTimes);
+		if ($psEventType== null) $psEventType = cADCore::ALL_EVENT_TYPES;
+		$sSeverities = cADCore::ALL_SEVERITIES;
 		
 		$sEventsUrl = cHttp::build_url("$sApp/events", "severities", $sSeverities);
 		$sEventsUrl = cHttp::build_url($sEventsUrl, "Output", "JSON");
 		$sEventsUrl = cHttp::build_url($sEventsUrl, "event-types", $psEventType);
 		$sEventsUrl = cHttp::build_url($sEventsUrl, $sTimeQs);
-		return cAppDynCore::GET($sEventsUrl );
+		return cADCore::GET($sEventsUrl );
 	}
+	
 
 	//*****************************************************************
 	public function GET_ExtTiers(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppExtTiers(null);
+		if ( cAD::is_demo()) return cADDemo::GET_AppExtTiers(null);
 		cDebug::enter();
-		$sMetricPath= cAppDynMetric::appBackends();
-		$aMetrics = cAppdynCore::GET_Metric_heirarchy($this->name, $sMetricPath,false); //dont cache
-		if ($aMetrics) uasort($aMetrics,"Appd_name_sort_fn");
+		$sMetricPath= cADMetric::appBackends();
+		$aMetrics = $this->GET_Metric_heirarchy($sMetricPath,false); //dont cache
+		if ($aMetrics) uasort($aMetrics,"AD_name_sort_fn");
 		cDebug::leave();
 		return $aMetrics;
 	}
@@ -85,24 +91,80 @@ class cAppDApp{
 	public function GET_HealthRules(){
 		cDebug::enter();
 		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
-		$aData = cAppDynCore::GET($sUrl,true,false,false);
+		$aData = cADCore::GET($sUrl,true,false,false);
 		cDebug::leave();
 		return $aData;
 	}
 	
 	//*****************************************************************
 	public function GET_InfoPoints($poTimes){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_AppInfoPoints(null);
-		return cAppdynCore::GET_Metric_heirarchy($this->name,cAppDynMetric::INFORMATION_POINTS, false, $poTimes);
+		if ( cAD::is_demo()) return cADDemo::GET_AppInfoPoints(null);
+		return $this->GET_Metric_heirarchy(cADMetric::INFORMATION_POINTS, false, $poTimes);
 	}
 
+	//*****************************************************************
+	public function GET_MetricData($psMetricPath, $poTimes , $psRollup="false", $pbCacheable=false, $pbMulti = false)
+	{
+		cDebug::enter();
+		if ($poTimes == null) cDebug::error("times are missing");
+		$sApp = $this->name;
+		
+		$sRangeType = "";
+		$sTimeCmd=cADTime::make($poTimes);
+		
+		$encoded = rawurlencode($psMetricPath);
+		$encoded = str_replace(rawurlencode("*"),"*",$encoded);
+		
+		if ($sApp === cADCore::SERVER_APPLICATION)
+			$sApp = cADCore::ENCODED_SERVER_APPLICATION;		//special case
+		else
+			$sApp = rawurlencode($sApp);
+		
+		$url = "$sApp/metric-data?metric-path=$encoded&$sTimeCmd&rollup=$psRollup";
+		$oData = cADCore::GET( $url ,$pbCacheable);
+		
+		$aOutput = $oData;
+		if (!$pbMulti && (count($oData) >0)) $aOutput = $oData[0]->metricValues; //watch out this will knobble the data
+		
+		cDebug::leave();
+		return $aOutput;		
+	}
+	
+	//*****************************************************************
+	public function GET_Metric_heirarchy($psMetricPath, $pbCached=true, $poTimes = null)
+	{
+		cDebug::enter();
+		cDebug::extra_debug("get Heirarchy: $psMetricPath");
+		$encoded=rawurlencode($psMetricPath);	
+		$encoded = str_replace("%2A","*",$encoded);			//decode wildcards
+		
+		if ($this->name === cADCore::SERVER_APPLICATION)
+			$sApp = cADCore::ENCODED_SERVER_APPLICATION;		//special case
+		else
+			$sApp = rawurlencode($this->name);
+
+		$sCommand = "$sApp/metrics?metric-path=$encoded";
+		if ($poTimes !== null){
+			if ( $poTimes === cADCore::BEFORE_NOW_TIME)
+				$sTimeCmd=cADTime::beforenow();
+			else
+				$sTimeCmd=cADTime::make($poTimes);
+			$sCommand .= "&$sTimeCmd";
+		}
+		
+		$oData = cADCore::GET($sCommand, $pbCached);
+		cDebug::extra_debug("count of rows: ".count($oData));
+		cDebug::leave();
+		return $oData;
+	}
+	
 	//*****************************************************************
 	public function GET_Nodes(){
 		cDebug::enter();
 		
 		$sID = $this->id;
 		
-		$aResponse = cAppDynCore::GET("$sID/nodes?",true);
+		$aResponse = cADCore::GET("$sID/nodes?",true);
 
 		$aOutput = [];
 		foreach ($aResponse as $oNode){
@@ -123,26 +185,26 @@ class cAppDApp{
 		*/
 		
 		$sApp = rawurlencode($this->name);
-		$sUrl = cHttp::build_url("$sApp/request-snapshots", cAppdynTime::make($poTimes));
+		$sUrl = cHttp::build_url("$sApp/request-snapshots", cADTime::make($poTimes));
 		$sUrl = cHttp::build_url($sUrl, "application_name", $sApp);
 		//$sUrl = cHttp::build_url($sUrl, "application-component-ids", $psTierID);
 		$sUrl = cHttp::build_url($sUrl, "business-transaction-ids", $psTransID);
 		$sUrl = cHttp::build_url($sUrl, "output", "JSON");
-		return cAppDynCore::GET($sUrl);
+		return cADCore::GET($sUrl);
 	}
 	
 	//*****************************************************************
 	public function GET_Tiers(){
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Tiers($this);
+		if ( cAD::is_demo()) return cADDemo::GET_Tiers($this);
 		$sApp = rawurlencode($this->name);
-		$aData = cAppdynCore::GET("$sApp/tiers?" );
-		if ($aData) uasort($aData,"Appd_name_sort_fn");
+		$aData = cADCore::GET("$sApp/tiers?" );
+		if ($aData) uasort($aData,"AD_name_sort_fn");
 		
 		$aOutTiers = [];
 
 		//convert to tier objects and populate the app
 		foreach ($aData as $oInTier){
-			$oOutTier = new cAppDTier($this, $oInTier->name, $oInTier->id);
+			$oOutTier = new cADTier($this, $oInTier->name, $oInTier->id);
 			$aOutTiers[] = $oOutTier;
 		}
 		
@@ -153,9 +215,12 @@ class cAppDApp{
 	//*****************************************************************
 	public function GET_Transactions(){		
 		$sApp = rawurlencode($this->name);
-		return cAppDynCore::GET("$sApp/business-transactions?" );
+		return cADCore::GET("$sApp/business-transactions?" );
 	}
 
 }
+
+cADApp::$db_app = new cADApp(cADCore::DATABASE_APPLICATION,cADCore::DATABASE_APPLICATION);
+cADApp::$server_app = new cADApp(cADCore::SERVER_APPLICATION,cADCore::SERVER_APPLICATION);
 
 ?>

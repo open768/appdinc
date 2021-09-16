@@ -16,7 +16,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$phpinc/ckinc/header.php");
 require_once("$phpinc/ckinc/hash.php");
 require_once("$phpinc/ckinc/http.php");
-require_once("$appdlib/common.php");
+require_once("$ADlib/common.php");
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/common.php");
 require_once("$phpinc/php-openssl-crypt/cryptor.php");
@@ -38,7 +38,7 @@ class cLogin{
 //#################################################################
 //# 
 //#################################################################
-class cAppDynAuditAccount{
+class cADAuditAccount{
 	public $host = null;
 	public $account = null;
 	public $user = null;
@@ -46,17 +46,17 @@ class cAppDynAuditAccount{
 	public $IP = null;
 }
 
-class cAppDynAudit{
-	const ACCOUNTS_KEY = "cAppDynAudit.accounts.key";
-	const ACCOUNT_BASE_KEY = "cAppDynAudit.account.basekey.";
+class cADAudit{
+	const ACCOUNTS_KEY = "cADAudit.accounts.key";
+	const ACCOUNT_BASE_KEY = "cADAudit.account.basekey.";
 	const MAX_ENTRIES_PER_USER = 100;
 	
 	//**************************************************************************************
 	public static function audit ($poCredentials){
 		cDebug::enter();
-		if (! ($poCredentials instanceof cAppDynCredentials )) cDebug::error("cAppDynCredentials not provided");
+		if (! ($poCredentials instanceof cADCredentials )) cDebug::error("cADCredentials not provided");
 			
-		$oAccount = new cAppDynAuditAccount;
+		$oAccount = new cADAuditAccount;
 		$oAccount->host = $poCredentials->host;
 		$oAccount->account = $poCredentials->account;
 		$oAccount->user = $poCredentials->get_username();
@@ -151,7 +151,7 @@ class cAppDynAudit{
 //# encrypt with a key that is randomly generated - 
 //# so that even the person hosting cant easily find the details
 //#################################################################
-class cAppDynCrypt{
+class cADCrypt{
 	public static $credentials = null;
 	
 	private static function pr__check_credentials(){
@@ -162,7 +162,7 @@ class cAppDynCrypt{
 	
 	private static function get_key(){
 		self::pr__check_credentials();
-		$sHash = "cAppDynCrypt.key.".(self::$credentials->host).(self::$credentials->account);
+		$sHash = "cADCrypt.key.".(self::$credentials->host).(self::$credentials->account);
 		$sKey = "##key is not set##";
 		if (cHash::exists($sHash)){
 			$sKey = cHash::get($sHash);
@@ -171,7 +171,7 @@ class cAppDynCrypt{
 			cHash::put($sHash, $sKey);
 		}
 		
-		//return cAppDSecret::SESSION_ENCRYPTION_KEY;
+		//return cADSecret::SESSION_ENCRYPTION_KEY;
 		return $sKey;
 	}
 	
@@ -188,7 +188,7 @@ class cAppDynCrypt{
 //#################################################################
 //# 
 //#################################################################
-class cAppDynCredentials{
+class cADCredentials{
 	const HOST_KEY = "apple";
 	const ACCOUNT_KEY = "pear";
 	const USERNAME_KEY = "orange";
@@ -250,12 +250,12 @@ class cAppDynCredentials{
 		
 		$this->host = cHeader::get(cLogin::KEY_HOST);
 		$this->account  = cHeader::get(cLogin::KEY_ACCOUNT);
-		cAppDynCrypt::$credentials = $this;
+		cADCrypt::$credentials = $this;
 		
 		$username  = cHeader::get(cLogin::KEY_USERNAME);
-		if ($username)	$this->encrypted_username = cAppDynCrypt::encrypt($username);
+		if ($username)	$this->encrypted_username = cADCrypt::encrypt($username);
 		$password  = cHeader::get(cLogin::KEY_PASSWORD);
-		if ($password)	$this->encrypted_password = cAppDynCrypt::encrypt($password);
+		if ($password)	$this->encrypted_password = cADCrypt::encrypt($password);
 		
 		$sUse_https = cHeader::get(cLogin::KEY_HTTPS);
 		
@@ -279,9 +279,9 @@ class cAppDynCredentials{
 		$_SESSION[self::RESTRICTED_LOGIN_KEY]  = $this->restricted_login;
 		
 		//try to login - if it worked you are logged in
-		cAppDynCore::login();
+		cADCore::login();
 		cDebug::write("logged in");
-		cAppDynAudit::audit($this); //audit on success
+		cADAudit::audit($this); //audit on success
 		
 		$_SESSION[self::LOGGEDIN_KEY] = true;
 		$this->mbLogged_in = true;
@@ -319,14 +319,14 @@ class cAppDynCredentials{
 	
 	//**************************************************************************************
 	public function get_username(){
-		cAppDynCrypt::$credentials = $this;
-		return cAppDynCrypt::decrypt($this->encrypted_username);
+		cADCrypt::$credentials = $this;
+		return cADCrypt::decrypt($this->encrypted_username);
 	}
 	
 	//**************************************************************************************
 	public function get_password(){
-		cAppDynCrypt::$credentials = $this;
-		return cAppDynCrypt::decrypt($this->encrypted_password);
+		cADCrypt::$credentials = $this;
+		return cADCrypt::decrypt($this->encrypted_password);
 	}
 	
 	//**************************************************************************************
@@ -375,7 +375,7 @@ class cAppDynCredentials{
 		cDebug::enter();
 		
 		//------------- check login credentials --------------------------
-		$oCred = new cAppDynCredentials;
+		$oCred = new cADCredentials;
 		if (!$oCred->logged_in()) cDebug::error("must be logged in");
 		if ($oCred->restricted_login) cDebug::error("token not available in restricted login");
 		
@@ -392,7 +392,7 @@ class cAppDynCredentials{
 	public static function login_with_token($psToken ){
 		$oCred = cHash::pr__get_obj($psToken);
 		if ($oCred == null) cDebug::error("token not found");
-		if (get_class($oCred) !== "cAppDynCredentials") cDebug::error("unexpected class");
+		if (get_class($oCred) !== "cADCredentials") cDebug::error("unexpected class");
 
 		//perform the login
 		$oCred->save();

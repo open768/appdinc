@@ -13,12 +13,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$appdlib/appdynamics.php");
+require_once("$ADlib/appdynamics.php");
 
 //#################################################################
 //# 
 //#################################################################
-class cAppDTrans{
+class cADTrans{
 	public $name, $id, $tier;
 
    function __construct($poTier, $psTransName, $piTransId) {	
@@ -29,8 +29,8 @@ class cAppDTrans{
 	
 	//*****************************************************************
 	public function GET_ExtTiers(){
-		$sMetricPath= cAppDynMetric::transExtNames($this->tier->name,$this->name);
-		return cAppdynCore::GET_Metric_heirarchy($this->tier->app->name, $sMetricPath, false);
+		$sMetricPath= cADMetric::transExtNames($this->tier->name,$this->name);
+		return $this->tier->app->GET_Metric_heirarchy( $sMetricPath, false);
 	}
 }
 ?>

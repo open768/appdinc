@@ -17,15 +17,15 @@ require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/common.php");
 require_once("$phpinc/ckinc/hash.php");
 require_once("$phpinc/ckinc/http.php");
-require_once("$appdlib/common.php");
-require_once("$appdlib/time.php");
+require_once("$ADlib/common.php");
+require_once("$ADlib/time.php");
 
 
 //#################################################################
 //# 
 //#################################################################
 
-class cAppdynMetricRow{
+class cADMetricRow{
 	public $value;
 	public $max;
 	public $startTimeInMillis;
@@ -34,9 +34,10 @@ class cAppdynMetricRow{
 //#################################################################
 //# 
 //#################################################################
-class cAppDynCore{
+class cADCore{
 	public static $CONTROLLER_PREFIX="controller";
 	public static $SUFFIX = "&output=JSON";
+	private static $bOutputController = false;
 	const USUAL_METRIC_PREFIX = "/rest/applications/";
 	const CONFIG_METRIC_PREFIX = "/rest/configuration";
 	const DB_METRIC_PREFIX = "/rest/applications/Database%20Monitoring/metric-data?metric-path=";
@@ -48,19 +49,25 @@ class cAppDynCore{
 	const DEMO_HOST = "demo";
 	const BEFORE_NOW_TIME = "bn";
 	const METRIC_NOT_FOUND = "METRIC DATA NOT FOUND";
+	const ALL_EVENT_TYPES = "POLICY_OPEN_CRITICAL,POLICY_OPEN_WARNING,POLICY_CLOSE,POLICY_CLOSE_CRITICAL,POLICY_CLOSE_WARNING,POLICY_CONTINUES_CRITICAL";
+	const ALL_SEVERITIES = "WARN,ERROR,INFO";
+	const APPDYN_OVERFLOWING_BT = "_APPDYNAMICS_DEFAULT_TX_";
 	
 	public static $URL_PREFIX = self::USUAL_METRIC_PREFIX;
 	
 	const DATE_FORMAT="Y-m-d\TG:i:s\Z";
 
 	public static function GET_controller(){
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$sController = ($oCred->use_https?"https":"http")."://$oCred->host";
 		
 		if (self::$CONTROLLER_PREFIX)
 				$sController.= "/".self::$CONTROLLER_PREFIX;
-		
-		cDebug::extra_debug("controller URL: $sController");
+			
+		if (!self::$bOutputController){
+			cDebug::extra_debug("controller URL: $sController");
+			self::$bOutputController = true;
+		}
 		return $sController;
 	}
 	
@@ -69,7 +76,7 @@ class cAppDynCore{
 		cDebug::enter();
 		//TBD "controller/auth?action=login"		
 		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$oCred->check();
 		$sCred=$oCred->encode();
 		
@@ -92,7 +99,7 @@ class cAppDynCore{
 	//*****************************************************************
 	private static function pr__get_extra_header(){
 		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$oCred->check();
 
 		$sExtraHeader= "Content-Type: application/json";
@@ -111,11 +118,15 @@ class cAppDynCore{
 		cDebug::enter();
 		
 		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$oCred->check();
 		
+		//-------------- convert object
+		if (is_object($psPayload) || is_array($psPayload))
+		$psPayload = json_encode($psPayload);
+		
 		//-------------- check the cache
-		cDebug::write("getting $psCmd with payload $psPayload");
+		cDebug::write("getting $psCmd with payload");
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd.$psPayload;
 		
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
@@ -130,8 +141,8 @@ class cAppDynCore{
 		//----- actually do it
 		$sAD_REST = self::GET_controller().self::RESTUI_PREFIX;
 		$url = $sAD_REST.$psCmd;
-		cDebug::extra_debug("Url: $url");
-		cDebug::extra_debug("header: $sExtraHeader");
+		//cDebug::extra_debug("Url: $url");
+		//cDebug::extra_debug("header: $sExtraHeader");
 		
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
@@ -159,7 +170,10 @@ class cAppDynCore{
 	
 	//*****************************************************************
 	public static function  GET_restUI($psCmd, $pbCacheable = false){
-		return self::GET_restUI_with_payload($psCmd, null, $pbCacheable);
+		cDebug::enter();
+		$oData = self::GET_restUI_with_payload($psCmd, null, $pbCacheable);
+		cDebug::leave();
+		return $oData;
 	}
 
 	//*****************************************************************
@@ -168,7 +182,7 @@ class cAppDynCore{
 
 		cDebug::enter();
 		//-------------- get authentication info
-		$oCred = new cAppDynCredentials();
+		$oCred = new cADCredentials();
 		$oCred->check();
 		
 		//-------------- check the cache
@@ -210,104 +224,6 @@ class cAppDynCore{
 
 		cDebug::leave();
 		return $oData;
-	}
-	
-	
-	//*****************************************************************
-	//*
-	//*****************************************************************
-	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $psRollup="false", $pbCacheable=false, $pbMulti = false)
-	{
-		cDebug::enter();
-		if ($poTimes == null) cDebug::error("times are missing");
-		$sApp = $poApp->name;
-		
-		$sRangeType = "";
-		$sTimeCmd=cAppdynTime::make($poTimes);
-		
-		$encoded = rawurlencode($psMetricPath);
-		$encoded = str_replace(rawurlencode("*"),"*",$encoded);
-		
-		if ($sApp === self::SERVER_APPLICATION)
-			$sApp = self::ENCODED_SERVER_APPLICATION;		//special case
-		else
-			$sApp = rawurlencode($sApp);
-		
-		$url = "$sApp/metric-data?metric-path=$encoded&$sTimeCmd&rollup=$psRollup";
-		$oData = self::GET( $url ,$pbCacheable);
-		
-		$aOutput = $oData;
-		if (!$pbMulti && (count($oData) >0)) $aOutput = $oData[0]->metricValues; //watch out this will knobble the data
-		
-		cDebug::leave();
-		return $aOutput;		
-	}
-	
-	
-	//*****************************************************************
-	public static function GET_Metric_heirarchy($psApp, $psMetricPath, $pbCached=true, $poTimes = null)
-	{
-		cDebug::enter();
-		cDebug::extra_debug("get Heirarchy: $psMetricPath");
-		$encoded=rawurlencode($psMetricPath);	
-		$encoded = str_replace("%2A","*",$encoded);			//decode wildcards
-		
-		if ($psApp === self::SERVER_APPLICATION)
-			$sApp = self::ENCODED_SERVER_APPLICATION;		//special case
-		else
-			$sApp = rawurlencode($psApp);
-
-		$sCommand = "$sApp/metrics?metric-path=$encoded";
-		if ($poTimes !== null){
-			if ( $poTimes === self::BEFORE_NOW_TIME)
-				$sTimeCmd=cAppdynTime::beforenow();
-			else
-				$sTimeCmd=cAppdynTime::make($poTimes);
-			$sCommand .= "&$sTimeCmd";
-		}
-		
-		$oData = self::GET($sCommand, $pbCached);
-		cDebug::extra_debug("count of rows: ".count($oData));
-		cDebug::leave();
-		return $oData;
-	}
-	
-
-	//*****************************************************************
-	public static function GET_TransURL($psAppID, $psTransID){
-		$caption = "default";
-		$epoch = time();
-		
-		$duration = cAppDynCommon::get_duration();
-		switch($duration){
-			case 15:
-				$caption = "last_15_mins";
-				break;
-			case 30:
-				$caption = "last_30_mins";
-				break;
-			case 60:
-				$caption = "last_1_hour";
-				break;
-			case 120:
-				$caption = "last_2_hours";
-				break;
-			case 240:
-				$caption = "last_4_hours";
-				break;
-			case 1440:
-				$caption = "last_1_day";
-				break;
-			case 2880:
-				$caption = "last_2_days";
-				break;
-			case 4320:
-				$caption = "last_3_days";
-				break;
-		}
-
-		$sUrl = self::GET_controller()."/#location=APP_BT_DETAIL&timeRange=$caption.BEFORE_NOW.-1.$epoch.$duration&application=$psAppID&businessTransaction=$psTransID"; 
-		return $sUrl;
 	}
 }
 

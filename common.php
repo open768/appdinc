@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 require_once("$phpinc/ckinc/common.php");
 
-class cAppDynCommon{
+class cADCommon{
 	const TIME_SESS_KEY= "tsk";
 	const TIME_CUSTOM_FROM_KEY="tcfk";
 	const TIME_CUSTOM_TO_KEY="tctk";
@@ -52,8 +52,8 @@ class cAppDynCommon{
 	public static function get_duration(){
 		global $_SESSION;
 		
-		$duration = cCommon::get_session(cAppDynCommon::TIME_SESS_KEY);
-		if ($duration == cAppDynCommon::TIME_CUSTOM){
+		$duration = cCommon::get_session(cADCommon::TIME_SESS_KEY);
+		if ($duration == cADCommon::TIME_CUSTOM){
 			$hh1 = cCommon::get_session("fromh");
 			$mm1 = cCommon::get_session("fromm");
 			$hh2 = cCommon::get_session("toh");
@@ -73,10 +73,10 @@ class cAppDynCommon{
 		global $LINK_SESS_KEY;
 		global $_SESSION, $_SERVER;
 
-		$sess_key = cCommon::get_session(cAppDynCommon::TIME_SESS_KEY);
-		if ($sess_key == cAppDynCommon::TIME_CUSTOM){ 
-			$fromtime= $_SESSION[cAppDynCommon::TIME_CUSTOM_FROM_KEY];
-			$totime =  $_SESSION[cAppDynCommon::TIME_CUSTOM_TO_KEY];
+		$sess_key = cCommon::get_session(cADCommon::TIME_SESS_KEY);
+		if ($sess_key == cADCommon::TIME_CUSTOM){ 
+			$fromtime= $_SESSION[cADCommon::TIME_CUSTOM_FROM_KEY];
+			$totime =  $_SESSION[cADCommon::TIME_CUSTOM_TO_KEY];
 			$fromDate = date("d/m/y H:i", $fromtime/1000);
 			$toDate = date("d/m/y H:i", $totime/1000);
 			return "<b>Custom $fromDate to $toDate</b>";

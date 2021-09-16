@@ -13,12 +13,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$appdlib/appdynamics.php");
+require_once("$ADlib/appdynamics.php");
 
 //#################################################################
 //# CLASSES
 //#################################################################
-class cAppDynController{		
+class cADController{		
 	//****************************************************************
 	public static function GET_Controller_version(){
 		cDebug::enter();
@@ -37,10 +37,10 @@ class cAppDynController{
 	//****************************************************************
 	public static function GET_configuration(){
 		cDebug::enter();
-		$old_prefix = cAppDynCore::$URL_PREFIX;
-		cAppDynCore::$URL_PREFIX = cAppDynCore::CONFIG_METRIC_PREFIX ;
-		$oData = cAppDynCore::GET("?");
-		cAppDynCore::$URL_PREFIX = $old_prefix ;
+		$old_prefix = cADCore::$URL_PREFIX;
+		cADCore::$URL_PREFIX = cADCore::CONFIG_METRIC_PREFIX ;
+		$oData = cADCore::GET("?");
+		cADCore::$URL_PREFIX = $old_prefix ;
 		cDebug::leave();
 		return $oData;
 	}
@@ -48,14 +48,14 @@ class cAppDynController{
 	//*****************************************************************
 	public static function GET_Applications(){
 		cDebug::enter();
-		if ( cAppDyn::is_demo()) return cAppDynDemo::GET_Applications();
+		if ( cAD::is_demo()) return cADDemo::GET_Applications();
 		
-		$aData = cAppDynCore::GET('?',true);
-		if ($aData)	uasort($aData,"Appd_name_sort_fn");
+		$aData = cADCore::GET('?',true);
+		if ($aData)	uasort($aData,"AD_name_sort_fn");
 		$aOut = [];
 		foreach ($aData as $oItem){
 			if ($oItem->name !== null){
-				$oApp = new cAppDApp($oItem->name, $oItem->id);
+				$oApp = new cADApp($oItem->name, $oItem->id);
 				$aOut[] = $oApp;
 			}
 		}
@@ -68,12 +68,18 @@ class cAppDynController{
 	//*****************************************************************
 	public static function GET_Databases(){
 		cDebug::enter();
-		$sMetricPath= cAppDynMetric::databases();
-		$oData = cAppdynCore::GET_Metric_heirarchy(cAppDynCore::DATABASE_APPLICATION, $sMetricPath, false);
+		$sMetricPath= cADMetric::databases();
+		$oData = (cADApp::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
 		cDebug::leave();
 		return $oData;
 	}
 
+	//*****************************************************************
+	public static function GET_Database_ServerStats($psDB){
+		$sMetricPath= cADMetric::databaseServerStats($psDB);
+		return  (cADApp::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
+	}
+	
 	//*****************************************************************
 	public static function GET_allBackends(){
 		cDebug::enter();
@@ -85,7 +91,7 @@ class cAppDynController{
 			foreach ($aBackends as $oBackend){
 				$sBName = $oBackend->name;
 				if (!isset($aServices[$sBName])) $aServices[$sBName] = [];
-				$aServices[$sBName][] = new cAppDApp($oApp->name, $oApp->id);
+				$aServices[$sBName][] = new cADApp($oApp->name, $oApp->id);
 			}
 		}
 		ksort($aServices);
@@ -97,14 +103,14 @@ class cAppDynController{
 	public static function GET_server_nodes_with_MQ(){
 		cDebug::enter();
 		
-		$oTime = new cAppDynTimes();
-		$oTime->time_type = cAppDynTimes::BEFORE_NOW;
+		$oTime = new cADTimes();
+		$oTime->time_type = cADTimes::BEFORE_NOW;
 		$oTime->duration = 5;
 		
 		//fetch the data
-		$sMetricPath= cAppDynMetric::serverNodesWithMQ();  
-		$oApp = new cAppdApp(cAppDynCore::SERVER_APPLICATION, cAppDynCore::SERVER_APPLICATION);
-		$oData = cAppDynCore::GET_MetricData($oApp, $sMetricPath, $oTime, false,true,true);
+		$sMetricPath= cADMetric::serverNodesWithMQ();  
+		$oApp = new cADApp(cADCore::SERVER_APPLICATION, cADCore::SERVER_APPLICATION);
+		$oData = $oApp->GET_MetricData($sMetricPath, $oTime, false,true,true);
 		if (gettype($oData) === "NULL")		cDebug::error("no data returned");
 		cDebug::extra_debug("type of data returned is :". gettype($oData));
 		cDebug::vardump($oData);
@@ -113,7 +119,7 @@ class cAppDynController{
 		$aOut = [];
 		foreach ($oData as $oItem){
 			
-			if ($oItem->metricName !== cAppDynCore::METRIC_NOT_FOUND){
+			if ($oItem->metricName !== cADCore::METRIC_NOT_FOUND){
 				$sMetric = $oItem->metricPath;
 				$sMetric = preg_replace("/^.*Nodes\|(.*)\|Custom.*$/", "$1", $sMetric);
 				$aOut[] = $sMetric;
@@ -123,5 +129,6 @@ class cAppDynController{
 		cDebug::leave();
 		return $aOut;
 	}
+	
 }
 ?>
