@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 
-require_once("$ADlib/appdynamics.php");
+require_once("$ADlib/AD.php");
 require_once("$phpinc/ckinc/header.php");
 
 

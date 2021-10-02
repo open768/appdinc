@@ -51,6 +51,17 @@ class cADControllerUI{
 	}
 	
 	//###############################################################################################
+	public static function analytics_home(){
+		return self::pr__get_location("ANALYTICS_HOME");
+	}
+	public static function analytics_config(){
+		return self::pr__get_location("ANALYTICS_CONFIG_TXN_ANALYTICS_CONFIGURATION");
+	}
+	public static function log_analytics_config(){
+		return self::pr__get_location("ANALYTICS_SOURCE_CONFIG");
+	}
+	
+	//###############################################################################################
 	public static function apps_home(){
 		return self::pr__get_location("APPS_ALL_DASHBOARD");
 	}

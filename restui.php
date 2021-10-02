@@ -79,6 +79,12 @@ class cADCorrelatedEvent{
 	public $type= "";
 	public $summary= "";
 	public $id = "";
+	public $parentid = "";
+}
+
+class cADLogDetailRequest{
+	public $id;
+	public $version;
 }
 
 
@@ -112,6 +118,47 @@ class cAD_RestUI{
 			cDebug::extra_debug("cached");
 		cDebug::leave();
 		return self::$iAccount;
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* analyTICS
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_log_analytics_sources(){
+		cDebug::enter();
+		$sUrl = "analytics/logsources";
+		$aData = cADCore::GET_restUI($sUrl, true);
+		uasort($aData,"AD_name_sort_fn");
+
+		cDebug::leave();
+		return $aData;
+	}
+	
+	//*******************************************************************
+	public static function GET_log_analytics_details($psID){
+		cDebug::enter();
+		$aData = null;
+		$oFound = null;
+		
+		//find the details from GET_log_analytics_sources
+		cDebug::extra_debug("looking for ID $psID");
+		$aSources = self::GET_log_analytics_sources();
+		foreach ($aSources as $oSource)
+			if ($oFound == null)
+				if ($oSource->id == $psID)
+					$oFound = $oSource;
+				
+		
+		if ($oFound==null)
+			cDebug::error("didnt find log source with id $psID");
+		
+		//---------make the request to get more information
+		$sUrl = "analytics/logsources/extract-fields";
+		$sEncoded =  json_encode($oFound);
+		cDebug::extra_debug("Request payload: $sEncoded");
+		$aData = cADCore::GET_restUI_with_payload($sUrl,$sEncoded);
+
+		cDebug::leave();
+		return $aData;
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -186,6 +233,8 @@ class cAD_RestUI{
 		foreach ($paEvents as $oEvent){
 			$aRequest[] = new cADCorrelatedEventRequest($oEvent->id);
 		}
+		//cDebug::vardump($aRequest);
+		
 		//$sTime = cADTime::beforenow(60);
 		$sTime = "timeRangeString=last_1_hour.BEFORE_NOW.-1.-1.60";
 		$sUrl = "events/correlatedEvents?$sTime";
@@ -203,7 +252,20 @@ class cAD_RestUI{
 				
 				$sID = strval($oItem->id);
 				$oObj->id = $sID;
-				$aOutput[$sID] = $oObj;
+				
+				$sCorrelatedID = "";
+				$aCorrelated = $oItem->correlationKeys;
+				foreach ($aCorrelated as $oCorrelated){
+					if ($oCorrelated->correlationType === "PARENT_EVENT_ID")
+						$sCorrelatedID = $oCorrelated->correlationValue;
+				}
+
+				if ($sCorrelatedID === "") 
+					cDebug::extra_debug("no correlation ID found for $sID");
+				else{
+					$oObj->parentid = $sCorrelatedID;
+					$aOutput[$sCorrelatedID] = $oObj;
+				}
 			}
 		//cDebug::vardump($aOutput);
 		
@@ -271,7 +333,7 @@ class cAD_RestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_snapshot_segments($psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getRequestSegmentData?requestGUID=$psGUID&$sTimeUrl";
 			$aResult = cADCore::GET_restUI($sURL);
@@ -282,7 +344,7 @@ class cAD_RestUI{
 	//************************************************************************************
 	public static function GET_snapshot_problems($poApp,$psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime, "time-range");
 			$sURL = "snapshot/potentialProblems?request-guid=$psGUID&applicationId=$poApp->id&$sTimeUrl&max-problems=50&max-rsds=30&exe-time-threshold=5";
 			$aResult = cADCore::GET_restUI($sURL);
@@ -293,7 +355,7 @@ class cAD_RestUI{
 	//************************************************************************************
 	public static function GET_snapshot_flow($poSnapShot){
 		cDebug::enter();
-			$oTime = cADUtil::make_time_obj($poSnapShot->serverStartTime);
+			$oTime = new cADTimes($poSnapShot->serverStartTime);
 			$sAid = $poSnapShot->applicationId;
 			$sBtID = $poSnapShot->businessTransactionId;
 			$sGUID = $poSnapShot->requestGUID;
@@ -308,7 +370,7 @@ class cAD_RestUI{
 	//************************************************************************************
 	public static function GET_snapshot_expensive_methods($psGUID, $piSnapTime){
 		cDebug::enter();
-			$oTime = cADUtil::make_time_obj($piSnapTime);
+			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getMostExpensiveMethods?limit=30&max-rsds=30&$sTimeUrl&mapId=-1";
 			$oResult = cADCore::GET_restUI_with_payload($sURL,$psGUID);
@@ -322,7 +384,6 @@ class cAD_RestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_service_end_points($poTier){
 		cDebug::enter();
-		//serviceEndpoint/list2/1424/1424/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60
 		$iTid = $poTier->id;
 		$iAid = $poTier->app->id;
 		$sURL = "serviceEndpoint/list2/$iAid/$iAid/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60";

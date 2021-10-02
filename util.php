@@ -96,6 +96,11 @@ class cEventAnalysisOutput{
 	public $analysis = null;
 }
 
+class cAgentAnalysis{
+	public $machineAgents = null;
+	public $appAgents = null;
+}
+
 class CAD_CorrelatedEvent{
 	public $id;
 	public $type;
@@ -104,6 +109,12 @@ class CAD_CorrelatedEvent{
 	public $severity;
 	public $action = null;
 	public $deepLinkUrl;
+}
+
+class cTierErrorsAnalysis{
+	public $name;
+	public $count;
+	public $average;
 }
 
 
@@ -203,6 +214,41 @@ class cADUtil {
 	}
 
 	//*****************************************************************
+	public static function analyse_agent_versions($paNodes){
+		cDebug::enter();
+		$aMachineAgentCounts = [];
+		$aAppAgentCounts = [];
+
+		foreach ($paNodes as $aNodes)
+			foreach ($aNodes as $oNode){
+				if ($oNode->machineAgentPresent){
+					$sAgent = self::extract_agent_version($oNode->machineAgentVersion);
+					if (array_key_exists($sAgent, $aMachineAgentCounts))
+						$aMachineAgentCounts[$sAgent] ++;
+					else
+						$aMachineAgentCounts[$sAgent] = 1;
+				}
+				if ($oNode->appAgentPresent){
+					$sAgent = self::extract_agent_version($oNode->appAgentVersion);
+					if (array_key_exists($sAgent, $aAppAgentCounts))
+						$aAppAgentCounts[$sAgent] ++;
+					else
+						$aAppAgentCounts[$sAgent] = 1;
+				}
+			}
+			
+		
+		$oOutput = new cAgentAnalysis;
+		$oOutput->machineAgents = $aMachineAgentCounts;
+		$oOutput->appAgents = $aAppAgentCounts;
+		
+		cDebug::vardump($oOutput);
+		
+		cDebug::leave();
+		return $oOutput;
+}
+	
+	//*****************************************************************
 	public static function analyse_app_nodes($paNodes){
 		cDebug::enter();
 		$aTierData = [];
@@ -221,7 +267,7 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
-	public static function Analyse_Metrics($poData)
+	public static function Analyse_Metrics($paData)
 	{
 		$max = 0; 
 		$count = 0;
@@ -229,9 +275,16 @@ class cADUtil {
 		$min = -1;
 		$sum=0;
 		$avg=0;
+		$bDumped = false;
 		
-		foreach( $poData as $oRow)
+		cDebug::enter();
+		foreach( $paData as $oRow)
 		{
+			if (!$bDumped){
+				cDebug::vardump($oRow);
+				$bDumped = true;
+			}
+				
 			$value = $oRow->value;	
 		
 			$max = max($max, $value, $oRow->max);
@@ -260,6 +313,7 @@ class cADUtil {
 		$oResult->avg = round($avg,2);
 		$oResult->count= $count;
 		
+		cDebug::leave();
 		return $oResult;
 	}
 	
@@ -343,12 +397,52 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
+	public static function analyse_CorrelatedEventActions($paEvents){
+		cDebug::enter();
+		$aAnalysed = [];
+		$aTypes = [];
+		
+		//---------------------------------------------------
+		foreach ($paEvents as $oEvent){
+			if ($oEvent->action) {
+				$sPolicy = $oEvent->policy;
+				$sActionType = $oEvent->action->type;
+				
+				if (array_key_exists($sPolicy, $aAnalysed))
+					$oItem = $aAnalysed[$sPolicy];
+				else{
+					$oItem = new cEventAnalysis;
+					$oItem->name = $sPolicy;
+					$aAnalysed[$sPolicy] = $oItem;
+				}
+				$oItem->add($sActionType);
+			}
+		}
+		
+		//add the type to the array
+		if (!array_key_exists($sActionType, $aTypes)) 
+			$aTypes[$sActionType] = 1;
+		
+		//---------------------------------------------------
+		ksort($aAnalysed);
+		ksort($aTypes);
+		$oOutput = new cEventAnalysisOutput;
+		$oOutput->analysis = $aAnalysed;
+		$oOutput->types = $aTypes;
+		
+		cDebug::leave();
+		return $oOutput;
+	}
+	
+	//*****************************************************************
 	public static function analyse_CorrelatedEvents($paEvents, $paCorrelated)
 	{
 		cDebug::enter();
 		$aOutput=[];
+		$aEventIds = [];
 		$iActionCount = 0;
 		
+		//---------------------------------------------------
 		foreach ($paEvents as $oEvent){
 			$aPolicy = cADUtil::get_event_policy($oEvent);
 			$sPolicy  = $aPolicy["policy"];
@@ -360,6 +454,7 @@ class cADUtil {
 			$oOut->severity = $oEvent->severity;
 			$oOut->eventTime = $oEvent->eventTime;
 			$oOut->id = $sID;
+			$aEventIds[] = $sID;
 			$oOut->type = $sType;
 			$oOut->policy = $sPolicy;
 			$oOut->deepLinkUrl = $oEvent->deepLinkUrl;
@@ -372,7 +467,14 @@ class cADUtil {
 			
 			$aOutput[] = $oOut;
 		}
-		if ($iActionCount  == 0) cDebug::write("no actions");
+		if ($iActionCount  == 0) {
+			cDebug::extra_debug("vardump Events");
+			cDebug::vardump($aEventIds);
+			
+			cDebug::extra_debug("vardump correlated");
+			cDebug::vardump($paCorrelated);
+			cCommon::messagebox("no actions");
+		}
 		
 		cDebug::leave();
 		return $aOutput;
@@ -406,6 +508,7 @@ class cADUtil {
 				$aTypes[$oEvent->type] = 1;
 		}
 		
+		//---------------------------------------------------
 		ksort($aAnalysed);
 		ksort($aTypes);
 		$oOutput = new cEventAnalysisOutput;
@@ -417,6 +520,25 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
+	public static function analyse_tier_errors($poTier, $paData){
+		$aOutput = [];
+		
+		foreach ($paData as $oItem){
+			if ($oItem == null ) continue;
+			if ($oItem->metricValues == null ) continue;
+			$oValues = $oItem->metricValues[0];
+			if ($oValues->count == 0 ) continue;
+			
+			$oEntry = new cTierErrorsAnalysis;
+			$oEntry->name = cADUtil::extract_error_name($poTier->name, $oItem->metricPath);
+			$oEntry->count = $oValues->count;
+			$oEntry->average = $oValues->value;
+			$aOutput[] = $oEntry;
+		}
+		return $aOutput;
+	}
+	
+	//################################################################
 	public static function extract_bt_name($psMetric, $psTier){
 		$sLeft = cADMetric::tierTransactions($psTier);
 		$sOut = substr($psMetric, strlen($sLeft)+1);
@@ -470,10 +592,14 @@ class cADUtil {
 		if (preg_match("/^[\d\.]+$/",$psInput))
 			return $psInput;
 		
-		if (preg_match("/\s+(v[\d\.]+\s\w+)/",$psInput, $aMatches))
+	if (preg_match("/\s+v([\d\.-]+)\s\w+/",$psInput, $aMatches))
 			return $aMatches[1];
-		else	
-			return "unknown $psInput";
+
+		if (preg_match("/([\d\.-]+)\scomp/",$psInput, $aMatches))
+			return $aMatches[1];
+		
+		
+		return "unknown - $psInput";
 	}
 	
 	//*****************************************************************
@@ -538,6 +664,7 @@ class cADUtil {
 		
 		foreach ($aNodes as $oNode){
 			$aSegments = $oNode->requestSegmentDataItems;
+			if ($aSegments==null) continue;
 			if (count($aSegments)==0) continue;
 			
 			foreach ($aSegments as $oSegment){

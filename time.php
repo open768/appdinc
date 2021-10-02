@@ -22,8 +22,12 @@ class cADTimes{
 	public $end;
 	public $duration;
 	
-	function __construct() {	
+	function __construct($piTime = null) {	
 		$this->time_type = self::BETWEEN;
+		if ($piTime){
+			$this->start = $piTime - 5000;
+			$this->end = $piTime + 5000;
+		}
 	}
 }
 

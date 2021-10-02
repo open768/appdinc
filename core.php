@@ -156,8 +156,10 @@ class cADCore{
 				self::login();
 				cDebug::write("finished logging in, trying again");
 				$oData = $oHttp->getjson($url);
-			}else
+			}else{
+				cDebug::write("unknown error: ".$e->getMessage());
 				throw($e);
+			}
 		}
 		
 		//----- 
@@ -180,22 +182,21 @@ class cADCore{
 	public static function  GET($psCmd, $pbCacheable = false, $pbPrefix=true, $pbSuffix=true){
 		global $oData;
 
-		cDebug::enter();
+		//cDebug::enter();
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
 		
 		//-------------- check the cache
-		cDebug::write("getting $psCmd");
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd;
 		
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
-			cDebug::extra_debug("cached");
+			cDebug::extra_debug("$psCmd cached");
 			$iOld = cHash::$CACHE_EXPIRY;		//TBD to replace with cache instance
 			cHash::$CACHE_EXPIRY = 600; //10 mins
 			$oData = cHash::get($sCacheCmd); 
 			cHash::$CACHE_EXPIRY = $iOld; //whatever it was
-			cDebug::leave();
+			//cDebug::leave();
 			return $oData;
 		}
 		
@@ -216,13 +217,12 @@ class cADCore{
 		$oHttp->USE_CURL = false;
 		
 		$oHttp->set_credentials($sCred,$oCred->get_password());
-		//$oHttp->extra_header = "";	//TODO dont use the password here use the tokens
 		$oData = $oHttp->getjson($sUrl);
 		
 		//----- 
 		if ($pbCacheable)	cHash::put($sCacheCmd, $oData,true);
 
-		cDebug::leave();
+		//cDebug::leave();
 		return $oData;
 	}
 }

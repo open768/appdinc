@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/appdynamics.php");
+require_once("$ADlib/AD.php");
 
 //#################################################################
 //# CLASSES
@@ -53,12 +53,12 @@ class cADController{
 		$aData = cADCore::GET('?',true);
 		if ($aData)	uasort($aData,"AD_name_sort_fn");
 		$aOut = [];
-		foreach ($aData as $oItem){
-			if ($oItem->name !== null){
-				$oApp = new cADApp($oItem->name, $oItem->id);
-				$aOut[] = $oApp;
-			}
-		}
+		foreach ($aData as $oItem)
+			if ($oItem->name !== null)
+				if (strtolower($oItem->name) !== "analytics"){
+					$oApp = new cADApp($oItem->name, $oItem->id);
+					$aOut[] = $oApp;
+				}
 		
 		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
 		cDebug::leave();

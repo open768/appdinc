@@ -87,5 +87,17 @@ class cADCommon{
 			return "<b>last $duration mins up-to ".date("F j, Y, g:i a"). "</b>";
 		}
 	}
+
+	//**************************************************************************
+	public static function button ($psUrl, $psCaption = "Launch in AppDynamics"){
+		$sClass="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect";
+		?>
+			<button class="<?=$sClass?>" onclick="window.open('<?=$psUrl?>','appdynamics');">
+				<i class="material-icons-outlined">north_east</i>
+				&nbsp;
+				<?=$psCaption?>
+			</button>
+		<?php
+	}
 }
 

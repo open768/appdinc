@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/appdynamics.php");
+require_once("$ADlib/AD.php");
 
 //#################################################################
 //# 
@@ -24,13 +24,18 @@ class cADApp{
 	
 	public $name, $id;
 	function __construct($psAppName, $psAppId=null) {	
-		if ($psAppName == null) cDebug::error("null app name");
+		if (!$psAppName  && !$psAppId) cDebug::error("no app details provided");
 
-		$this->name = $psAppName;
-		if ($psAppId == null)
-			$this->pr__get_id();
-		else
+		if ($psAppName){
+			$this->name = $psAppName;
+			if (!$psAppId)
+				$this->pr__get_id();
+			else
+				$this->id = $psAppId;
+		}else{
 			$this->id = $psAppId;
+			$this->name = $this->pr__get_name();
+		}
 	}
    
 	//*****************************************************************
@@ -38,15 +43,38 @@ class cADApp{
 		$aApps = cADController::GET_Applications();
 		$sID = null;
 		
+		$sLower = strtolower($this->name);
 		foreach ($aApps as $oApp){
-			if  ($oApp->name === $this->name){
+			if  (strtolower($oApp->name) === $sLower){
 				$sID = $oApp->id;
 				break;
 			}
 		}
 		
-		if ($sID !== null)	$this->id = $sID;
+		if ($sID == null)	
+			cDebug::error("unable to find application id with name: $sLower");
+		else
+			$this->id = $sID;
 		return $sID;
+	}
+	//*****************************************************************
+	public function pr__get_name(){
+		$aApps = cADController::GET_Applications();
+		$sName = null;
+		
+		foreach ($aApps as $oApp){
+			if  ($oApp->id == $this->id){
+				$sName = $oApp->name;
+				break;
+			}
+		}
+		
+		if ($sName == null)	
+			cDebug::error("unable to find application name with ID: $this->id");
+		else
+			$this->name = $sName;
+	
+		return $sName;
 	}
 	
 	//*****************************************************************
@@ -88,12 +116,35 @@ class cADApp{
 	}
 
 	//*****************************************************************
+	public function GET_flowmap(){
+		cDebug::enter();
+		$oData = cAD_RestUI::GET_app_flowmap($this);
+		cDebug::leave();
+		
+		return $oData;
+	}
+	
+	//*****************************************************************
 	public function GET_HealthRules(){
 		cDebug::enter();
+
 		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
 		$aData = cADCore::GET($sUrl,true,false,false);
+		if ($aData) uasort($aData, "AD_name_sort_fn");
 		cDebug::leave();
+		
 		return $aData;
+	}
+	
+	//*****************************************************************
+	public function GET_HealthRuleDetail($piRuleID){
+		cDebug::enter();
+
+		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules/$piRuleID";	
+		$oData = cADCore::GET($sUrl,true,false,false);
+		cDebug::leave();
+		
+		return $oData;
 	}
 	
 	//*****************************************************************
@@ -194,10 +245,16 @@ class cADApp{
 	}
 	
 	//*****************************************************************
-	public function GET_Tiers(){
+	public function GET_raw_tiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_Tiers($this);
 		$sApp = rawurlencode($this->name);
-		$aData = cADCore::GET("$sApp/tiers?" );
+		$aData = cADCore::GET("$sApp/tiers?",true );
+		return $aData; 
+	}
+	
+	public function GET_Tiers(){
+		cDebug::enter();
+		$aData = $this->GET_raw_tiers();
 		if ($aData) uasort($aData,"AD_name_sort_fn");
 		
 		$aOutTiers = [];
@@ -208,6 +265,7 @@ class cADApp{
 			$aOutTiers[] = $oOutTier;
 		}
 		
+		cDebug::leave();
 		return $aOutTiers;
 	}
 
