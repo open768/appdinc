@@ -79,7 +79,7 @@ class cADInfraMetric{
 			$oDetails->metric = $oMetric;
 			$aOut[] = $oDetails;
 		}
-		uasort($aOut,"ad_sort_by_metric_short");
+		usort($aOut,"ad_sort_by_metric_short");
 		return $aOut;
 	}
 		

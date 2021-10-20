@@ -15,14 +15,45 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //see 
 require_once("$ADlib/AD.php");
 
-//#################################################################
+class cAppCheckupMessage{
+	public $message;
+	public $is_bad;
+	public $extra;
+}
+class cAppCheckupAnalysis{
+	public $DCs = [];
+	public $BTs = [];
+	public $tiers = [];
+	public $backends = [];
+}
+
+
 //# 
-//#################################################################
-class cADApp{
-	public static $db_app = null;
-	public static $server_app = null;
+class cADApp{	
+	//#################################################################
+	public static function GET_Applications(){
+		cDebug::enter();
+		if ( cAD::is_demo()) return cADDemo::GET_Applications();
+		
+		$aData = cADCore::GET('?',true);
+		if ($aData)	usort($aData,"AD_name_sort_fn");
+		$aOut = [];
+		foreach ($aData as $oItem)
+			if ($oItem->name !== null)
+				if (strtolower($oItem->name) !== "analytics"){
+					$oApp = new cADApp($oItem->name, $oItem->id);
+					$aOut[] = $oApp;
+				}
+		
+		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
+		cDebug::leave();
+		return $aOut;		
+	}
 	
+	//#################################################################
+	public static $server_app = null;
 	public $name, $id;
+	
 	function __construct($psAppName, $psAppId=null) {	
 		if (!$psAppName  && !$psAppId) cDebug::error("no app details provided");
 
@@ -39,27 +70,34 @@ class cADApp{
 	}
    
 	//*****************************************************************
-	public function pr__get_id(){
-		$aApps = cADController::GET_Applications();
+	private function pr__get_id(){
+		$aApps = cADApp::GET_Applications();
 		$sID = null;
 		
-		$sLower = strtolower($this->name);
-		foreach ($aApps as $oApp){
-			if  (strtolower($oApp->name) === $sLower){
-				$sID = $oApp->id;
+		switch($this->name){
+			case cADCore::DATABASE_APPLICATION:
+			case cADCore::SERVER_APPLICATION:
+				$sID = $this->name;
 				break;
-			}
+			default:
+				$sLower = strtolower($this->name);
+				foreach ($aApps as $oApp)
+					if  (strtolower($oApp->name) === $sLower){
+						$sID = $oApp->id;
+						break;
+					}
 		}
 		
-		if ($sID == null)	
+		if ($sID == null)
 			cDebug::error("unable to find application id with name: $sLower");
 		else
 			$this->id = $sID;
+		
 		return $sID;
 	}
 	//*****************************************************************
-	public function pr__get_name(){
-		$aApps = cADController::GET_Applications();
+	private function pr__get_name(){
+		$aApps = cADApp::GET_Applications();
 		$sName = null;
 		
 		foreach ($aApps as $oApp){
@@ -77,6 +115,114 @@ class cADApp{
 		return $sName;
 	}
 	
+	//#################################################################
+	//#################################################################
+	public function checkup(){
+		cDebug::enter();
+
+		$aTrans = $this->GET_Transactions();
+		$oOut = new cAppCheckupAnalysis;
+		
+		//-------------BTs --------------------------------
+		cDebug::extra_debug("analysing app $this->name");
+		$iCount = count($aTrans);
+		$sCaption  = "There are $iCount BTs.";
+		$bBad = true;
+		
+		if ($iCount < 5)
+			$sCaption .= " There are too few BTs - check BT detection configuration";
+		elseif ($iCount >=250)
+			$sCaption .= " This must be below 250. <b>Investigate configuration</b>";
+		elseif ($iCount >=50)
+			$sCaption .= " The number of transactions is very high";
+		elseif ($iCount >=30)
+			$sCaption .= " The number of transactions is on the high side. we recommend no more than about 30 BTs per application";
+		else
+			$bBad = false;
+		
+		$oMsg = new cAppCheckupMessage();
+		$oMsg->message = $sCaption;
+		$oMsg->is_bad = $bBad;
+		$oOut->BTs[] = $oMsg;
+		
+		//-------------Data Collectors ----------------------
+		cDebug::extra_debug("counting data collectors");
+		$aDCs = $this->GET_data_collectors();
+		$oMsg = new cAppCheckupMessage;
+		$oMsg->extra = "data collectors";
+		if (!$aDCs || count($aDCs) ==0){
+			$oMsg->message = "no Data Collectors defined";
+			$oMsg->is_bad = true;
+		}elseif (count($aDCs)==1 && ($aDCs[0]->name === "Default HTTP Request Data Collector")){
+			$oMsg->message = "only the Default HTTP Request DC defined: ";
+			$oMsg->is_bad = true;
+		}else{
+			$oMsg->message = "number of DCs defined: ".count($aDCs);
+			$oMsg->is_bad = false;
+		}
+		$oOut->DCs[] = $oMsg;
+		
+		
+		//-------------tiers --------------------------------
+		cDebug::extra_debug("counting tiers");
+		$aTierCount = []; 	//counts the transactions per tier
+		foreach ($aTrans as $oTrans){
+			$sTier = $oTrans->tierName;
+			if (! isset($aTierCount[$sTier])) $aTierCount[$sTier] = 0;
+			$aTierCount[$sTier] = $aTierCount[$sTier] +1;
+		}
+		
+		if (count($aTierCount) == 0){
+			$oMsg = new cAppCheckupMessage;
+			$oMsg->message = "no tiers defined";
+			$oMsg->extra = "tiers";
+			$oMsg->is_bad = true;
+			$oOut->tiers[] = $oMsg;
+		}else{
+			foreach ($aTierCount as $sTier=>$iCount){
+				
+				$bBad = true;
+				$sCaption = "There are $iCount BTs.";
+				if ($iCount >=50)
+					$sCaption .= " This must be below 50. <b>Investigate instrumentation</b>";
+				elseif ($iCount >=10)
+					$sCaption .= " The number of transactions is on the high side. we recommend around a max of 10 BTs per tier ";
+				else
+					$bBad = false;
+
+				$oMsg = new cAppCheckupMessage;
+				$oMsg->message = $sCaption;
+				$oMsg->is_bad = $bBad;
+				$oMsg->extra = $sTier;
+				$oOut->tiers[] = $oMsg;
+			}
+		}
+		
+		//-------------backends --------------------------------
+		$aBackends = $this->GET_Backends();
+		$iCount = count($aBackends);
+		if ($iCount ==0){
+			$sCaption = "There no remote services detected.";
+			$bBad = false;
+		}else{
+			$bBad = true;
+			$sCaption = "There are $iCount remote services.";
+			if ($iCount >=50)
+				$sCaption .= " its a little on the high side";
+			elseif ($iCount >=100)
+				$sCaption .= " this doesnt look right, check the detection";
+			else
+				$bBad = false;
+		}
+		$oMsg = new cAppCheckupMessage;
+		$oMsg->message = $sCaption;
+		$oMsg->is_bad = $bBad;
+		$oOut->backends[] = $oMsg;
+		
+		//-------------BTs --------------------------------
+		cDebug::leave();
+		return $oOut;
+	}
 	//*****************************************************************
 	public function GET_Backends(){
 		if ( cAD::is_demo()) return cADDemo::GET_Backends(null);
@@ -85,11 +231,15 @@ class cADApp{
 	}
 
 	//*****************************************************************
-	//see events reference at https://docs.appdynamics.com/display/PRO14S/Events+Reference
-	/*
-	but the UI uses restui https://xxxx.saas.appdynamics.com/controller/restui/events/query
-	//with payload:	//{"queryCursor":{"timeRange":{"type":"BEFORE_NOW","durationInMinutes":60}},"eventStreamItemFilter":{"applicationIds":[354],"policyViolationStartedWarning":true,"policyViolationStartedCritical":true,"machineLearningStartedWarning":true,"machineLearningStartedCritical":true,"codeDeadlock":true,"resourcePoolLimit":true,"applicationDeployment":true,"appServerRestart":true,"appConfigChange":true,"applicationCrash":true,"clrCrash":true,"license":true,"controllerDiskSpaceLow":true,"agentVersionNewerThanController":true,"agentConfigurationError":true,"controllerMetricRegistrationLimitReached":true,"agentMetricRegistrationLimitReached":true,"devModeConfigUpdate":true,"syntheticAvailabilityHealthy":true,"syntheticAvailabilityWarning":true,"syntheticAvailabilityConfirmedWarning":true,"syntheticAvailabilityOngoingWarning":true,"syntheticAvailabilityError":true,"syntheticAvailabilityConfirmedError":true,"syntheticAvailabilityOngoingError":true,"syntheticPerformanceHealthy":true,"syntheticPerformanceWarning":true,"syntheticPerformanceConfirmedWarning":true,"syntheticPerformanceOngoingWarning":true,"syntheticPerformanceCritical":true,"syntheticPerformanceConfirmedCritical":true,"syntheticPerformanceOngoingCritical":true,"mobileNewCrash":true,"customEventFilters":[],"networkIncluded":true,"clusterEvents":false,"businessTransactionIds":[],"applicationComponentIds":[],"applicationComponentNodeIds":[],"timeRange":{"type":"BEFORE_NOW","durationInMinutes":60}}}
-	*/
+	public function GET_data_collectors(){
+		cDebug::enter();
+		$aData = cADRestUI::get_app_data_collectors($this);
+		usort($aData, "AD_name_sort_fn");
+		cDebug::leave();
+		return $aData;
+	}
+	
+	//*****************************************************************
 	public function GET_Events($poTimes, $psEventType = null){
 		$sApp = rawurlencode($this->name);
 		$sTimeQs = cADTime::make($poTimes);
@@ -110,7 +260,7 @@ class cADApp{
 		cDebug::enter();
 		$sMetricPath= cADMetric::appBackends();
 		$aMetrics = $this->GET_Metric_heirarchy($sMetricPath,false); //dont cache
-		if ($aMetrics) uasort($aMetrics,"AD_name_sort_fn");
+		if ($aMetrics) usort($aMetrics,"AD_name_sort_fn");
 		cDebug::leave();
 		return $aMetrics;
 	}
@@ -118,7 +268,7 @@ class cADApp{
 	//*****************************************************************
 	public function GET_flowmap(){
 		cDebug::enter();
-		$oData = cAD_RestUI::GET_app_flowmap($this);
+		$oData = cADRestUI::GET_app_flowmap($this);
 		cDebug::leave();
 		
 		return $oData;
@@ -130,7 +280,7 @@ class cADApp{
 
 		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
 		$aData = cADCore::GET($sUrl,true,false,false);
-		if ($aData) uasort($aData, "AD_name_sort_fn");
+		if ($aData) usort($aData, "AD_name_sort_fn");
 		cDebug::leave();
 		
 		return $aData;
@@ -230,21 +380,6 @@ class cADApp{
 	}
 
 	//*****************************************************************
-	public function GET_snaphot_info($psTransID, $poTimes){
-		/*should use instead
-		eg https://xxx.saas.appdynamics.com/controller/restui/snapshot/snapshotListDataWithFilterHandle		{"firstInChain":false,"maxRows":600,"applicationIds":[1424],"businessTransactionIds":[],"applicationComponentIds":[4561],"applicationComponentNodeIds":[],"errorIDs":[],"errorOccured":null,"userExperience":[],"executionTimeInMilis":null,"endToEndLatency":null,"url":null,"sessionId":null,"userPrincipalId":null,"dataCollectorFilter":null,"archived":null,"guids":[],"diagnosticSnapshot":null,"badRequest":null,"deepDivePolicy":[],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":15}}		
-		*/
-		
-		$sApp = rawurlencode($this->name);
-		$sUrl = cHttp::build_url("$sApp/request-snapshots", cADTime::make($poTimes));
-		$sUrl = cHttp::build_url($sUrl, "application_name", $sApp);
-		//$sUrl = cHttp::build_url($sUrl, "application-component-ids", $psTierID);
-		$sUrl = cHttp::build_url($sUrl, "business-transaction-ids", $psTransID);
-		$sUrl = cHttp::build_url($sUrl, "output", "JSON");
-		return cADCore::GET($sUrl);
-	}
-	
-	//*****************************************************************
 	public function GET_raw_tiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_Tiers($this);
 		$sApp = rawurlencode($this->name);
@@ -255,7 +390,7 @@ class cADApp{
 	public function GET_Tiers(){
 		cDebug::enter();
 		$aData = $this->GET_raw_tiers();
-		if ($aData) uasort($aData,"AD_name_sort_fn");
+		if ($aData) usort($aData,"AD_name_sort_fn");
 		
 		$aOutTiers = [];
 
@@ -272,13 +407,33 @@ class cADApp{
 
 	//*****************************************************************
 	public function GET_Transactions(){		
+		cDebug::enter();
 		$sApp = rawurlencode($this->name);
-		return cADCore::GET("$sApp/business-transactions?" );
+		$aData =cADCore::GET("$sApp/business-transactions?" );
+		cDebug::leave();
+		
+		return $aData;
+		
+	}
+	
+	//*****************************************************************
+	public function GET_Transaction_configs(){		
+		cDebug::enter();
+		$oData = cADRestUI::GET_transaction_configs($this);
+		$aData = $oData->ruleScopeSummaryMappings;
+		usort($aData,"bt_config_sort_function" );
+		cDebug::leave();
+		return $aData;
 	}
 
 }
-
-cADApp::$db_app = new cADApp(cADCore::DATABASE_APPLICATION,cADCore::DATABASE_APPLICATION);
+function bt_config_sort_function($po1,$po2){
+	$p1=str_pad($po1->rule->priority,3,"0", STR_PAD_LEFT);
+	$p2=str_pad($po2->rule->priority,3,"0", STR_PAD_LEFT);
+	$s1 = $p1." ".$po1->rule->summary->name;
+	$s2 = $p2." ".$po2->rule->summary->name;
+	return strcasecmp ($s2,$s1);
+}
 cADApp::$server_app = new cADApp(cADCore::SERVER_APPLICATION,cADCore::SERVER_APPLICATION);
 
 ?>

@@ -23,6 +23,7 @@ require_once("$ADlib/auth.php");
 require_once("$ADlib/core.php");
 require_once("$ADlib/account.php");
 require_once("$ADlib/util.php");
+require_once("$ADlib/analyse.php");
 require_once("$ADlib/time.php");
 require_once("$ADlib/metrics.php");
 require_once("$ADlib/controllerui.php");
@@ -33,6 +34,8 @@ require_once("$ADlib/controller.php");
 require_once("$ADlib/app.php");
 require_once("$ADlib/tier.php");
 require_once("$ADlib/trans.php");
+require_once("$ADlib/db.php");
+require_once("$ADlib/server.php");
 
 
 //#################################################################

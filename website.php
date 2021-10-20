@@ -32,7 +32,7 @@ class cADWebsite{
 				$sUrl = null;
 		}
 		
-		uasort($aData,"AD_title_sort_fn");
+		usort($aData,"AD_title_sort_fn");
 		return $aData;
 	}
 }

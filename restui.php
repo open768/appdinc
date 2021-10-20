@@ -14,7 +14,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$ADlib/core.php");
 require_once("$ADlib/flowmap.php");
 
-class cAD_RestUISynthList{
+class cADRestUISynthList{
 	public $applicationId= -1;
 	public $timeRangeString ="";	
 }
@@ -24,7 +24,7 @@ class cADUsageRequest{
 	public $hostIds = null;
 }
 
-class cAD_RestUITime{
+class cADRestUITime{
 	public $type="BETWEEN_TIMES";
 	public $durationInMinutes = 60;
 	public $endTime = -1;
@@ -34,24 +34,24 @@ class cAD_RestUITime{
 }
 
 
-class cAD_RestUISnapshotFilter{
+class cADRestUISnapshotFilter{
 	public $applicationIds = [];
 	public $applicationComponentIds = [];
 	public $sepIds = [];
 	public $rangeSpecifier = null;
 	
 	function __construct() {
-		$this->rangeSpecifier = new cAD_RestUITime;
+		$this->rangeSpecifier = new cADRestUITime;
 	}
 }
-class cAD_RestUIRequest{
+class cADRestUIRequest{
 	public $applicationIds = [];
 	public $guids = [];
 	public $rangeSpecifier = null;
 	public $needExitCalls = true;
 	
 	function __construct(){
-		$this->rangeSpecifier = new cAD_RestUITime;
+		$this->rangeSpecifier = new cADRestUITime;
 	}
 }
 
@@ -91,7 +91,7 @@ class cADLogDetailRequest{
 //#####################################################################################
 //#
 //#####################################################################################
-class cAD_RestUI{
+class cADRestUI{
 	private static $iAccount = null;
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -109,15 +109,21 @@ class cAD_RestUI{
 	//* account
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_account(){
+		$oAccount = cADController::GET_account();
+		return $oAccount->id;
+	}
+	
+	//**********************************************************************
+	public static function GET_account_flowmap(){
 		cDebug::enter();
-		if (!self::$iAccount){
-			$oData = self::GET_init_data();
-			$iAccount = $oData->accountUI->account->id;
-			self::$iAccount = $iAccount;
-		}else
-			cDebug::extra_debug("cached");
+
+		$iAccount = self::GET_account();
+		$sTime = cADTime::last_hour();
+		$sUrl = "accountFlowMapUiService/account/$iAccount?$sTime&mapId=-1&baselineId=-1";
+		$oData = cADCore::GET_restUI($sUrl);
+
 		cDebug::leave();
-		return self::$iAccount;
+		return $oData;
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -127,7 +133,7 @@ class cAD_RestUI{
 		cDebug::enter();
 		$sUrl = "analytics/logsources";
 		$aData = cADCore::GET_restUI($sUrl, true);
-		uasort($aData,"AD_name_sort_fn");
+		usort($aData,"AD_name_sort_fn");
 
 		cDebug::leave();
 		return $aData;
@@ -177,6 +183,14 @@ class cAD_RestUI{
 		return $oFlowMap;
 	}
 	
+	//****************************************************************
+	public static function get_app_data_collectors($poApp){
+		cDebug::enter();
+		$aData = cADCore::GET_restUI("MidcUiService/getAllDataGathererConfigs/$poApp->id",true);
+		cDebug::leave();
+		return $aData;
+	}
+	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Agents 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -187,19 +201,22 @@ class cAD_RestUI{
 		cDebug::leave();	
 		return  $aAgents;
 	}
+
+	//****************************************************************
 	public static function GET_machine_agents(){
 		cDebug::enter();	
 		$aAgents = cADCore::GET_restUI("agent/setting/allMachineAgents");
 		cDebug::extra_debug("sorting");
-		uasort($aAgents,"sort_machine_agents");
+		usort($aAgents,"sort_machine_agents");
 		cDebug::extra_debug("finished sorting");
 		cDebug::leave();	
 		return  $aAgents;
 	}
+	//****************************************************************
 	public static function GET_appserver_agents(){
 		cDebug::enter();	
 		$aAgents = cADCore::GET_restUI("agent/setting/getAppServerAgents");
-		uasort($aAgents,"sort_appserver_agents");
+		usort($aAgents,"sort_appserver_agents");
 		cDebug::leave();	
 		return  $aAgents;
 	}
@@ -223,6 +240,26 @@ class cAD_RestUI{
 		cDebug::leave();
 	}
 	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* Dashboards
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_dashboards(){
+		cDebug::enter();
+		
+		$sUrl = "/dashboards/getAllDashboardsByType/false";
+		$aDashboards = cADCore::GET_restUI($sUrl);
+		usort($aDashboards, "AD_name_sort_fn");
+		cDebug::leave();
+		return $aDashboards;
+	}
+
+	public static function GET_dashboard_detail($piDashID){
+		cDebug::enter();
+		$sUrl = "/dashboards/dashboardIfUpdated/$piDashID/-1";
+		$aData = cADCore::GET_restUI($sUrl, true);
+		cDebug::leave();
+		return $aData;
+	}
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Events
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -398,7 +435,7 @@ class cAD_RestUI{
 				$aEndPoints[] = $oItem;
 			} 
 		}
-		uasort($aEndPoints,"AD_name_sort_fn");
+		usort($aEndPoints,"AD_name_sort_fn");
 		cDebug::leave();
 		return $aEndPoints;
 	}
@@ -409,7 +446,7 @@ class cAD_RestUI{
 		//{"applicationIds":[1424],"applicationComponentIds":[4561],"sepIds":[6553581],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":60},"maxRows":600}
 		
 		$sURL = "snapshot/snapshotListDataWithFilterHandle";
-		$oFilter = new cAD_RestUISnapshotFilter;
+		$oFilter = new cADRestUISnapshotFilter;
 		$oFilter->applicationIds[] = intval($poTier->app->id);
 		$oFilter->applicationComponentIds[] = intval($poTier->id);
 		$oFilter->sepIds[] = intval($piServiceEndPointID);
@@ -430,7 +467,7 @@ class cAD_RestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_Synthetic_jobs($poApp, $oTime, $pbDetails){
 		cDebug::enter();
-		$oRequest = new cAD_RestUISynthList;
+		$oRequest = new cADRestUISynthList;
 		$oRequest->applicationId = (int)$poApp->id;
 		$oRequest->timeRangeString = cADTime::make_short( $oTime,null);
 		$sURL = "synthetic/schedule/getJobList";
@@ -463,6 +500,17 @@ class cAD_RestUI{
 		}
 		cDebug::leave();
 		return $aSyth;		
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* BT config
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_transaction_configs($poApp){
+		cDebug::enter();
+		$sURL = "/transactionConfigProto/getRules/$poApp->id";
+		$oData = cADCore::GET_restUI($sURL,true);
+		cDebug::leave();
+		return $oData;
 	}
 }
 	

@@ -92,7 +92,7 @@ class cADCommon{
 	public static function button ($psUrl, $psCaption = "Launch in AppDynamics"){
 		$sClass="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect";
 		?>
-			<button class="<?=$sClass?>" onclick="window.open('<?=$psUrl?>','appdynamics');">
+			<button class="<?=$sClass?>" onclick="window.stop();window.open('<?=$psUrl?>','appdynamics');">
 				<i class="material-icons-outlined">north_east</i>
 				&nbsp;
 				<?=$psCaption?>

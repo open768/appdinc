@@ -14,6 +14,13 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 //see 
 require_once("$ADlib/AD.php");
+require_once("$ADlib/util.php");
+class cADTierTransResult{
+	public $name, $max, $id, $url, $avg, $count;
+}
+function trans_name_sort_fn($po1, $po2){
+	return strcasecmp ($po1->name, $po2->name);
+}
 
 class cADTier{
    public static $db_app = null;
@@ -39,6 +46,13 @@ class cADTier{
 	private function pr_get_tier_name(){
 		cDebug::enter();
 		$aTiers = $this->app->GET_raw_tiers(); 
+		foreach ($aTiers as $oTier)
+			if ($oTier->id == $this->id){
+				$this->name = $oTier->name;
+				return;
+			}
+			
+		cDebug::error("Tier ID doesnt match");
 		cDebug::leave();
 	}
 	
@@ -71,7 +85,7 @@ class cADTier{
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "leaf") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'AD_name_sort_fn');
+		usort($aOut, "AD_name_sort_fn");
 		cDebug::leave();
 		return  $aOut;
 	}
@@ -108,13 +122,13 @@ class cADTier{
 			cDebug::write("<b>Calls per min</b>");
 			$oCalls = null;
 			$oData = $this->GET_ExtCallsPerMin( $sOtherTier, $poTimes, "true");
-			if ($oData)	$oCalls = cADUtil::Analyse_Metrics( $oData);
+			if ($oData)	$oCalls = cADAnalysis::analyse_metrics( $oData);
 				
 			cDebug::write("<b>response times</b>");
 			$oTimes = null;
 			$oData = $this->GET_ExtResponseTimes($sOtherTier, $poTimes, "true");
 			if ($oData)	
-				$oTimes = cADUtil::Analyse_Metrics( $oData);
+				$oTimes = cADAnalysis::analyse_metrics( $oData);
 			
 			cDebug::write("<b>done</b>");
 			
@@ -132,7 +146,7 @@ class cADTier{
 		cDebug::enter();
 			$metricPath = "Overall Application Performance|$sTier|External Calls";
 			$aData = $this->app->GET_Metric_heirarchy($metricPath, false);
-			uasort ($aData, "AD_name_sort_fn");
+			usort ($aData, "AD_name_sort_fn");
 		cDebug::leave();
 		return $aData;
 	}
@@ -163,7 +177,7 @@ class cADTier{
 		cDebug::enter();
 		$sMetricpath=cADMetric::InfrastructureNodes($this->name);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
-		uasort($aData, 'AD_name_sort_fn');
+		usort($aData, "AD_name_sort_fn");
 		cDebug::leave();
 		return  $aData;
 	}
@@ -178,7 +192,7 @@ class cADTier{
 		foreach ($aData as $oEntry)
 			if ($oEntry->type === "folder") $aOut[] = $oEntry;
 		
-		uasort($aOut, 'AD_name_sort_fn');
+		usort($aOut, "AD_name_sort_fn");
 		cDebug::leave();
 		return  $aOut;
 	}
@@ -215,7 +229,7 @@ class cADTier{
 				$aResults[] = $oDetail;
 			}
 			
-			uasort($aResults, 'AD_name_sort_fn');
+			usort($aResults, "AD_name_sort_fn");
 		}
 		catch (Exception $e){
 			$aResults = null;
@@ -224,6 +238,55 @@ class cADTier{
 		return $aResults;
 	}
 
+	//*****************************************************************
+	public function GET_transaction_times($poTimes){
+		$aActive = [];
+		$aInActive = [];
+		$bContinue = true;
+		cDebug::enter();
+		
+		$sMetricpath = cADMetric::transResponseTimes($this->name, "*");
+		cDebug::extra_debug($sMetricpath);
+		
+		try{
+			$aStats = $this->app->GET_MetricData($sMetricpath, $poTimes,"true",false,true);
+		}catch (Exception $e){
+			$bContinue	=false	;
+		}
+		//cDebug::vardump($aStats);
+		if ($bContinue)
+			foreach ($aStats as $oTrans){
+				$sName = cADUtil::extract_bt_name($oTrans->metricPath, $this->name);
+				if (count($oTrans->metricValues) > 0){
+					$oStats =  cADAnalysis::analyse_metrics($oTrans->metricValues);
+					try {
+						$sID = cADUtil::extract_bt_id($oTrans->metricName);
+					}catch (Exception $e){
+						//cDebug::vardump($oTrans);
+						continue;
+					}
+					
+					$oItem = new cADTierTransResult;
+					$oItem->name = $sName;
+					$oItem->url= cADControllerUI::transaction($this->app, $sID);
+					$oItem->id = $sID;
+					$oItem->max = $oStats->max;
+					$oItem->avg = $oStats->avg;
+					$oItem->count = $oStats->count;
+					$aActive[] = $oItem;
+				}else
+					$aInActive[] = $sName;
+			}
+		sort($aInActive);
+		if (count($aActive)>0){
+			cDebug::extra_debug("size was ".count($aActive));
+			cDebug::vardump($aActive);
+			usort($aActive, "trans_name_sort_fn");
+		}
+		
+		cDebug::leave();
+		return (object)["active"=>$aActive, "inactive"=>$aInActive];
+	}
 	
 }
 ?>

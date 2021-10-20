@@ -42,6 +42,7 @@ class cADCore{
 	const CONFIG_METRIC_PREFIX = "/rest/configuration";
 	const DB_METRIC_PREFIX = "/rest/applications/Database%20Monitoring/metric-data?metric-path=";
 	const RESTUI_PREFIX = "/restui/";
+	const DBUI_PREFIX = "/databasesui/";
 	const DATABASE_APPLICATION = "Database Monitoring";
 	const SERVER_APPLICATION = "Server & Infrastructure Monitoring";
 	const ENCODED_SERVER_APPLICATION = "Server%20&%20Infrastructure%20Monitoring";
@@ -61,13 +62,9 @@ class cADCore{
 		$oCred = new cADCredentials();
 		$sController = ($oCred->use_https?"https":"http")."://$oCred->host";
 		
-		if (self::$CONTROLLER_PREFIX)
-				$sController.= "/".self::$CONTROLLER_PREFIX;
+		if (self::$CONTROLLER_PREFIX)	$sController.= "/".self::$CONTROLLER_PREFIX;
 			
-		if (!self::$bOutputController){
-			cDebug::extra_debug("controller URL: $sController");
-			self::$bOutputController = true;
-		}
+		//cDebug::extra_debug("controller URL: $sController");
 		return $sController;
 	}
 	
@@ -112,7 +109,7 @@ class cADCore{
 	}
 	
 	//*****************************************************************
-	public static function  GET_restUI_with_payload($psCmd,  $psPayload, $pbCacheable = false){
+	public static function  GET_restUI_with_payload($psCmd,  $psPayload, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX ){
 		global $oData;
 
 		cDebug::enter();
@@ -139,7 +136,7 @@ class cADCore{
 
 		
 		//----- actually do it
-		$sAD_REST = self::GET_controller().self::RESTUI_PREFIX;
+		$sAD_REST = self::GET_controller().$psUIPrefix;
 		$url = $sAD_REST.$psCmd;
 		//cDebug::extra_debug("Url: $url");
 		//cDebug::extra_debug("header: $sExtraHeader");
@@ -171,9 +168,9 @@ class cADCore{
 	}
 	
 	//*****************************************************************
-	public static function  GET_restUI($psCmd, $pbCacheable = false){
+	public static function  GET_restUI($psCmd, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX){
 		cDebug::enter();
-		$oData = self::GET_restUI_with_payload($psCmd, null, $pbCacheable);
+		$oData = self::GET_restUI_with_payload($psCmd, null, $pbCacheable, $psUIPrefix);
 		cDebug::leave();
 		return $oData;
 	}

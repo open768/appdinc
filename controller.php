@@ -19,6 +19,14 @@ require_once("$ADlib/AD.php");
 //# CLASSES
 //#################################################################
 class cADController{		
+	
+	public static function GET_account(){
+		cDebug::enter();
+		$aData = cADCore::GET('/api/accounts/myaccount',true,false,false);
+		cDebug::leave();
+		return $aData;
+	}
+	
 	//****************************************************************
 	public static function GET_Controller_version(){
 		cDebug::enter();
@@ -45,41 +53,8 @@ class cADController{
 		return $oData;
 	}
 	
-	//*****************************************************************
-	public static function GET_Applications(){
-		cDebug::enter();
-		if ( cAD::is_demo()) return cADDemo::GET_Applications();
-		
-		$aData = cADCore::GET('?',true);
-		if ($aData)	uasort($aData,"AD_name_sort_fn");
-		$aOut = [];
-		foreach ($aData as $oItem)
-			if ($oItem->name !== null)
-				if (strtolower($oItem->name) !== "analytics"){
-					$oApp = new cADApp($oItem->name, $oItem->id);
-					$aOut[] = $oApp;
-				}
-		
-		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
-		cDebug::leave();
-		return $aOut;		
-	}
 	
-	//*****************************************************************
-	public static function GET_Databases(){
-		cDebug::enter();
-		$sMetricPath= cADMetric::databases();
-		$oData = (cADApp::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
-		cDebug::leave();
-		return $oData;
-	}
 
-	//*****************************************************************
-	public static function GET_Database_ServerStats($psDB){
-		$sMetricPath= cADMetric::databaseServerStats($psDB);
-		return  (cADApp::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
-	}
-	
 	//*****************************************************************
 	public static function GET_allBackends(){
 		cDebug::enter();

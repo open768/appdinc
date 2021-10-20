@@ -207,6 +207,7 @@ class cADCredentials{
 	const DEMO_ACCOUNT = "demo";
 	
 	public $account;
+	public $account_id;
 	public $host;
 	public $encrypted_username;
 	public $jsessionid;

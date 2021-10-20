@@ -16,6 +16,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //# CLASSES
 //#################################################################
 class cADControllerUI{
+	//###############################################################################################
+	//privates
+	private static function pr__time_command($poTimes, $psKey="timeRange"){
+		return  "$psKey=Custom_Time_Range.BETWEEN_TIMES.".$poTimes->end.".".$poTimes->start.".0";
+	}
+	
 	private static function pr__get_location($psLocation){
 		$sBaseUrl = cADCore::GET_controller();
 		return $sBaseUrl."/#/location=$psLocation";		
@@ -30,14 +36,6 @@ class cADControllerUI{
 		$sBaseUrl = self::pr__get_app_location($poTier->app, $psLocation);
 		return $sBaseUrl."&component=$poTier->id";		
 	}
-	//###############################################################################################
-	public static function home(){
-		$sURL = self::pr__get_location("AD_HOME");
-		return $sURL;
-	}	
-	private static function time_command($poTimes, $psKey="timeRange"){
-		return  "$psKey=Custom_Time_Range.BETWEEN_TIMES.".$poTimes->end.".".$poTimes->start.".0";
-	}
 
 	//###############################################################################################
 	public static function agents(){
@@ -51,6 +49,7 @@ class cADControllerUI{
 	}
 	
 	//###############################################################################################
+	//# analytics
 	public static function analytics_home(){
 		return self::pr__get_location("ANALYTICS_HOME");
 	}
@@ -62,6 +61,7 @@ class cADControllerUI{
 	}
 	
 	//###############################################################################################
+	//# apps
 	public static function apps_home(){
 		return self::pr__get_location("APPS_ALL_DASHBOARD");
 	}
@@ -71,17 +71,38 @@ class cADControllerUI{
 	public static function app_slow_transactions($poApp){
 		return self::pr__get_app_location($poApp, "APP_SLOW_TRANSACTIONS");
 	}
+	
+	public static function app_BT_config($poApp){
+		return self::pr__get_app_location($poApp, "APP_TX_CONFIG_RULES");
+	}
 		
 	//###############################################################################################
-	//# servers
-	public static function servers(){
-		return  self::pr__get_location("SERVER_LIST_PAGINATED");
+	//# Dashboards
+	public static function dashboard_home(){
+		return  self::pr__get_location("DASHBOARD_LIST");
+	}
+	public static function dashboard_detail($piDash, $poTimes){
+		$sUrl = self::pr__get_location("CDASHBOARD_DETAIL");
+		$sUrl .= "&".self::pr__time_command($poTimes);
+		$sUrl .= "&mode=MODE_DASHBOARD&dashboard=$piDash";
+		return $sUrl;
 	}
 	
 	//###############################################################################################
 	//# Databases
 	public static function databases(){
 		return  self::pr__get_location("DB_MONITORING_SERVER_LIST");
+	}
+	public static function db_custom_metrics(){
+		return  self::pr__get_location("DB_MONITORING_CUSTOM_SQL_METRICS_LIST");
+	}
+	
+	//###############################################################################################
+	//# data collectors
+	public static function data_collectors($poApp){
+		$sUrl = self::pr__get_location("APP_CONFIG_DATA_COLLECTOR");
+		$sUrl.= "&application=$poApp->id";
+		return $sUrl;
 	}
 	
 	//###############################################################################################
@@ -104,10 +125,17 @@ class cADControllerUI{
 	
 	public static function app_health_policies($poApp){
 		$sUrl = self::pr__get_location("ALERT_RESPOND_POLICIES");	
-		$sUrl = $sUrl."&application=$poApp->id";
+		$sUrl .= "&application=$poApp->id";
 		
 		return $sUrl;
 	}
+	
+	//###############################################################################################
+	//home
+	public static function home(){
+		$sURL = self::pr__get_location("AD_HOME");
+		return $sURL;
+	}	
 	
 	//###############################################################################################
 	//# Nodes
@@ -166,6 +194,28 @@ class cADControllerUI{
 		return $sURL."&serviceEndpoint=$piServiceID";
 	}
 	//###############################################################################################
+	//# servers
+	public static function servers(){
+		return  self::pr__get_location("SERVER_LIST_PAGINATED");
+	}
+
+	//###############################################################################################
+	//# snapshots
+	
+	public static function snapshot($poApp, $piTransID, $psGuid, $poTimes){
+		$sURL = self::pr__get_app_location($poApp, "APP_SNAPSHOT_VIEWER");
+		$sTimeRange = self::pr__time_command($poTimes);
+		$sTimeRSD = self::pr__time_command($poTimes, "rsdTime");
+		return $sURL."&$sTimeRange&bypassAssociatedLocationsCheck=true&businessTransaction=$piTransID&requestGUID=$psGuid&$sTimeRSD&dashboardMode=force";
+	}
+	
+	public static function transaction_snapshots($poApp, $piTransID, $poTimes){
+		$sURL = self::pr__get_app_location($poApp, "APP_BT_ALL_SNAPSHOT_LIST");
+		$sTime = self::pr__time_command($poTimes);
+		return $sURL."&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$piTransID&$sTime";
+	}
+	
+	//###############################################################################################
 	//# Transactions
 	public static function businessTransactions($poApp){
 		return  self::pr__get_app_location($poApp, "APP_BT_LIST");
@@ -177,22 +227,7 @@ class cADControllerUI{
 	}
 
 	//###############################################################################################
-	//# snapshots
-	
-	public static function snapshot($poApp, $piTransID, $psGuid, $poTimes){
-		$sURL = self::pr__get_app_location($poApp, "APP_BT_DETAIL");
-		$sTimeRange = self::time_command($poTimes);
-		$sTimeRSD = self::time_command($poTimes, "rsdTime");
-		return $sURL."&$sTimeRange&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$piTransID&requestGUID=$psGuid&$sTimeRSD&dashboardMode=force";
-	}
-	
-	public static function transaction_snapshots($poApp, $piTransID, $poTimes){
-		$sURL = self::pr__get_app_location($poApp, "APP_BT_ALL_SNAPSHOT_LIST");
-		$sTime = self::time_command($poTimes);
-		return $sURL."&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$piTransID&$sTime";
-	}
-	
-	//###############################################################################################
+	//webrum
 	public static function webrum_pages($poApp){
 		return self::pr__get_app_location($poApp, "EUM_PAGES_LIST");
 	}
@@ -205,7 +240,7 @@ class cADControllerUI{
 	}
 	public static function webrum_synthetics($poApp, $poTimes){
 		$sUrl = self::pr__get_app_location($poApp, "EUM_SYNTHETIC_SCHEDULE_LIST");
-		$sTime = self::time_command($poTimes);
+		$sTime = self::pr__time_command($poTimes);
 		return "$sUrl&$sTime";
 	}
 			
