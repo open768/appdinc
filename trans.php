@@ -15,6 +15,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //see 
 require_once("$ADlib/AD.php");
 
+//#####################################################################
+function sort_timetaken($a, $b){
+	return (($a->timeTakenInMilliSecs<$b->timeTakenInMilliSecs?1:-1));
+}
+
 //#################################################################
 //# 
 //#################################################################
@@ -38,6 +43,7 @@ class cADTrans{
 	
 	//*****************************************************************
 	public function GET_snapshots($poTimes){
+		//TODO convert into snapshot objects
 		/*should use instead
 		eg https://xxx.saas.appdynamics.com/controller/restui/snapshot/snapshotListDataWithFilterHandle		{"firstInChain":false,"maxRows":600,"applicationIds":[1424],"businessTransactionIds":[],"applicationComponentIds":[4561],"applicationComponentNodeIds":[],"errorIDs":[],"errorOccured":null,"userExperience":[],"executionTimeInMilis":null,"endToEndLatency":null,"url":null,"sessionId":null,"userPrincipalId":null,"dataCollectorFilter":null,"archived":null,"guids":[],"diagnosticSnapshot":null,"badRequest":null,"deepDivePolicy":[],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":15}}		
 		*/
@@ -46,15 +52,31 @@ class cADTrans{
 		$sApp = rawurlencode($oApp->name);
 		$sUrl = cHttp::build_url("$sApp/request-snapshots", cADTime::make($poTimes));
 		$sUrl = cHttp::build_url($sUrl, "application_name", $sApp);
-		//$sUrl = cHttp::build_url($sUrl, "application-component-ids", $psTierID);
 		$sUrl = cHttp::build_url($sUrl, "business-transaction-ids", $this->id);
-		//$sUrl = cHttp::build_url($sUrl, "output", "JSON");
-		return cADCore::GET($sUrl);
+		$aOut = [];
+		$aResults = cADCore::GET($sUrl);
+		foreach ($aResults as $oItem){
+			$oSnap = new cADSnapshot($this, $oItem->requestGUID, $oItem->serverStartTime);
+			$oSnap->summary = $oItem->summary;
+			$oSnap->applicationComponentNodeId = $oItem->applicationComponentNodeId;
+			$oSnap->timeTakenInMilliSecs = $oItem->timeTakenInMilliSecs;
+			$oSnap->url = ($oItem->URL?$oItem->URL:$this->name);
+			
+			$aOut[] = $oSnap;
+		}
+		return $aOut;
 	}
 	
 	//*****************************************************************
-	public function GET_snapshot_segments($sSnapGUID, $sSnapTime){
-		return cADRestUI::GET_snapshot_segments($sSnapGUID, $sSnapTime);	
+	public function GET_top_10_snapshots($poTimes){
+		$aSnapshots = $this->GET_snapshots($poTimes);
+		usort($aSnapshots , "sort_timetaken");	
+		$aTopTen = [];
+		foreach ($aSnapshots as $oSnapshot){
+			if (count($aTopTen) >=10) break;				
+			$aTopTen[] = $oSnapshot;
+		}
+		return $aTopTen ;
 	}
 }
 ?>

@@ -339,23 +339,6 @@ class cADUtil {
 		return $oExtCalls;
 	}
 	
-	//*****************************************************************
-	public static function count_snapshot_ext_calls($poShapshot){
-		cDebug::enter();
-		
-		//---------------- get the flow
-		try{
-			$oFlow = cADRestUI::GET_snapshot_flow($poShapshot);
-		}catch (Exception $e){
-			return null;
-		}
-		
-		//---------------- analyse the flow
-		$oExtCalls = self::count_flow_ext_calls($oFlow);
-		cDebug::leave();		
-		return $oExtCalls;
-	}
-
 	public static function flushprint($psChar = cCommon::PROGRESS_CHAR){
 		if (self::$SHOW_PROGRESS) cCommon::flushprint($psChar);
 	}

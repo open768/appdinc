@@ -255,12 +255,12 @@ class cADTier{
 		}
 		//cDebug::vardump($aStats);
 		if ($bContinue)
-			foreach ($aStats as $oTrans){
-				$sName = cADUtil::extract_bt_name($oTrans->metricPath, $this->name);
-				if (count($oTrans->metricValues) > 0){
-					$oStats =  cADAnalysis::analyse_metrics($oTrans->metricValues);
+			foreach ($aStats as $oMetrics){
+				$sName = cADUtil::extract_bt_name($oMetrics->metricPath, $this->name);
+				if (count($oMetrics->metricValues) > 0){
+					$oStats =  cADAnalysis::analyse_metrics($oMetrics->metricValues);
 					try {
-						$sID = cADUtil::extract_bt_id($oTrans->metricName);
+						$sID = cADUtil::extract_bt_id($oMetrics->metricName);
 					}catch (Exception $e){
 						//cDebug::vardump($oTrans);
 						continue;
@@ -268,7 +268,8 @@ class cADTier{
 					
 					$oItem = new cADTierTransResult;
 					$oItem->name = $sName;
-					$oItem->url= cADControllerUI::transaction($this->app, $sID);
+					$oTrans = new cADTrans($this,$oItem->name,$sID);
+					$oItem->url= cADControllerUI::transaction($oTrans);
 					$oItem->id = $sID;
 					$oItem->max = $oStats->max;
 					$oItem->avg = $oStats->avg;

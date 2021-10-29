@@ -153,6 +153,8 @@ class cADCore{
 				self::login();
 				cDebug::write("finished logging in, trying again");
 				$oData = $oHttp->getjson($url);
+			}elseif (strpos($e->getMessage(), "204")){
+				cDebug::error("no data returned");
 			}else{
 				cDebug::write("unknown error: ".$e->getMessage());
 				throw($e);

@@ -202,17 +202,24 @@ class cADControllerUI{
 	//###############################################################################################
 	//# snapshots
 	
-	public static function snapshot($poApp, $piTransID, $psGuid, $poTimes){
-		$sURL = self::pr__get_app_location($poApp, "APP_SNAPSHOT_VIEWER");
-		$sTimeRange = self::pr__time_command($poTimes);
-		$sTimeRSD = self::pr__time_command($poTimes, "rsdTime");
-		return $sURL."&$sTimeRange&bypassAssociatedLocationsCheck=true&businessTransaction=$piTransID&requestGUID=$psGuid&$sTimeRSD&dashboardMode=force";
+	public static function snapshot($poSnapshot){
+		$oApp = $poSnapshot->trans->tier->app;
+		$sTrid = $poSnapshot->trans->id;
+		$oTime = new cADTimes($poSnapshot->starttime);
+		$sGuuid = $poSnapshot->guuid;
+		
+		$sURL = self::pr__get_app_location($oApp, "APP_SNAPSHOT_VIEWER");
+		$sTimeRange = self::pr__time_command($oTime);
+		$sTimeRSD = self::pr__time_command($oTime, "rsdTime");
+		return $sURL."&$sTimeRange&bypassAssociatedLocationsCheck=true&businessTransaction=$sTrid&requestGUID=$sGuuid&$sTimeRSD&dashboardMode=force";
 	}
 	
-	public static function transaction_snapshots($poApp, $piTransID, $poTimes){
-		$sURL = self::pr__get_app_location($poApp, "APP_BT_ALL_SNAPSHOT_LIST");
+	public static function transaction_snapshots($poTrans, $poTimes){
+		$oApp = $poTrans->tier->app;
+		$sTrid = $poTrans->id;
+		$sURL = self::pr__get_app_location($oApp, "APP_BT_ALL_SNAPSHOT_LIST");
 		$sTime = self::pr__time_command($poTimes);
-		return $sURL."&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$piTransID&$sTime";
+		return $sURL."&bypassAssociatedLocationsCheck=true&tab=1&businessTransaction=$sTrid&$sTime";
 	}
 	
 	//###############################################################################################
@@ -221,9 +228,11 @@ class cADControllerUI{
 		return  self::pr__get_app_location($poApp, "APP_BT_LIST");
 	}
 	
-	public static function transaction($poApp, $piTransID){
-		$sURL = self::pr__get_app_location($poApp, "APP_BT_DETAIL");
-		return $sURL."&businessTransaction=$piTransID&dashboardMode=force";
+	public static function transaction($poTrans){
+		$oApp = $poTrans->tier->app;
+		$sTrid = $poTrans->id;
+		$sURL = self::pr__get_app_location($oApp, "APP_BT_DETAIL");
+		return $sURL."&businessTransaction=$sTrid&dashboardMode=force";
 	}
 
 	//###############################################################################################
