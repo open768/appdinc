@@ -507,7 +507,7 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_transaction_configs($poApp){
 		cDebug::enter();
-		$sURL = "/transactionConfigProto/getRules/$poApp->id";
+		$sURL = "transactionConfigProto/getRules/$poApp->id";
 		$oData = cADCore::GET_restUI($sURL,true);
 		cDebug::leave();
 		return $oData;

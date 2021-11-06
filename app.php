@@ -19,7 +19,15 @@ class cAppCheckupMessage{
 	public $message;
 	public $is_bad;
 	public $extra;
+	
+	function __construct($pbIsBad, $psMessage, $psExtra="") {	
+		$this->is_bad = $pbIsBad;
+		$this->message = $psMessage;
+		$this->extra = $psExtra;
+	}
 }
+
+
 class cAppCheckupAnalysis{
 	public $DCs = [];
 	public $BTs = [];
@@ -140,47 +148,81 @@ class cADApp{
 		else
 			$bBad = false;
 		
-		$oMsg = new cAppCheckupMessage();
-		$oMsg->message = $sCaption;
-		$oMsg->is_bad = $bBad;
+		$oMsg = new cAppCheckupMessage($bBad, $sCaption, "Count");
 		$oOut->BTs[] = $oMsg;
+		
+		//-------------duplicate BTs  ----------------------
+		$aTNames = [];
+		foreach ($aTrans as $oTrans){
+			$sTName = $oTrans->name;
+			if (! isset($aTNames[$sTName])) $aTNames[$sTName] = 0;
+			$aTNames[$sTName] ++;
+		}
+		ksort($aTNames);
+		$iCountDup = 0;
+		foreach ($aTNames as $sTName=>$iTcount){
+			if ($sTName === cADCore::APPDYN_OVERFLOWING_BT ) continue;
+			if ($iTcount >2){
+				$oMsg = new cAppCheckupMessage(true, "$iTcount x $sTName", "duplicate BT");
+				$oOut->BTs[] = $oMsg;
+				$iCountDup ++;
+			}
+		}
+		if ($iCountDup ==0){
+			$oMsg = new cAppCheckupMessage(false, "no duplicate BTs found", "duplicate BT");
+			$oOut->BTs[] = $oMsg;
+		}
+
+		//- - - -  numeric BTs  - - - - - - - - - - 
+		$iIDCount = 0;
+		foreach ($aTrans as $oTrans){
+			$sTName = $oTrans->name;
+			if (preg_match('/\/[0-9]/', $sTName, $matches)) $iIDCount++;
+		}
+		if ($iIDCount >0 ){
+			$oMsg = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", "BTs with IDs");
+			$oOut->BTs[] = $oMsg;
+		}
 		
 		//-------------Data Collectors ----------------------
 		cDebug::extra_debug("counting data collectors");
 		$aDCs = $this->GET_data_collectors();
-		$oMsg = new cAppCheckupMessage;
-		$oMsg->extra = "data collectors";
+		$bBad = true;
 		if (!$aDCs || count($aDCs) ==0){
-			$oMsg->message = "no Data Collectors defined";
-			$oMsg->is_bad = true;
+			$sMsg = "no Data Collectors defined";
+			$bBad = true;
 		}elseif (count($aDCs)==1 && ($aDCs[0]->name === "Default HTTP Request Data Collector")){
-			$oMsg->message = "only the Default HTTP Request DC defined: ";
-			$oMsg->is_bad = true;
+			$sMsg = "only the Default HTTP Request DC defined: ";
+			$bBad = true;
 		}else{
-			$oMsg->message = "number of DCs defined: ".count($aDCs);
-			$oMsg->is_bad = false;
+			$sMsg = "number of DCs defined: ".count($aDCs);
+			$bBad = false;
 		}
+		$oMsg = new cAppCheckupMessage($bBad, $sMsg, "data collectors");
 		$oOut->DCs[] = $oMsg;
 		
 		
 		//-------------tiers --------------------------------
 		cDebug::extra_debug("counting tiers");
 		$aTierCount = []; 	//counts the transactions per tier
+		$aTierTrans = [];
 		foreach ($aTrans as $oTrans){
 			$sTier = $oTrans->tierName;
-			if (! isset($aTierCount[$sTier])) $aTierCount[$sTier] = 0;
+			if (! isset($aTierCount[$sTier])) {
+				$aTierCount[$sTier] = 0;
+				$aTierTrans[$sTier] = [];
+			}
 			$aTierCount[$sTier] = $aTierCount[$sTier] +1;
+			$aTierTrans[$sTier][] = $oTrans->name;
 		}
 		
 		if (count($aTierCount) == 0){
-			$oMsg = new cAppCheckupMessage;
-			$oMsg->message = "no tiers defined";
-			$oMsg->extra = "tiers";
-			$oMsg->is_bad = true;
+			$oMsg = new cAppCheckupMessage(true,"no tiers defined","tiers") ;
 			$oOut->tiers[] = $oMsg;
 		}else{
 			foreach ($aTierCount as $sTier=>$iCount){
 				
+				//- - - -  BTs in Tiers - - - - - - - - - - 
 				$bBad = true;
 				$sCaption = "There are $iCount BTs.";
 				if ($iCount >=50)
@@ -190,11 +232,20 @@ class cADApp{
 				else
 					$bBad = false;
 
-				$oMsg = new cAppCheckupMessage;
-				$oMsg->message = $sCaption;
-				$oMsg->is_bad = $bBad;
-				$oMsg->extra = $sTier;
+				$oMsg = new cAppCheckupMessage($bBad,$sCaption,$sTier) ;
 				$oOut->tiers[] = $oMsg;
+				
+				//- - - -  numeric BTs  - - - - - - - - - - 
+				$iIDCount = 0;
+				$aTrans = $aTierTrans[$sTier];
+				foreach ($aTrans as $sTrans){
+					if (preg_match('/\/[0-9]/', $sTrans, $matches)) $iIDCount++;
+				}
+				if ($iIDCount >0 ){
+					$oMsg = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", $sTier);
+					$oOut->tiers[] = $oMsg;
+				}
+
 			}
 		}
 		
@@ -214,9 +265,7 @@ class cADApp{
 			else
 				$bBad = false;
 		}
-		$oMsg = new cAppCheckupMessage;
-		$oMsg->message = $sCaption;
-		$oMsg->is_bad = $bBad;
+		$oMsg = new cAppCheckupMessage($bBad,$sCaption,"backends") ;
 		$oOut->backends[] = $oMsg;
 		
 		//-------------BTs --------------------------------
