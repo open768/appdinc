@@ -78,7 +78,7 @@ class cADTier{
 	//##############################################################################
 	public function GET_DiskMetrics(){
 		cDebug::enter();
-		$sMetricpath=cADMetric::InfrastructureNodeDisks($this->name, null);
+		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, null);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
@@ -93,7 +93,7 @@ class cADTier{
 	
 	//*****************************************************************
 	public  function GET_errors($poTimes){
-		$sMetricpath = cADMetric::Errors($this->name, "*");
+		$sMetricpath = cADMetricPaths::Errors($this->name, "*");
 		$aData = $this->app->GET_MetricData($sMetricpath, $poTimes,"true",false,true);
 		return $aData;
 	}
@@ -153,20 +153,20 @@ class cADTier{
 
 	//*****************************************************************
 	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $psRollup){
-		$sMetricpath= cADMetric::tierExtCallsPerMin($this->name, $psTier2);
+		$sMetricpath= cADMetricPaths::tierExtCallsPerMin($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
 	}	
 
 	//*****************************************************************
 	public function GET_ExtResponseTimes($psTier2, $poTimes, $psRollup){
-		$sMetricpath= cADMetric::tierExtResponseTimes($this->name, $psTier2);
+		$sMetricpath= cADMetricPaths::tierExtResponseTimes($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
 	}
 	
 	//*****************************************************************
 	public function GET_JDBC_Pools($psNode=null){
 		cDebug::enter();
-		$sMetricpath=cADMetric::InfrastructureJDBCPools($this->name, $psNode);
+		$sMetricpath=cADMetricPaths::InfrastructureJDBCPools($this->name, $psNode);
 		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		cDebug::leave();
 		return  $oData;
@@ -175,7 +175,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_Nodes(){
 		cDebug::enter();
-		$sMetricpath=cADMetric::InfrastructureNodes($this->name);
+		$sMetricpath=cADMetricPaths::InfrastructureNodes($this->name);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		usort($aData, "AD_name_sort_fn");
 		cDebug::leave();
@@ -185,7 +185,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_NodeDisks($psNode){
 		cDebug::enter();
-		$sMetricpath=cADMetric::InfrastructureNodeDisks($this->name, $psNode);
+		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, $psNode);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
@@ -200,7 +200,7 @@ class cADTier{
 	//*****************************************************************
 	public  function GET_ServiceEndPoints(){
 		if ( cAD::is_demo()) return cADDemo::GET_TierServiceEndPoints(null,null);
-		$sMetricpath= cADMetric::tierServiceEndPoints($this->name);
+		$sMetricpath= cADMetricPaths::tierServiceEndPoints($this->name);
 		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		return $oData;
 	}
@@ -212,7 +212,7 @@ class cADTier{
 		$aResults = []; 
 		
 		try{
-			$metricPath = cADMetric::tierTransactions($this->name);
+			$metricPath = cADMetricPaths::tierTransactions($this->name);
 			$aTierTransactions = $this->app->GET_Metric_heirarchy($metricPath, false);	
 			if (!$aTierTransactions) return null;
 			
@@ -245,7 +245,7 @@ class cADTier{
 		$bContinue = true;
 		cDebug::enter();
 		
-		$sMetricpath = cADMetric::transResponseTimes($this->name, "*");
+		$sMetricpath = cADMetricPaths::transResponseTimes($this->name, "*");
 		cDebug::extra_debug($sMetricpath);
 		
 		try{

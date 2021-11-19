@@ -25,8 +25,13 @@ class cADTimes{
 	function __construct($piTime = null) {	
 		$this->time_type = self::BETWEEN;
 		if ($piTime){
-			$this->start = $piTime - 5000;
+			$this->start = $piTime - 5000; //5secs either way
 			$this->end = $piTime + 5000;
+		}else{
+			$this->time_type = SELF::BEFORE_NOW;
+			$this->end = time() * 1000;
+			$this->start = $this->end - 3600000; //past hour
+			$this->duration = 60;
 		}
 	}
 }

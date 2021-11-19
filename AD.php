@@ -32,6 +32,7 @@ require_once("$ADlib/website.php");
 
 require_once("$ADlib/controller.php");
 require_once("$ADlib/app.php");
+require_once("$ADlib/appcheckup.php");
 require_once("$ADlib/tier.php");
 require_once("$ADlib/trans.php");
 require_once("$ADlib/snapshot.php");

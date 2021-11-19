@@ -191,6 +191,15 @@ class cADRestUI{
 		return $aData;
 	}
 	
+	//****************************************************************
+	public static function get_app_diagnostic_stats($poApp){
+		cDebug::enter();
+		$sUrl = "agent/setting/agentDiagnosticStats?entityType=APPLICATION&entityId=$poApp->id&timeRange=last_1_hour.BEFORE_NOW.-1.-1.60";
+		$aData = cADCore::GET_restUI($sUrl,true);
+		cDebug::leave();
+		return $aData;
+	}
+	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Agents 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

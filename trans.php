@@ -37,7 +37,7 @@ class cADTrans{
 	
 	//*****************************************************************
 	public function GET_ExtTiers(){
-		$sMetricPath= cADMetric::transExtNames($this->tier->name,$this->name);
+		$sMetricPath= cADMetricPaths::transExtNames($this->tier->name,$this->name);
 		return $this->tier->app->GET_Metric_heirarchy( $sMetricPath, false);
 	}
 	

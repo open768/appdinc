@@ -72,12 +72,13 @@ class cDashDetailAnalysis{
 }
 
 
+
 //#################################################################
 //# CLASSES
 //#################################################################
 
 class cADAnalysis {
-	
+
 	//*****************************************************************
 	public static function analyse_account_flowmap($paData){
 		$aOutput = [];
@@ -166,6 +167,26 @@ class cADAnalysis {
 		return $oOutput;
 	}
 	
+	
+	//*****************************************************************
+	public static function analyse_app_diagnostic_stats($paData){
+		cDebug::enter();
+		$aOut= [];
+		$aData = $paData->children;
+		foreach ($aData as $oItem){
+			$aProperties = get_object_vars($oItem);
+			foreach ( $aProperties as $sKey=>$oMetric)
+				if (is_object($oMetric))
+					if (property_exists($oMetric, "value")){
+						if (!array_key_exists( $sKey, $aOut	))	$aOut[$sKey] = 0;
+						if ($oMetric->value >= 0)				$aOut[$sKey] += $oMetric->value;
+					}	
+		}
+		//cDebug::vardump($aOut);
+		
+		cDebug::leave();
+		return $aOut;
+	}
 	
 	//*****************************************************************
 	public static function analyse_app_nodes($paNodes){

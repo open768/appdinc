@@ -28,7 +28,7 @@ class cADDB{
 	//*****************************************************************
 	public static function GET_Databases(){
 		cDebug::enter();
-		$sMetricPath= cADMetric::databases();
+		$sMetricPath= cADMetricPaths::databases();
 		$oData = (self::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
 		cDebug::leave();
 		return $oData;
@@ -36,7 +36,7 @@ class cADDB{
 
 	//*****************************************************************
 	public static function GET_Database_ServerStats($psDB){
-		$sMetricPath= cADMetric::databaseServerStats($psDB);
+		$sMetricPath= cADMetricPaths::databaseServerStats($psDB);
 		return  (self::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
 	}
 	

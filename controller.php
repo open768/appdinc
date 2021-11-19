@@ -53,16 +53,35 @@ class cADController{
 		return $oData;
 	}
 	
+	//****************************************************************
+	public static function GET_all_Applications(){
+		cDebug::enter();
+		if ( cAD::is_demo()) return cADDemo::GET_Applications();
+		
+		$aData = cADCore::GET('?',true);
+		if ($aData)	usort($aData,"AD_name_sort_fn");
+		$aOut = [];
+		foreach ($aData as $oItem)
+			if ($oItem->name !== null)
+				if (strtolower($oItem->name) !== "analytics"){
+					$oApp = new cADApp($oItem->name, $oItem->id);
+					$aOut[] = $oApp;
+				}
+		
+		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
+		cDebug::leave();
+		return $aOut;		
+	}
 	
 
 	//*****************************************************************
-	public static function GET_allBackends(){
+	public static function GET_all_Backends(){
 		cDebug::enter();
 		$aServices = [];
 		
-		$oApps = self::GET_Applications();
+		$oApps = self::GET_all_Applications();
 		foreach ($oApps as $oApp){
-			$aBackends = self::GET_Backends($oApp->name);
+			$aBackends = $oApp->GET_Backends();
 			foreach ($aBackends as $oBackend){
 				$sBName = $oBackend->name;
 				if (!isset($aServices[$sBName])) $aServices[$sBName] = [];
@@ -83,7 +102,7 @@ class cADController{
 		$oTime->duration = 5;
 		
 		//fetch the data
-		$sMetricPath= cADMetric::serverNodesWithMQ();  
+		$sMetricPath= cADMetricPaths::serverNodesWithMQ();  
 		$oApp = new cADApp(cADCore::SERVER_APPLICATION, cADCore::SERVER_APPLICATION);
 		$oData = $oApp->GET_MetricData($sMetricPath, $oTime, false,true,true);
 		if (gettype($oData) === "NULL")		cDebug::error("no data returned");

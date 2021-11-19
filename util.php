@@ -70,7 +70,7 @@ class cADTransFlow{
 	public function walk($poApp, $psTier, $psTrans){
 		cDebug::enter();
 		
-		$sMetricPath = cADMetric::transExtNames($psTier, $psTrans);
+		$sMetricPath = cADMetricPaths::transExtNames($psTier, $psTrans);
 		$this->walk_metric($poApp, $sMetricPath);
 		$this->name = $psTrans;
 		
@@ -86,7 +86,7 @@ class cADTransFlow{
 		
 		foreach ($aCalls as $oCall)
 			if ($oCall->type == "folder") {
-				$sMetricPath = $psMetricPath . "|".$oCall->name."|".cADMetric::EXT_CALLS;
+				$sMetricPath = $psMetricPath . "|".$oCall->name."|".cADMetricPaths::EXT_CALLS;
 				
 				$oChild = new cADTransFlow();
 				$this->children[] = $oChild;
@@ -113,7 +113,7 @@ class cADUtil {
 	
 	//*****************************************************************
 	public static function get_application_ids(){
-		$aApps = cADApp::GET_Applications();
+		$aApps = cADController::GET_all_Applications();
 		$aOutput = [];
 		foreach ($aApps as $oApp){
 			$aOutput[ $oApp->id] = $oApp->name;
@@ -182,9 +182,9 @@ class cADUtil {
 	
 	//################################################################
 	public static function extract_bt_name($psMetric, $psTier){
-		$sLeft = cADMetric::tierTransactions($psTier);
+		$sLeft = cADMetricPaths::tierTransactions($psTier);
 		$sOut = substr($psMetric, strlen($sLeft)+1);
-		$iPos = strpos($sOut, cADMetric::RESPONSE_TIME);
+		$iPos = strpos($sOut, cADMetricPaths::RESPONSE_TIME);
 		$sOut = substr($sOut, 0, $iPos -1);
 		return $sOut;
 	}
@@ -212,7 +212,7 @@ class cADUtil {
 	//*****************************************************************
 	public static function extract_RUM_id($psType, $psMetricName){
 		$sType="Base Page";
-		if ($psType == cADMetric::AJAX_REQ) $sType="AJAX Request";
+		if ($psType == cADMetricPaths::AJAX_REQ) $sType="AJAX Request";
 		$sPattern = "/\|$sType:(\d+)\|/";
 		if (preg_match($sPattern, $psMetricName, $aMatches))
 			return $aMatches[1];
