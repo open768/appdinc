@@ -48,7 +48,7 @@ class cADDemo{
 	}
 	
 	//*****************************************************************
-	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $psRollup=false, $pbCacheable=false, $pbMulti = false){
+	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false){
 		$aOutput = [];
 		
 		$epoch_start = $poTimes->start;

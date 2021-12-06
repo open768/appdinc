@@ -280,7 +280,7 @@ class cADInfraMetric{
 //######################################################################
 class cADMetricData{
 	//*****************************************************************
-	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $psRollup="false", $pbCacheable=false, $pbMulti = false)
+	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
 		cDebug::enter();
 		if ($poTimes == null) cDebug::error("times are missing");
@@ -297,7 +297,8 @@ class cADMetricData{
 		else
 			$sApp = rawurlencode($sApp);
 		
-		$url = "$sApp/metric-data?metric-path=$encoded&$sTimeCmd&rollup=$psRollup";
+		$url = "$sApp/metric-data?metric-path=$encoded&$sTimeCmd";
+		if (!$pbRollup) $url .= "&rollup=false";
 		$oData = cADCore::GET( $url ,$pbCacheable);
 		
 		$aOutput = $oData;
@@ -358,7 +359,8 @@ class cADMetricPaths{
 	const SLOW_CALLS = "Number of Slow Calls";
 	const VSLOW_CALLS = "Number of Very Slow Calls";
 	const STALL_COUNT = "Stall Count";
-	
+	const ALL_OTHER = "_APPDYNAMICS_DEFAULT_TX_";
+
 	const APPLICATION = "Overall Application Performance";
 	const ERRORS = "Errors";
 	const INFRASTRUCTURE = "Application Infrastructure Performance";
@@ -383,6 +385,10 @@ class cADMetricPaths{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Application
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function app(){
+		return self::APPLICATION;
+	}
+	
 	public static function appResponseTimes(){
 		return self::APPLICATION."|".self::RESPONSE_TIME;
 	}
@@ -642,39 +648,43 @@ class cADMetricPaths{
 	//* tiers
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function tier($psTier){
-		return self::TRANSACTIONS."|Business Transactions|$psTier";
+		return self::APPLICATION."|$psTier";
 	}
 	
 	public static function tierCallsPerMin($psTier){
-		return self::APPLICATION."|$psTier|".self::CALLS_PER_MIN;
+		return self::tier($psTier)."|".self::CALLS_PER_MIN;
 	}
 	public static function tierResponseTimes($psTier){
-		return self::APPLICATION."|$psTier|".self::RESPONSE_TIME;
+		return self::tier($psTier)."|".self::RESPONSE_TIME;
 	}
 	public static function tierErrorsPerMin($psTier){
-		return self::APPLICATION."|$psTier|".self::ERRS_PER_MIN;
+		return self::tier($psTier)."|".self::ERRS_PER_MIN;
 	}
 	public static function tierExceptionsPerMin($psTier){
-		return self::APPLICATION."|$psTier|Exceptions per Minute";
+		return self::tier($psTier)."|Exceptions per Minute";
 	}
 	public static function tierSlowCalls($psTier){
-		return self::APPLICATION."|$psTier|".self::SLOW_CALLS;
+		return self::tier($psTier)."|".self::SLOW_CALLS;
 	}
 	
 	public static function tierNodes($psTier){
-		return self::APPLICATION."|$psTier|Individual Nodes";
+		return self::tier($psTier)."|Individual Nodes";
 	}
 
 	public static function tierVerySlowCalls($psTier){
-		return self::APPLICATION."|$psTier|".self::VSLOW_CALLS;
+		return self::tier($psTier)."|".self::VSLOW_CALLS;
 	}
 	public static function tierTransactions($psTier){
 		$sMetric = self::TRANSACTIONS."|Business Transactions|$psTier";
 		return $sMetric;
 	}
+	public static function tierTransaction($psTier, $psName){
+		$sMetric = self::TRANSACTIONS."|Business Transactions|$psTier|$psName";
+		return $sMetric;
+	}
 	
 	public static function tierExt($psTier1,$psTier2){
-		return self::APPLICATION."|$psTier1|".self::EXT_CALLS."|$psTier2";
+		return self::tier($psTier1)."|".self::EXT_CALLS."|$psTier2";
 	}
 	
 	public static function tierExtCallsPerMin($psTier1,$psTier2){
@@ -709,41 +719,41 @@ class cADMetricPaths{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* transactions
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function transMetric($psTier, $psTrans, $psNode=null){
+	public static function Transaction($psTier, $psTrans, $psNode=null){
 		$sMetric = self::tierTransactions($psTier)."|$psTrans";
 		if ($psNode) $sMetric .= "|Individual Nodes|$psNode";
 		return $sMetric;
 	}
 	
-	public static function transResponseTimes($psTier, $psTrans, $psNode=null){
-		return self::transMetric($psTier, $psTrans, $psNode)."|".self::RESPONSE_TIME;
+	public static function transResponseTimes($poTrans, $psNode=null){
+		return self::Transaction($poTrans->tier->name, $poTrans->name, $psNode)."|".self::RESPONSE_TIME;
 	}
 
-	public static function transErrors($psTier, $psTrans, $psNode=null){
-		return self::transMetric($psTier, $psTrans, $psNode)."|".self::ERRS_PER_MIN;
+	public static function transErrors($poTrans, $psNode=null){
+		return self::Transaction($poTrans->tier->name, $poTrans->name, $psNode)."|".self::ERRS_PER_MIN;
 	}
 
-	public static function transCpuUsed($psTier, $psTrans, $psNode=null){
-		return self::transMetric($psTier, $psTrans, $psNode)."|Average CPU Used (ms)";
+	public static function transCpuUsed($poTrans, $psNode=null){
+		return self::Transaction($poTrans->tier->name, $poTrans->name, $psNode)."|Average CPU Used (ms)";
 	}
 	
-	public static function transCallsPerMin($psTier, $psTrans, $psNode=null){
-		return self::transMetric($psTier, $psTrans, $psNode)."|".self::CALLS_PER_MIN;
+	public static function transCallsPerMin($poTrans, $psNode=null){
+		return self::Transaction($poTrans->tier->name, $poTrans->name, $psNode)."|".self::CALLS_PER_MIN;
 	}
 	
-	public static function transExtNames($psTier, $psTrans, $psNode=null){
-		return self::transMetric($psTier, $psTrans, $psNode)."|".self::EXT_CALLS;
+	public static function transExtNames($poTrans, $psNode=null){
+		return self::Transaction($poTrans->tier->name, $poTrans->name, $psNode)."|".self::EXT_CALLS;
 	}
 	
-	public static function transExtCalls($psTier, $psTrans, $psOther){
-		return self::transExtNames($psTier, $psTrans)."|$psOther|".self::CALLS_PER_MIN;
+	public static function transExtCalls($poTrans, $psExt){
+		return self::transExtNames($poTrans)."|$psExt|".self::CALLS_PER_MIN;
 	}
 		
-	public static function transExtResponseTimes($psTier, $psTrans, $psOther){
-		return self::transExtNames($psTier, $psTrans)."|$psOther|".self::RESPONSE_TIME;
+	public static function transExtResponseTimes($poTrans, $psExt){
+		return self::transExtNames($poTrans)."|$psExt|".self::RESPONSE_TIME;
 	}
-	public static function transExtErrors($psTier, $psTrans, $psOther){
-		return self::transExtNames($psTier, $psTrans)."|$psOther|".self::ERRORS;
+	public static function transExtErrors($poTrans, $psExt){
+		return self::transExtNames($poTrans)."|$psExt|".self::ERRORS;
 	}
 }
 

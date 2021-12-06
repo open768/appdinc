@@ -428,17 +428,23 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* service end points
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function GET_service_end_points($poTier){
+	public static function GET_service_end_points($poApp){
 		cDebug::enter();
-		$iTid = $poTier->id;
-		$iAid = $poTier->app->id;
+		$iAid = $poApp->id;
 		$sURL = "serviceEndpoint/list2/$iAid/$iAid/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60";
-		$oResult = cADCore::GET_restUI($sURL);
+		$oResult = cADCore::GET_restUI($sURL,true);
+		cDebug::leave();
+		return $oResult->serviceEndpointListEntries;
+	}
+	
+	public static function GET_Tier_service_end_points($poTier){
+		cDebug::enter();
+		$aResult = self::GET_service_end_points($poTier->app);
 		
 		//now filter the results for the tier id
 		$aEndPoints = [];
-		foreach( $oResult->serviceEndpointListEntries as $oService){
-			if ($oService->applicationComponentId == $iTid){
+		foreach( $aResult as $oService){
+			if ($oService->applicationComponentId == $poTier->id){
 				$oItem = new cADDetails($oService->name, $oService->id, null,null);
 				$oItem->type = $oService->type;
 				$aEndPoints[] = $oItem;
@@ -520,6 +526,26 @@ class cADRestUI{
 		$oData = cADCore::GET_restUI($sURL,true);
 		cDebug::leave();
 		return $oData;
+	}
+
+	//***************************************************************
+	public static function GET_appLevel_BT_Config($poApp){
+		cDebug::enter();
+		$sURL = "transactionConfig/getAppLevelBTConfig/$poApp->id";
+		$oData = cADCore::GET_restUI($sURL,true);
+		cDebug::leave();
+		return $oData;
+	}
+	
+	//***************************************************************
+	public static function GET_dropped_overflow_transaction_traffic($poTier){
+		cDebug::enter();
+		$sPayload = '{"componentId":'.$poTier->id.',"timeRangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":60,"endTime":null,"startTime":null,"timeRange":null,"timeRangeAdjusted":false}}';
+		$sURL = "overflowtraffic/event";
+		$oResult = cADCore::GET_restUI_with_payload($sURL,$sPayload,true);
+		
+		cDebug::leave();
+		return $oResult;
 	}
 }
 	

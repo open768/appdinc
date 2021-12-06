@@ -34,6 +34,35 @@ class cADTimes{
 			$this->duration = 60;
 		}
 	}
+	
+	public function start_time(){
+		$iTime = $this->start/1000;
+		cDebug::extra_debug("time is $iTime");
+		return  new DateTime("@$iTime");
+	}
+	
+	public function set_start_time($pDate){
+		$this->start = ($pDate->getTimeStamp())*1000;
+	}
+	public function set_end_time($pDate){
+		$this->start = ($pDate->getTimeStamp())*1000;
+	}
+	
+	public function end_time(){
+		$iTime = $this->end/1000;
+		return  new DateTime("@$iTime");
+	}
+	
+	public function set_duration($piMins){
+		$this->end = $this->start + ($piMins*60*1000);
+	}
+	
+	public function toString(){
+		return  
+			($this->start_time())->format(cCommon::ENGLISH_DATE_FORMAT).
+			" to ".
+			($this->end_time())->format(cCommon::ENGLISH_DATE_FORMAT);
+	}
 }
 
 class cADTime {

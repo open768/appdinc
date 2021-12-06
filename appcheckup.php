@@ -35,6 +35,7 @@ class cAppCheckupAnalysis{
 	public $BTs = [];
 	public $tiers = [];
 	public $backends = [];
+	public $sendpoints = [];
 }
 
 
@@ -43,6 +44,8 @@ class cAppCheckupAnalysis{
 //#################################################################
 
 class cADAppCheckup {
+	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator"];
+
 	public static function checkup($poApp){
 		cDebug::enter();
 
@@ -55,10 +58,50 @@ class cADAppCheckup {
 		self::pr__check_DCs($poApp, $oOut);
 		self::pr__check_Tiers($poApp,$aTrans, $oOut);
 		self::pr__check_Backends($poApp, $oOut);
+		self::pr__check_ServiceEndpoints($poApp, $oOut);
 		
 		//---------------------------------------------
 		cDebug::leave();
 		return $oOut;
+	}
+	
+	//**************************************************************************
+	private static function pr__check_ServiceEndpoints($poApp, $poOut){
+		cDebug::enter();
+		$aEndPoints = $poApp->GET_ServiceEndPoints();
+		
+		//-----------------------------------------------------------------
+		$iCount = count($aEndPoints);
+		cDebug::extra_debug("there are :$iCount endpoints");
+		$sCaption = "There are $iCount Service endpoints. ";
+		$bBad = false;
+		if ($iCount >200){
+			$bBad = true;
+			$sCaption .= "Thats very high - <b>investigate instrumentation</b>";
+		}elseif ($iCount >100){
+			$bBad = true;
+			$sCaption .= "Thats quite high";
+		}
+		$poOut->sendpoints[] = new cAppCheckupMessage($bBad,$sCaption,"endpoints") ;
+		
+		//-------------known bad BT names --------------------------------
+		$aBadNames = [];
+		foreach ($aEndPoints as $oEndPoint){
+			foreach (self::$badnames as $sNeedle)
+				if (stripos($oEndPoint->name, $sNeedle )) cCommon::add_count_to_array($aBadNames, $sNeedle);
+		}
+		foreach ($aBadNames as $sKey=>$iCount)
+			 $poOut->sendpoints[] = new cAppCheckupMessage(true, "$iCount x  endpoints containing '$sKey' detected", "known unwanted names");
+			 
+		//-------------numeric --------------------------------
+		$iIDCount = 0;
+		
+		foreach ($aEndPoints as $oEndPoint)
+			if (cCommon::is_numeric_name($oEndPoint->name))$iIDCount++;
+		if ($iIDCount >0 )
+			$poOut->sendpoints[] = new cAppCheckupMessage(true, "$iIDCount x names found containing IDs", "Names");
+			 
+		cDebug::leave();
 	}
 	
 	//**************************************************************************
@@ -112,7 +155,7 @@ class cADAppCheckup {
 				
 				//- - - -  BTs in Tiers - - - - - - - - - - 
 				$bBad = true;
-				$sCaption = "There are $iCount BTs.";
+				$sCaption = "There are $iCount BTs in this tier.";
 				if ($iCount >=50)
 					$sCaption .= " This must be below 50. <b>Investigate instrumentation</b>";
 				elseif ($iCount >=10)
@@ -125,10 +168,8 @@ class cADAppCheckup {
 				$iIDCount = 0;
 				
 				$aTransList = $aTierTrans[$sTier];
-				foreach ($aTransList as $sTrans){
-					if (preg_match('/\/\d+/', $sTrans, $matches)) $iIDCount++;
-					elseif (preg_match('/\-\d+/', $sTrans, $matches)) $iIDCount++;
-				}
+				foreach ($aTransList as $sTrans)
+					if (cCommon::is_numeric_name($sTrans))$iIDCount++;
 				if ($iIDCount >0 )
 					$poOut->tiers[] = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", $sTier);
 
@@ -186,13 +227,11 @@ class cADAppCheckup {
 		$aBadBTs = [];
 		foreach ($paTrans as $oTrans){
 			$sTName = $oTrans->name;
-			if (stripos($sTName, "swagger" )) cCommon::add_count_to_array($aBadBTs, "swagger");
-			if (stripos($sTName, "well-known" )) cCommon::add_count_to_array($aBadBTs, "well known");
-			if (stripos($sTName, ".axd" )) cCommon::add_count_to_array($aBadBTs, ".axd");
-			if (stripos($sTName, "favicon" )) cCommon::add_count_to_array($aBadBTs, "favicon");
+			foreach (self::$badnames as $sNeedle)
+				if (stripos($sTName, $sNeedle )) cCommon::add_count_to_array($aBadBTs, $sNeedle);
 		}
 		foreach ($aBadBTs as $sKey=>$iCount)
-			 $poOut->BTs[] = new cAppCheckupMessage(true, "$iCount x $sKey BTs detected", "BT Names");
+			 $poOut->BTs[] = new cAppCheckupMessage(true, "$iCount x $sKey known unwanted BTs detected", "BT Names");
 		
 		//-------------duplicate BTs  ----------------------
 		$aTNames = [];
@@ -235,6 +274,7 @@ class cADAppCheckup {
 		cDebug::enter();
 		//-------------Active BTs --------------------------------
 		$oTimes = new cADTimes();
+		//cDebug::vardump($oTimes);
 		$aCallsPerMin = $poApp->GET_CallsPerMin($oTimes);
 		if (count($aCallsPerMin) == 0)
 			$poOut->general[] = new cAppCheckupMessage(true, "this is an inactive application", "BT Activity");
@@ -264,6 +304,20 @@ class cADAppCheckup {
 			if ( $iCount > 0)
 				$poOut->general[] = new cAppCheckupMessage(true, "$iCount metrics rejected due license issue in the last hr", "Metrics");
 		}	
+		
+		//----- check lockdown------------------------------
+		try{
+			$oConfig = $poApp->GET_AppLevel_BT_Detection_Config();
+		}catch (Exception $e){
+			$oConfig = null;
+			$poOut->general[] = new cAppCheckupMessage(true, "unable to check whether Business Transaction lockdown is enabled", "config");
+		}
+		if ($oConfig)
+			if ($oConfig->isBtLockDownEnabled)
+				$poOut->general[] = new cAppCheckupMessage(false, "Business Transaction lockdown is enabled", "config");
+			else
+				$poOut->general[] = new cAppCheckupMessage(true, "we recommend that Business Transaction lockdown is enabled", "config");
+		
 		cDebug::leave();
 	}
 

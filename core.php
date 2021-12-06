@@ -208,7 +208,7 @@ class cADCore{
 		//----- actually do it
 		$sUrl = $sAD_REST.$psCmd;
 		if ($pbSuffix) $sUrl.=self::$SUFFIX;
-		cDebug::extra_debug("Url: $sUrl");
+		//cDebug::extra_debug("Url: $sUrl");
 		
 		$oHttp = new cHttp();
 		//$sExtraHeader = self::pr__get_extra_header();

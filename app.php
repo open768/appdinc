@@ -198,6 +198,12 @@ class cADApp{
 		
 		return $oData;
 	}
+
+	//*****************************************************************
+	public function GET_ServiuceEndPoints($poTimes){
+		https://appdcontrol.tele2.com/controller/restui/serviceEndpoint/list2/1073/1073/APPLICATION?time-range=last_3_hours.BEFORE_NOW.-1.-1.180
+		return cADMetricData::GET_Metric_heirarchy($this, cADMetricPaths::INFORMATION_POINTS, false, $poTimes);
+	}
 	
 	//*****************************************************************
 	public function GET_InfoPoints($poTimes){
@@ -207,10 +213,10 @@ class cADApp{
 
 	//*****************************************************************
 	//this function belongs elsewhere as it is common to AD objects
-	public function GET_MetricData($psMetricPath, $poTimes , $psRollup="false", $pbCacheable=false, $pbMulti = false)
+	public function GET_MetricData($psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
 		cDebug::enter();
-		$aOutput = cADMetricData::GET_MetricData($this,$psMetricPath, $poTimes , $psRollup, $pbCacheable, $pbMulti);
+		$aOutput = cADMetricData::GET_MetricData($this,$psMetricPath, $poTimes , $pbRollup, $pbCacheable, $pbMulti);
 		cDebug::leave();
 		return $aOutput;		
 	}
@@ -243,6 +249,14 @@ class cADApp{
 		
 		cDebug::leave();
 		return $aOutput;
+	}
+
+	//*****************************************************************
+	public function GET_ServiceEndPoints(){	
+		cDebug::enter();
+		$aData = cADRestUI::GET_service_end_points($this);
+		cDebug::leave();
+		return $aData;
 	}
 
 	//*****************************************************************
@@ -285,6 +299,13 @@ class cADApp{
 	}
 	
 	//*****************************************************************
+	public function GET_AppLevel_BT_Detection_Config(){
+		cDebug::enter();
+		$oData = cADRestUI::GET_appLevel_BT_Config($this);
+		cDebug::leave();
+		return $oData;
+	}
+	
 	public function GET_Transaction_configs(){		
 		cDebug::enter();
 		$oData = cADRestUI::GET_transaction_configs($this);

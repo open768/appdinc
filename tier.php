@@ -21,6 +21,10 @@ class cADTierTransResult{
 function trans_name_sort_fn($po1, $po2){
 	return strcasecmp ($po1->name, $po2->name);
 }
+class cADOverflowTraffic{
+	public $name;
+	public $count;
+}
 
 class cADTier{
    public static $db_app = null;
@@ -94,7 +98,7 @@ class cADTier{
 	//*****************************************************************
 	public  function GET_errors($poTimes){
 		$sMetricpath = cADMetricPaths::Errors($this->name, "*");
-		$aData = $this->app->GET_MetricData($sMetricpath, $poTimes,"true",false,true);
+		$aData = $this->app->GET_MetricData($sMetricpath, $poTimes,true,false,true);
 		return $aData;
 	}
 	
@@ -121,12 +125,12 @@ class cADTier{
 			cDebug::write("<h4>other tier is $sOtherTier</h4>");
 			cDebug::write("<b>Calls per min</b>");
 			$oCalls = null;
-			$oData = $this->GET_ExtCallsPerMin( $sOtherTier, $poTimes, "true");
+			$oData = $this->GET_ExtCallsPerMin( $sOtherTier, $poTimes, true);
 			if ($oData)	$oCalls = cADAnalysis::analyse_metrics( $oData);
 				
 			cDebug::write("<b>response times</b>");
 			$oTimes = null;
-			$oData = $this->GET_ExtResponseTimes($sOtherTier, $poTimes, "true");
+			$oData = $this->GET_ExtResponseTimes($sOtherTier, $poTimes, true);
 			if ($oData)	
 				$oTimes = cADAnalysis::analyse_metrics( $oData);
 			
@@ -144,23 +148,23 @@ class cADTier{
    	public function GET_ext_calls(){
 		$sTier = $this->name;
 		cDebug::enter();
-			$metricPath = "Overall Application Performance|$sTier|External Calls";
-			$aData = $this->app->GET_Metric_heirarchy($metricPath, false);
+			$sMetricPath = "Overall Application Performance|$sTier|External Calls";
+			$aData = $this->app->GET_Metric_heirarchy($sMetricPath, false);
 			usort ($aData, "AD_name_sort_fn");
 		cDebug::leave();
 		return $aData;
 	}
 
 	//*****************************************************************
-	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $psRollup){
+	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $pbRollup){
 		$sMetricpath= cADMetricPaths::tierExtCallsPerMin($this->name, $psTier2);
-		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
+		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}	
 
 	//*****************************************************************
-	public function GET_ExtResponseTimes($psTier2, $poTimes, $psRollup){
+	public function GET_ExtResponseTimes($psTier2, $poTimes, $pbRollup){
 		$sMetricpath= cADMetricPaths::tierExtResponseTimes($this->name, $psTier2);
-		return $this->app->GET_MetricData($sMetricpath, $poTimes, $psRollup);
+		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}
 	
 	//*****************************************************************
@@ -197,23 +201,23 @@ class cADTier{
 		return  $aOut;
 	}
 
-	//*****************************************************************
-	public  function GET_ServiceEndPoints(){
-		if ( cAD::is_demo()) return cADDemo::GET_TierServiceEndPoints(null,null);
-		$sMetricpath= cADMetricPaths::tierServiceEndPoints($this->name);
-		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
-		return $oData;
-	}
 
 	//*****************************************************************
-	public function GET_transaction_names(){
+	public  function GET_ServiceEndPoints(){
+		return cADRestUI::GET_Tier_service_end_points($this);
+	}
+
+
+	
+	//*****************************************************************
+	public function GET_all_transaction_names(){
 		//find out the transactions in this tier - through metric heirarchy (but doesnt give the trans IDs)
 		cDebug::enter();
 		$aResults = []; 
 		
 		try{
-			$metricPath = cADMetricPaths::tierTransactions($this->name);
-			$aTierTransactions = $this->app->GET_Metric_heirarchy($metricPath, false);	
+			$sMetricPath = cADMetricPaths::tierTransactions($this->name);
+			$aTierTransactions = $this->app->GET_Metric_heirarchy($sMetricPath, false);	
 			if (!$aTierTransactions) return null;
 			
 			//so get the transaction IDs
@@ -239,17 +243,18 @@ class cADTier{
 	}
 
 	//*****************************************************************
-	public function GET_transaction_times($poTimes){
+	public function GET_all_transaction_times($poTimes){
 		$aActive = [];
 		$aInActive = [];
 		$bContinue = true;
 		cDebug::enter();
 		
-		$sMetricpath = cADMetricPaths::transResponseTimes($this->name, "*");
+		$oTrans = new cADTrans( $this, "*", null, true);
+		$sMetricpath = cADMetricPaths::transResponseTimes($oTrans);
 		cDebug::extra_debug($sMetricpath);
 		
 		try{
-			$aStats = $this->app->GET_MetricData($sMetricpath, $poTimes,"true",false,true);
+			$aStats = $this->app->GET_MetricData($sMetricpath, $poTimes,true,false,true);
 		}catch (Exception $e){
 			$bContinue	=false	;
 		}
@@ -287,6 +292,31 @@ class cADTier{
 		
 		cDebug::leave();
 		return (object)["active"=>$aActive, "inactive"=>$aInActive];
+	}
+	
+	//*****************************************************************
+	public function GET_dropped_overflow_traffic($poTimes){
+		cDebug::enter();
+		
+		$oData = cADRestUI::GET_dropped_overflow_transaction_traffic($this);
+		//cDebug::vardump($oData);
+		
+		$aOut = [];
+		foreach ($oData->droppedTransactionItemList as $oItem){
+			$oTraffic = new cADOverflowTraffic;
+			$oTraffic->name = $oItem->name;
+			$oTraffic->count = $oItem->count;
+			$aOut[] = $oTraffic;
+		}
+		uasort($aOut, "AD_name_sort_fn");
+		$aOut = array_values($aOut);
+		
+		cDebug::leave();
+		return $aOut;
+	}
+	
+	//*****************************************************************
+	public function register_overflow_traffic($psName){
 	}
 	
 }
