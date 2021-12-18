@@ -29,9 +29,7 @@ class cADTimes{
 			$this->end = $piTime + 5000;
 		}else{
 			$this->time_type = SELF::BEFORE_NOW;
-			$this->end = time() * 1000;
-			$this->start = $this->end - 3600000; //past hour
-			$this->duration = 60;
+			$this->set_duration(60);
 		}
 	}
 	
@@ -54,7 +52,17 @@ class cADTimes{
 	}
 	
 	public function set_duration($piMins){
-		$this->end = $this->start + ($piMins*60*1000);
+		if ($this->time_type == SELF::BEFORE_NOW){
+			$this->end = time() * 1000;
+			$this->start = $this->end - ($piMins*60*1000); //past hour
+			$this->duration = $piMins;
+		}else{
+			//TBD not sure how this works
+			$this->end = $this->start + ($piMins*60*1000);
+		}
+	}
+	public function set_duration_hrs($piHrs){
+		$this->set_duration($piHrs * 60);
 	}
 	
 	public function toString(){
