@@ -273,13 +273,10 @@ class cADAppCheckup {
 	private static function pr__check_general($poApp, $poOut){
 		cDebug::enter();
 		//-------------Active BTs --------------------------------
-		$oTimes = new cADTimes();
-		//cDebug::vardump($oTimes);
-		$aCallsPerMin = $poApp->GET_CallsPerMin($oTimes);
-		if (count($aCallsPerMin) == 0)
-			$poOut->general[] = new cAppCheckupMessage(true, "this is an inactive application", "BT Activity");
-		else
+		if ($poApp->is_active())
 			$poOut->general[] = new cAppCheckupMessage(false, "active application", "BT Activity");
+		else
+			$poOut->general[] = new cAppCheckupMessage(true, "this is an inactive application", "BT Activity");
 		
 		//-------------test application --------------------------------
 		if (stripos($poApp->name, "test" ) || stripos($poApp->name, "dev" ) || stripos($poApp->name, "uat" ))
