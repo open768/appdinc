@@ -47,6 +47,11 @@ class cAgentAnalysis{
 	public $appAgents = null;
 }
 
+class cAgentCounts{
+	public $type;
+	public $count;
+}
+
 class CAD_CorrelatedEvent{
 	public $id;
 	public $type;
@@ -132,6 +137,38 @@ class cADAnalysis {
 		return $aOutput;
 	}
 	
+	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	//# Agents
+	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&	
+	public static function count_all_agent_types($paNodes){
+		cDebug::enter();
+		$aTypes = [];
+		foreach ($paNodes as $aNodes)
+			foreach ($aNodes as $oNode)
+				cCommon::add_count_to_array($aTypes, $oNode->agentType);
+		
+		
+		cDebug::leave();
+		return $aTypes;
+	}
+	public static function count_agent_types($paNodes){
+		cDebug::enter();
+		$aTypes = [];
+		foreach ($paNodes as $oNode)
+			cCommon::add_count_to_array($aTypes, $oNode->agentType);
+			
+		$aOut = [];
+		foreach ($aTypes as $sType=>$iCount){
+			$oItem = new cAgentCounts;
+			$oItem->type = $sType;
+			$oItem->count = $iCount;
+			$aOut[] = $oItem;
+		}
+		
+		cDebug::leave();
+		return $aOut;
+	}
+	
 	//*****************************************************************
 	public static function analyse_agent_versions($paNodes){
 		cDebug::enter();
@@ -168,7 +205,9 @@ class cADAnalysis {
 	}
 	
 	
-	//*****************************************************************
+	//#######################################################################
+	//# 
+	//#######################################################################
 	public static function analyse_app_diagnostic_stats($paData){
 		cDebug::enter();
 		$aOut= [];
@@ -187,25 +226,6 @@ class cADAnalysis {
 		cDebug::leave();
 		return $aOut;
 	}
-	
-	//*****************************************************************
-	public static function analyse_app_nodes($paNodes){
-		cDebug::enter();
-		$aTierData = [];
-		
-		foreach ($paNodes as $aNodes)
-			foreach ($aNodes as $oNode){
-				$sTier = $oNode ->tierName;
-				
-				if (!isset($aTierData[$sTier]))	$aTierData[$sTier] = new cAgentTotals();
-				$aTierData[$sTier]->total ++;
-				if ($oNode->machineAgentPresent) $aTierData[$sTier]->machine ++;
-				if ($oNode->appAgentPresent) $aTierData[$sTier]->appserver++;
-			}
-		cDebug::leave();
-		return $aTierData;
-	}
-	
 	
 	//*****************************************************************
 	public static function analyse_dash_detail($paDetail){
@@ -508,6 +528,40 @@ class cADAnalysis {
 			$aOutput[] = $oEntry;
 		}
 		return $aOutput;
+	}
+	
+	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	//# nodes
+	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	public static function analyse_app_nodes($paNodes){
+		cDebug::enter();
+		$aTierData = [];
+		
+		foreach ($paNodes as $aNodes)
+			foreach ($aNodes as $oNode){
+				$sTier = $oNode ->tierName;
+				
+				if (!isset($aTierData[$sTier]))	$aTierData[$sTier] = new cAgentTotals();
+				$aTierData[$sTier]->total ++;
+				if ($oNode->machineAgentPresent) $aTierData[$sTier]->machine ++;
+				if ($oNode->appAgentPresent) $aTierData[$sTier]->appserver++;
+			}
+		cDebug::leave();
+		return $aTierData;
+	}
+	
+	//*****************************************************************
+	public static function group_nodes_by_tier($paNodes){
+		$aTiers = [];
+		
+		foreach ($paNodes as $aNodes)
+			foreach ($aNodes as $oNode){
+				$sTier = $oNode->tierName;
+				if (!isset($aTiers[$sTier])) $aTiers[$sTier] = [];
+				$aTiers[$sTier][] = $oNode;
+			}
+		uksort($aTiers,"strcasecmp");
+		return $aTiers;
 	}
 }
 
