@@ -106,6 +106,14 @@ class cADApp{
 	}
 	
 	//*****************************************************************
+	public function is_active(){
+		$oTimes = new cADTimes();
+		$oTimes->set_duration_hrs(6);
+		$aCallsPerMin = $this->GET_CallsPerMin($oTimes);
+		return (count($aCallsPerMin)>0);
+	}
+	
+	//*****************************************************************
 	public function GET_CallsPerMin($poTimes){
 		cDebug::enter();
 		$oTimes = new cADTimes();
