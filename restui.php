@@ -206,7 +206,7 @@ class cADRestUI{
 	public static function GET_database_agents(){
 		cDebug::enter();	
 		$sURL = "agent/setting/getDBAgents";
-		$aAgents = cADCore::GET_restUI($sURL);
+		$aAgents = cADCore::GET_restUI($sURL,true);
 		cDebug::leave();	
 		return  $aAgents;
 	}
@@ -214,7 +214,7 @@ class cADRestUI{
 	//****************************************************************
 	public static function GET_machine_agents(){
 		cDebug::enter();	
-		$aAgents = cADCore::GET_restUI("agent/setting/allMachineAgents");
+		$aAgents = cADCore::GET_restUI("agent/setting/allMachineAgents",true);
 		cDebug::extra_debug("sorting");
 		usort($aAgents,"sort_machine_agents");
 		cDebug::extra_debug("finished sorting");
@@ -224,7 +224,7 @@ class cADRestUI{
 	//****************************************************************
 	public static function GET_appserver_agents(){
 		cDebug::enter();	
-		$aAgents = cADCore::GET_restUI("agent/setting/getAppServerAgents");
+		$aAgents = cADCore::GET_restUI("agent/setting/getAppServerAgents",true);
 		usort($aAgents,"sort_appserver_agents");
 		cDebug::leave();	
 		return  $aAgents;
