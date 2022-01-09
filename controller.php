@@ -55,7 +55,7 @@ class cADController{
 	
 	//****************************************************************
 	public static function GET_all_Applications(){
-		cDebug::enter();
+		cDebug::enter(null,true);
 		if ( cAD::is_demo()) return cADDemo::GET_Applications();
 		
 		$aData = cADCore::GET('?',true);
@@ -69,7 +69,7 @@ class cADController{
 				}
 		
 		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
-		cDebug::leave();
+		cDebug::leave(null,true);
 		return $aOut;		
 	}
 	

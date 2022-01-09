@@ -190,7 +190,7 @@ class cADCore{
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd;
 		
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
-			cDebug::extra_debug("$psCmd cached");
+			cDebug::extra_debug("$psCmd cached", true);
 			$iOld = cHash::$CACHE_EXPIRY;		//TBD to replace with cache instance
 			cHash::$CACHE_EXPIRY = 600; //10 mins
 			$oData = cHash::get($sCacheCmd); 
