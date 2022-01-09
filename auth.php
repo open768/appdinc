@@ -332,7 +332,8 @@ class cADCredentials{
 	
 	//**************************************************************************************
 	public function encode(){
-		return urlencode(urlencode($this->get_username())."@".$this->account);
+		//return urlencode(urlencode($this->get_username())."@".$this->account); //dont double encode
+		return urlencode($this->get_username()."@".$this->account);
 	}
 
 	//**************************************************************************************
