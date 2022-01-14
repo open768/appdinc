@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-Copyright (C) Chicken Katsu 2013 
+	Copyright (C) Chicken Katsu 2013 
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -19,7 +19,7 @@ require_once("$phpinc/ckinc/http.php");
 require_once("$ADlib/common.php");
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/common.php");
-require_once("$phpinc/php-openssl-crypt/cryptor.php");
+require_once("$phpinc/extra/php-openssl-crypt/cryptor.php");
 
 //#################################################################
 //# 

@@ -38,6 +38,8 @@ class cADCore{
 	public static $CONTROLLER_PREFIX="controller";
 	public static $SUFFIX = "&output=JSON";
 	private static $bOutputController = false;
+	private static $oObjStore = null;
+	
 	const USUAL_METRIC_PREFIX = "/rest/applications/";
 	const CONFIG_METRIC_PREFIX = "/rest/configuration";
 	const DB_METRIC_PREFIX = "/rest/applications/Database%20Monitoring/metric-data?metric-path=";
@@ -58,6 +60,19 @@ class cADCore{
 	
 	const DATE_FORMAT="Y-m-d\TG:i:s\Z";
 
+	//*****************************************************************
+	public static function pr_init_objstore(){
+		if (!self::$oObjStore){
+			$oObjStore = new cObjStoreDB();
+			$oObjStore->realm = "ADCORE";
+			$oObjStore->expire_time = 300;	// 5 mins
+			$oObjStore->set_table("ADCORE");
+			
+			self::$oObjStore = $oObjStore;
+		}
+	}
+	
+	//*****************************************************************
 	public static function GET_controller(){
 		$oCred = new cADCredentials();
 		$sController = ($oCred->use_https?"https":"http")."://$oCred->host";
@@ -126,11 +141,13 @@ class cADCore{
 		cDebug::write("getting $psCmd with payload");
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd.$psPayload;
 		
-		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
-			cDebug::extra_debug("getting cached response");
-			$oData = cHash::get($sCacheCmd);
-			cDebug::leave();
-			return $oData;
+		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) ){
+			$oData = self::$oObjStore->get($sCacheCmd, true);
+			if ($oData !== null){
+				cDebug::leave();
+				return $oData;
+			}else
+				cDebug::extra_debug("$sCacheCmd not in cache");
 		}
 		$sExtraHeader = self::pr__get_extra_header();
 
@@ -162,8 +179,10 @@ class cADCore{
 		}
 		
 		//----- 
-		if ($pbCacheable)	
-			cHash::put($sCacheCmd, $oData,true);
+		if ($pbCacheable){	
+			cDebug::extra_debug("writing to cache");
+			self::$oObjStore->put($sCacheCmd, $oData,true);
+		}
 
 		cDebug::leave();
 		return $oData;
@@ -181,22 +200,21 @@ class cADCore{
 	public static function  GET($psCmd, $pbCacheable = false, $pbPrefix=true, $pbSuffix=true){
 		global $oData;
 
-		//cDebug::enter();
+		cDebug::enter();
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
 		
 		//-------------- check the cache
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd;
-		
-		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) && cHash::exists($sCacheCmd)){
-			cDebug::extra_debug("$psCmd cached", true);
-			$iOld = cHash::$CACHE_EXPIRY;		//TBD to replace with cache instance
-			cHash::$CACHE_EXPIRY = 600; //10 mins
-			$oData = cHash::get($sCacheCmd); 
-			cHash::$CACHE_EXPIRY = $iOld; //whatever it was
-			//cDebug::leave();
-			return $oData;
+		if ($pbCacheable && (!cDebug::$IGNORE_CACHE)){
+			$oData = self::$oObjStore->get($sCacheCmd);
+			if ($oData !== null){
+				cDebug::extra_debug("$sCacheCmd cached", true);
+				cDebug::leave();
+				return $oData;
+			}else				
+				cDebug::extra_debug("$sCacheCmd not in cache");
 		}
 		
 		//-------------- build the url
@@ -219,11 +237,15 @@ class cADCore{
 		$oData = $oHttp->getjson($sUrl);
 		
 		//----- 
-		if ($pbCacheable)	cHash::put($sCacheCmd, $oData,true);
+		if ($pbCacheable){
+			cDebug::extra_debug("writing to cache");
+			self::$oObjStore->put($sCacheCmd, $oData,true);
+		}
 
-		//cDebug::leave();
+		cDebug::leave();
 		return $oData;
 	}
 }
+cADCore::pr_init_objstore();
 
 ?>

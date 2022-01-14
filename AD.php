@@ -15,7 +15,6 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //see 
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/cached_http.php");
-require_once("$phpinc/pubsub/pub-sub.php");
 require_once("$ADlib/objects.php");
 require_once("$ADlib/demo.php");
 require_once("$ADlib/common.php");
