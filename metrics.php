@@ -83,6 +83,7 @@ class cADInfraMetric{
 		return $aOut;
 	}
 		
+	//**************************************************************************
 	public static function getInfrastructureMetricTypes(){
 		$aMetricTypes = [cADMetricPaths::METRIC_TYPE_ACTIVITY, cADMetricPaths::METRIC_TYPE_RESPONSE_TIMES];
 		$aMiscInfraMetricTypes = self::getInfrastructureMiscMetricTypes();
@@ -539,6 +540,9 @@ class cADMetricPaths{
 		return self::InfrastructureNodeDisks($psTier, $psNode)."|$psDisk|Space Used";
 	}
 	
+	public static function InfrastructureAppAgentAvailability($psTier, $psNode=null){
+		return self::InfrastructureNode($psTier, $psNode)."|Agent|App|Availability";
+	}
 	public static function InfrastructureAgentAvailability($psTier, $psNode=null){
 		return self::InfrastructureNode($psTier, $psNode)."|Agent|Machine|Availability";
 	}

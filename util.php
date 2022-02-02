@@ -200,6 +200,15 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
+	public static function extract_node_name($psMetric){
+		$sPattern = "/Individual Nodes\|(.*)\|/U";			
+		if (preg_match($sPattern, $psMetric, $aMatches))
+			return $aMatches[1];
+		else
+			return null;
+	}
+	
+	//*****************************************************************
 	public static function extract_RUM_name($psType, $psMetric){
 		$sType = preg_quote($psType);
 		$sPattern = "/\|$sType\|([^\|]+)\|/";

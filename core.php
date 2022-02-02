@@ -198,9 +198,8 @@ class cADCore{
 
 	//*****************************************************************
 	public static function  GET($psCmd, $pbCacheable = false, $pbPrefix=true, $pbSuffix=true){
-		global $oData;
 
-		cDebug::enter();
+		//cDebug::enter();
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
@@ -211,7 +210,7 @@ class cADCore{
 			$oData = self::$oObjStore->get($sCacheCmd);
 			if ($oData !== null){
 				cDebug::extra_debug("$sCacheCmd cached", true);
-				cDebug::leave();
+				//cDebug::leave();
 				return $oData;
 			}else				
 				cDebug::extra_debug("$sCacheCmd not in cache");
@@ -242,8 +241,28 @@ class cADCore{
 			self::$oObjStore->put($sCacheCmd, $oData,true);
 		}
 
-		cDebug::leave();
+		//cDebug::leave();
 		return $oData;
+	}
+	
+	//*****************************************************************
+	public static function POST($psCmd, $psPayload=null){
+		//-------------- get authentication info
+		$oCred = new cADCredentials();
+		$oCred->check();
+
+		//-------------- build the url
+		$sCred=$oCred->encode();
+		$sAD_REST = self::GET_controller();
+		$sUrl = $sAD_REST.$psCmd;
+		
+		//----- actually do it
+		$oHttp = new cHttp();
+		$oHttp->USE_CURL = false;
+		$oHttp->set_credentials($sCred,$oCred->get_password());
+		$oHttp->request_payload= $psPayload;
+		$oHttp->method = "POST";
+		$oHttp->getjson($sUrl);
 	}
 }
 cADCore::pr_init_objstore();

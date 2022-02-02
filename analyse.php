@@ -52,6 +52,20 @@ class cAgentCounts{
 	public $count;
 }
 
+class cAgentLine{
+	public $tier = null;
+	public $app = null;
+	public $node = null;
+	public $type;
+	public $version;
+	public $raw_version;
+	public $hostname;
+	public $runtime;
+	public $id;
+	public $installDir;
+}
+
+
 class CAD_CorrelatedEvent{
 	public $id;
 	public $type;
@@ -140,6 +154,63 @@ class cADAnalysis {
 	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	//# Agents
 	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&	
+	public static function analyse_agents($paAgents, $psType){
+		$aOut = [];
+		$sLowerApp = null;
+		
+		foreach ($paAgents as $oAgent){
+			$sRaw = null;
+			if (property_exists($oAgent,"agentDetails")){
+				$oDetails = $oAgent->agentDetails;
+				if ($oDetails->disable || $oDetails->disableMonitoring)
+					continue;
+				
+				if (property_exists($oAgent->agentDetails,"agentVersion"))
+					$sRaw = $oAgent->agentDetails->agentVersion;
+			}
+			
+			if (!$sRaw)		$sRaw = $oAgent->version;
+			$sVer = cADUtil::extract_agent_version($sRaw);
+			
+			$oObj = new cAgentLine;
+			$oObj->version = $sVer;
+			$oObj->raw_version = $sRaw;
+			$oObj->hostname = $oAgent->hostName;
+			
+			if (property_exists($oAgent,"agentDetails")){
+				$oDetails = $oAgent->agentDetails;
+				$oObj->id = $oDetails->id;
+				$oObj->installDir = $oDetails->installDir;
+				
+				try{
+					if (property_exists($oAgent, "applicationId"))
+						$oObj->app = new cAdApp($oAgent->applicationName, $oAgent->applicationId);
+					elseif ($oAgent->applicationIds)
+						$oObj->app = new cAdApp(null,$oAgent->applicationIds[0]);
+				}catch (Exception $e){
+					cDebug::extra_debug_warning("unable to create app object: ".$e->getMessage());
+				}
+
+				if (property_exists($oAgent,"applicationComponentNodeName"))
+					$oObj->node = $oAgent->applicationComponentNodeName;
+				
+				
+				$oObj->type = $oDetails->type;
+				$oObj->runtime = $oDetails->latestAgentRuntime;
+			}elseif ($psType === "db"){
+				$oObj->type = "DB_AGENT";
+				$oObj->id = $oAgent->id;
+			}
+			
+			$oObj->tier = @$oAgent->applicationComponentName;
+			
+			$aOut[] = $oObj;
+		}
+		
+		return $aOut;	
+	}
+	
+	//*****************************************************************
 	public static function count_all_agent_types($paNodes){
 		cDebug::enter();
 		$aTypes = [];
@@ -151,6 +222,7 @@ class cADAnalysis {
 		cDebug::leave();
 		return $aTypes;
 	}
+	//*****************************************************************
 	public static function count_agent_types($paNodes){
 		cDebug::enter();
 		$aTypes = [];

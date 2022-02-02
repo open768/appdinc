@@ -61,7 +61,7 @@ class cADTier{
 	}
 	
 	private function pr_get_tier_id(){
-		cDebug::enter();
+		//cDebug::enter();
 		$aTiers = $this->app->GET_raw_tiers();
 		$sID = null;
 		$sName = strtolower($this->name);
@@ -75,11 +75,18 @@ class cADTier{
 		else	
 			cDebug::error("tier name $sName not found");
 		
-		cDebug::leave();
+		//cDebug::leave();
 		return $sID;
 	}
 	
 	//##############################################################################
+	public function GET_All_App_Agent_availability($poTimes, $psNode, $pbRollup=true){
+		$sMetricpath=cADMetricPaths::InfrastructureAppAgentAvailability($this->name, $psNode);
+		$aData = $this->app->GET_MetricData($sMetricpath, $poTimes,$pbRollup,true,true);
+		return  $aData;
+	}
+	
+	//*****************************************************************
 	public function GET_DiskMetrics(){
 		cDebug::enter();
 		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, null);

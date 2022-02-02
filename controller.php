@@ -124,5 +124,31 @@ class cADController{
 		return $aOut;
 	}
 	
+	//*****************************************************************
+	public static function Mark_historical_nodes ($paNodes){
+		//using the config API in batches of 25
+		$iNodeCount = 0;
+		$iBatchCount=1;
+		$sNodes = "";
+		$sCMD = "/rest/mark-nodes-historical?application-component-node-ids=";
+		
+		foreach ($paNodes as $sNodeID){
+			if ($sNodes !== "") $sNodes .= ",";
+			$sNodes .= $sNodeID;
+			$iNodeCount++;
+			if ($iNodeCount >=25){
+				cDebug::extra_debug("sending Batch $iBatchCount");
+				cADCore::POST($sCMD.$sNodes);
+				$iNodeCount = 0;
+				$sNodes = "";
+				$iBatchCount ++;
+			}
+		}
+		if ($iNodeCount >0){
+			cDebug::extra_debug("sending Batch $iBatchCount");
+			cADCore::POST($sCMD.$sNodes);
+		}
+		
+	}
 }
 ?>

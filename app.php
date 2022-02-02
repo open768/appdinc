@@ -113,15 +113,6 @@ class cADApp{
 		return (count($aCallsPerMin)>0);
 	}
 	
-	//*****************************************************************
-	public function GET_CallsPerMin($poTimes){
-		cDebug::enter();
-		$oTimes = new cADTimes();
-		$sMetric = cADMetricPaths::appCallsPerMin();
-		$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
-		cDebug::leave();
-		return $aData;
-	}
 	
 	//*****************************************************************
 	public function GET_Backends(){
@@ -133,6 +124,16 @@ class cADApp{
 		return $aData;
 	}
 
+	//*****************************************************************
+	public function GET_CallsPerMin($poTimes){
+		cDebug::enter();
+		$oTimes = new cADTimes();
+		$sMetric = cADMetricPaths::appCallsPerMin();
+		$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
+		cDebug::leave();
+		return $aData;
+	}
+	
 	//*****************************************************************
 	public function GET_data_collectors(){
 		cDebug::enter();
