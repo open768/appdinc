@@ -216,7 +216,7 @@ class cADAnalysis {
 		$aTypes = [];
 		foreach ($paNodes as $aNodes)
 			foreach ($aNodes as $oNode)
-				cCommon::add_count_to_array($aTypes, $oNode->agentType);
+				cArrayUtil::add_count_to_array($aTypes, $oNode->agentType);
 		
 		
 		cDebug::leave();
@@ -227,7 +227,7 @@ class cADAnalysis {
 		cDebug::enter();
 		$aTypes = [];
 		foreach ($paNodes as $oNode)
-			cCommon::add_count_to_array($aTypes, $oNode->agentType);
+			cArrayUtil::add_count_to_array($aTypes, $oNode->agentType);
 			
 		$aOut = [];
 		foreach ($aTypes as $sType=>$iCount){

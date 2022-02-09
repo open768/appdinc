@@ -88,7 +88,7 @@ class cADAppCheckup {
 		$aBadNames = [];
 		foreach ($aEndPoints as $oEndPoint){
 			foreach (self::$badnames as $sNeedle)
-				if (stripos($oEndPoint->name, $sNeedle )) cCommon::add_count_to_array($aBadNames, $sNeedle);
+				if (stripos($oEndPoint->name, $sNeedle )) cArrayUtil::add_count_to_array($aBadNames, $sNeedle);
 		}
 		foreach ($aBadNames as $sKey=>$iCount)
 			 $poOut->sendpoints[] = new cAppCheckupMessage(true, "$iCount x  endpoints containing '$sKey' detected", "known unwanted names");
@@ -228,7 +228,7 @@ class cADAppCheckup {
 		foreach ($paTrans as $oTrans){
 			$sTName = $oTrans->name;
 			foreach (self::$badnames as $sNeedle)
-				if (stripos($sTName, $sNeedle )) cCommon::add_count_to_array($aBadBTs, $sNeedle);
+				if (stripos($sTName, $sNeedle )) cArrayUtil::add_count_to_array($aBadBTs, $sNeedle);
 		}
 		foreach ($aBadBTs as $sKey=>$iCount)
 			 $poOut->BTs[] = new cAppCheckupMessage(true, "$iCount x $sKey known unwanted BTs detected", "BT Names");
