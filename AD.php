@@ -37,6 +37,7 @@ require_once("$ADlib/trans.php");
 require_once("$ADlib/snapshot.php");
 require_once("$ADlib/db.php");
 require_once("$ADlib/server.php");
+require_once("$ADlib/rbac.php");
 
 
 //#################################################################

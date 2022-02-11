@@ -19,6 +19,7 @@ require_once("$phpinc/ckinc/http.php");
 require_once("$ADlib/common.php");
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/common.php");
+require_once("$phpinc/ckinc/audit.php");
 require_once("$phpinc/extra/php-openssl-crypt/cryptor.php");
 
 //#################################################################
@@ -33,118 +34,6 @@ class cLogin{
 	const KEY_HTTPS = "ss";
 	const KEY_REFERRER = "r";
 	const KEY_SUBMIT = "s";
-}
-
-//#################################################################
-//# 
-//#################################################################
-class cADAuditAccount{
-	public $host = null;
-	public $account = null;
-	public $user = null;
-	public $timestamp = null;
-	public $IP = null;
-}
-
-class cADAudit{
-	const ACCOUNTS_KEY = "cADAudit.accounts.key";
-	const ACCOUNT_BASE_KEY = "cADAudit.account.basekey.";
-	const MAX_ENTRIES_PER_USER = 100;
-	
-	//**************************************************************************************
-	public static function audit ($poCredentials){
-		cDebug::enter();
-		if (! ($poCredentials instanceof cADCredentials )) cDebug::error("cADCredentials not provided");
-			
-		$oAccount = new cADAuditAccount;
-		$oAccount->host = $poCredentials->host;
-		$oAccount->account = $poCredentials->account;
-		$oAccount->user = $poCredentials->get_username();
-		$oAccount->timstamp = $sDate = date('d-m-Y H:i:s');
-		
-		//if this this account hasnt been audited before add to the Audited customers table
-		cDebug::write("checking known accounts");
-		$sAccountHash = self::pr__get_account_key($oAccount);
-		if ( ! cHash::exists($sAccountHash) ){
-			cDebug::write("adding to Audited Customers table");
-			self::pr__add_audited_account($oAccount);
-		}
-		
-		//if this username hasnt been audited before, add to the known accounts for the account
-		cDebug::write("checking known users of account");
-		$sUserHash = self::pr__get_user_key($oAccount);
-		if ( ! cHash::exists($sUserHash) ){
-			cDebug::write("adding username to known Customers table");
-			self::pr__add_known_user($oAccount);
-		}
-		
-		//finally add the user audit entry
-		cDebug::write("writing audit entry");
-		self::pr_add_user_entry($oAccount);
-		cDebug::leave();
-	}
-	
-	
-	//**************************************************************************************
-	private static function pr__get_user_key($poAccount){
-		return self::pr__get_account_key($poAccount).$poAccount->user;
-	}
-	
-	//**************************************************************************************
-	private static function pr_add_user_entry($poAccount){
-		$sHash = self::pr__get_user_key($poAccount);
-		
-		$aAuditLines = cHash::get($sHash);
-		if ($aAuditLines == null) $aAuditLines = [];
-
-		//check size of array - mustnt grow too large
-		$iCount = count($aAuditLines);
-		while ($iCount >= self::MAX_ENTRIES_PER_USER){
-			array_shift($aAuditLines);
-			$iCount = count($aAuditLines);
-		}
-		
-		$aAuditLines[] = $poAccount;
-		cHash::put($sHash, $aAuditLines, true);
-	}
-	
-	//**************************************************************************************
-	public static function get_user_entries($poAccount){
-		return cHash::get(self::pr__get_user_key($poAccount));
-	}
-
-	//**************************************************************************************
-	private static function pr__get_account_key($poAccount){
-		return self::ACCOUNT_BASE_KEY.$poAccount->host.$poAccount->account;
-	}
-	
-	//**************************************************************************************
-	private static function pr__add_known_user($poAccount){
-		$sHash = self::pr__get_account_key($poAccount);
-		$aUsers = cHash::get($sHash);
-		if ($aUsers == null) $aUsers = [];
-		$aUsers[] = $poAccount;
-		cHash::put($sHash, $aUsers, true);
-	}
-	
-	//**************************************************************************************
-	public static function get_known_users($poAccount){
-		return cHash::get(self::pr__get_account_key($poAccount));
-	}
-	
-	//**************************************************************************************
-	private static function pr__add_audited_account($poAccount){
-		$aAccounts = self::get_audited_accounts();
-		if ($aAccounts == null) $aAccounts = [];
-		
-		$aAccounts[] = $poAccount;
-		cHash::put( self::ACCOUNTS_KEY, $aAccounts, true);
-	}
-	//**************************************************************************************
-	public static function get_audited_accounts(){
-		return cHash::get(self::ACCOUNTS_KEY);
-	}
-	
 }
 
 //#################################################################
@@ -282,7 +171,7 @@ class cADCredentials{
 		//try to login - if it worked you are logged in
 		cADCore::login();
 		cDebug::write("logged in");
-		cADAudit::audit($this); //audit on success
+		cAudit::audit($this, "login"); //audit on success
 		
 		$_SESSION[self::LOGGEDIN_KEY] = true;
 		$this->mbLogged_in = true;

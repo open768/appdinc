@@ -136,6 +136,7 @@ class cADCore{
 		//-------------- convert object
 		if (is_object($psPayload) || is_array($psPayload))
 		$psPayload = json_encode($psPayload);
+		//cDebug::vardump($psPayload);
 		
 		//-------------- check the cache
 		cDebug::write("getting $psCmd with payload");
@@ -179,7 +180,9 @@ class cADCore{
 		}
 		
 		//----- 
-		if ($pbCacheable){	
+		if ($oData == null)
+			cDebug::extra_debug("no data returned");
+		elseif ($pbCacheable){	
 			cDebug::extra_debug("writing to cache");
 			self::$oObjStore->put($sCacheCmd, $oData,true);
 		}

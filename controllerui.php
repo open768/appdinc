@@ -38,6 +38,16 @@ class cADControllerUI{
 	}
 
 	//###############################################################################################
+	public static function account_groups(){
+		$sURL = self::pr__get_location("ACCOUNT_ADMIN_GROUPS");
+		return $sURL;
+	}
+	public static function account_users(){
+		$sURL = self::pr__get_location("ACCOUNT_ADMIN_USERS");
+		return $sURL;
+	}
+	
+	//###############################################################################################
 	public static function agents(){
 		$sURL = self::pr__get_location("SETTINGS_AGENTS");
 		return $sURL;

@@ -375,6 +375,41 @@ class cADRestUI{
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* RBAC Role based Authentication
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function get_rbac_all_users(){
+		cDebug::enter();
+		$sUrl = "userAdministrationUiService/users";
+		$aData = cAdCore::GET_restui($sUrl, true);
+		cDebug::leave();
+		return $aData;		
+	}
+	
+	//************************************************************************************
+	public static function get_rbac_ldap_group_users($psGroup){
+		cDebug::enter();
+		$oPayload = (object)[
+			"offset" =>1,
+			"resultCount"=>25,
+			"cookie"=>null,
+			"queryString"=>"",
+			"groupName"=>"cn=$psGroup,ou=group,ou=AppDynamics,o=t2,dc=com"
+		];
+		$sUrl = "ldapAdministrationUiService/users/ldapquery";
+		$oData = cADCore::GET_restUI_with_payload($sUrl, $oPayload, true);
+		cDebug::leave();
+		return $oData;		
+	}
+	//************************************************************************************
+	public static function get_rbac_internal_group_users($psGroupID){
+		cDebug::enter();
+		$sUrl = "groupAdministrationUiService/groups/userids/$psGroupID";
+		$oData = cADCore::GET_restUI($sUrl, true);
+		cDebug::leave();
+		return $oData;		
+	}
+	
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Snapshots (warning this uses an undocumented API)
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_snapshot_segments($psGUID, $piSnapTime){
