@@ -53,10 +53,6 @@ class cADControllerUI{
 		return $sURL;
 
 	}
-	public static function licenses(){
-		$sURL = cADCore::GET_controller()."#/licensing/summary";
-		return $sURL;
-	}
 	
 	//###############################################################################################
 	//# analytics
@@ -145,7 +141,14 @@ class cADControllerUI{
 	public static function home(){
 		$sURL = self::pr__get_location("AD_HOME");
 		return $sURL;
-	}	
+	}
+	
+	//###############################################################################################
+	//licenses
+	public static function licenses(){
+		$sURL = self::pr__get_location("LICENSE_MANAGEMENT_PEAK_USAGE");
+		return $sURL;
+	}
 	
 	//###############################################################################################
 	//# Nodes

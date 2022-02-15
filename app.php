@@ -33,10 +33,12 @@ function bt_config_sort_function($po1,$po2){
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class cADApp{	
 	public static $server_app = null;
-	public $name, $id;
+	public $name = null, $id = null;
+	const NO_APP = "*noapp";
 	
 	function __construct($psAppName, $psAppId=null) {	
 		if (!$psAppName  && !$psAppId) cDebug::error("no app details provided");
+		if ($psAppName === self::NO_APP) return;
 
 		if ($psAppName){
 			$this->name = $psAppName;

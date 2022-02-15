@@ -22,6 +22,7 @@ class cADTimes{
 	public $end;
 	public $duration;
 	
+	//************************************************************************************
 	function __construct($piTime = null) {	
 		$this->time_type = self::BETWEEN;
 		if ($piTime){
@@ -33,17 +34,11 @@ class cADTimes{
 		}
 	}
 	
+	//************************************************************************************
 	public function start_time(){
 		$iTime = $this->start/1000;
 		cDebug::extra_debug("time is $iTime");
 		return  new DateTime("@$iTime");
-	}
-	
-	public function set_start_time($pDate){
-		$this->start = ($pDate->getTimeStamp())*1000;
-	}
-	public function set_end_time($pDate){
-		$this->start = ($pDate->getTimeStamp())*1000;
 	}
 	
 	public function end_time(){
@@ -51,6 +46,26 @@ class cADTimes{
 		return  new DateTime("@$iTime");
 	}
 	
+	public function set_start_time($pdDate){		//datetime object
+		if (! $pdDate instanceof DateTime) cDebug::error("expecting datetime object");
+		$this->start = ($pdDate->getTimeStamp())*1000;
+	}
+	
+	public function set_end_time($pdDate){ 		//datetime object
+		if (! $pdDate instanceof DateTime) cDebu::error("expecting datetime object");
+		$this->start = ($pdDate->getTimeStamp())*1000;
+	}
+	
+	//************************************************************************************
+	public function set_all_today(){
+		$dStart = new DateTime();
+		$dStart->setTime(0,0);
+		$this->set_start_time($dStart);
+		$dEnd = new DateTime();
+		$this->set_end_time($dStart);
+	}
+	
+	//************************************************************************************
 	public function set_duration($piMins){
 		if ($this->time_type == SELF::BEFORE_NOW){
 			$this->end = time() * 1000;
@@ -65,6 +80,7 @@ class cADTimes{
 		$this->set_duration($piHrs * 60);
 	}
 	
+	//************************************************************************************
 	public function toString(){
 		return  
 			($this->start_time())->format(cCommon::ENGLISH_DATE_FORMAT).
