@@ -74,7 +74,7 @@ class cADApp{
 		if ($sID == null)
 			cDebug::error("unable to find application id with name: $sLower");
 		else
-			$this->id = $sID;
+		$this->id = $sID;
 		
 		return $sID;
 	}

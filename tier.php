@@ -110,6 +110,8 @@ class cADTier{
 	}
 	
 	//*****************************************************************
+	//TODO this function shoud be removed as it takes a very long time to execute
+	//caller has to be asynchronous
 	public  function GET_ext_details($poTimes){
 		global $aResults;
 		$sApp = $this->app->name;
