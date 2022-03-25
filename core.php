@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-Copyright (C) Chicken Katsu 2013 
+Copyright (C) Chicken Katsu 2013 - 2022
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -49,6 +49,7 @@ class cADCore{
 	const SERVER_APPLICATION = "Server & Infrastructure Monitoring";
 	const ENCODED_SERVER_APPLICATION = "Server%20&%20Infrastructure%20Monitoring";
 	const LOGIN_URL = "/auth?action=login";
+	const API_TOKEN_ACCESS_URL = "/api/oauth/access_token";
 	const DEMO_HOST = "demo";
 	const BEFORE_NOW_TIME = "bn";
 	const METRIC_NOT_FOUND = "METRIC DATA NOT FOUND";
@@ -86,7 +87,7 @@ class cADCore{
 	//*****************************************************************
 	public static function login(){
 		cDebug::enter();
-		//TBD "controller/auth?action=login"		
+		//TODO "controller/auth?action=login"		
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
@@ -108,19 +109,22 @@ class cADCore{
 		cDebug::leave();
 	}
 	
+	
 	//*****************************************************************
 	private static function pr__get_extra_header(){
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
 
-		$sExtraHeader= "Content-Type: application/json";
-		$sExtraHeader.= "\r\nAccept: application/json, text/plain, */*";
-		$sExtraHeader.= "\r\nUser-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36";
-		$sExtraHeader = "\r\nX-CSRF-TOKEN: $oCred->csrftoken";
-		$sExtraHeader.= "\r\nCookie: JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN: $oCred->csrftoken;";	
+		$aExtraHeader=[
+			"Content-Type" => "application/json",
+			"Accept" => "application/json, text/plain, */*",
+			"User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36",
+			"X-CSRF-TOKEN" => $oCred->csrftoken,
+			"Cookie" => "JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN: $oCred->csrftoken;"	
+		];
 		
-		return $sExtraHeader;
+		return $aExtraHeader;
 	}
 	
 	//*****************************************************************
@@ -132,6 +136,10 @@ class cADCore{
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
+		if (!$oCred->csrftoken || !$oCred->jsessionid ){
+			//cDebug::vardump($oCred);
+			cDebug::error("missing  csrftoken or jsessionid in credentials");
+		}
 		
 		//-------------- convert object
 		if (is_object($psPayload) || is_array($psPayload))
@@ -150,18 +158,16 @@ class cADCore{
 			}else
 				cDebug::extra_debug("$sCacheCmd not in cache");
 		}
-		$sExtraHeader = self::pr__get_extra_header();
-
 		
 		//----- actually do it
 		$sAD_REST = self::GET_controller().$psUIPrefix;
 		$url = $sAD_REST.$psCmd;
-		//cDebug::extra_debug("Url: $url");
-		//cDebug::extra_debug("header: $sExtraHeader");
+		cDebug::extra_debug("Url: $url");
 		
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
-		$oHttp->extra_header = $sExtraHeader;
+		//$oHttp->debug = true; //debug
+		$oHttp->extra_headers = self::pr__get_extra_header();
 		$oHttp->request_payload= $psPayload;
 		try{
 			$oData = $oHttp->getjson($url);
@@ -235,7 +241,10 @@ class cADCore{
 		//$oHttp->extra_header = $sExtraHeader;
 		$oHttp->USE_CURL = false;
 		
-		$oHttp->set_credentials($sCred,$oCred->get_password());
+		if (cCommon::is_string_set($oCred->api_token))
+			$oHttp->extra_headers = ["Authorization" => "Bearer $oCred->api_token"];
+		else
+			$oHttp->set_credentials($sCred,$oCred->get_password());
 		$oData = $oHttp->getjson($sUrl);
 		
 		//----- 

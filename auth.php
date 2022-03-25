@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-	Copyright (C) Chicken Katsu 2013 
+	Copyright (C) Chicken Katsu 2013 - 2022
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -45,8 +45,8 @@ class cADCrypt{
 	
 	private static function pr__check_credentials(){
 		if (self::$credentials == null) cDebug::error("account credentials missing");
-		if (self::$credentials->host == null) cDebug::error("host missing");
-		if (self::$credentials->account == null) cDebug::error("account missing");
+		if (!cCommon::is_string_set(self::$credentials->host)) cDebug::error("host missing");
+		if (!cCommon::is_string_set(self::$credentials->account)) cDebug::error("account missing");
 	}
 	
 	private static function get_key(){
@@ -90,6 +90,13 @@ class cADCredentials{
 	const LOGGEDIN_KEY = "log";
 	const JSESSION_KEY = "boar";
 	const CSRF_TOKEN_KEY = "spike";
+	const API_SECRET_KEY = "van";
+	const API_APP_KEY = "car";
+	const API_TOKEN_KEY = "flat";
+	const ANALYTICS_API_KEY = "wall";
+	const ANALYTICS_API_APP = "stick";
+	const GLOBAL_ACCOUNT_NAME = "bean";
+	const ANALYTICS_HOST = "curd";
 	
 	const DEMO_USER = "demo";
 	const DEMO_PASS = "d3m0";
@@ -106,30 +113,41 @@ class cADCredentials{
 	public $restricted_login = null;
 	private $mbLogged_in = false;
 	public $encryption_key = "no encryption key set";
+	public $api_app;
+	public $api_secret;
+	public $api_token;
+	public $analytics_api_key;
+	public $analytics_api_app;
+	public $global_account_name;
+	public $analytics_host;
 	
 	//**************************************************************************************
-	function check(){
-		global $_SESSION;
+	//* construct
+	//**************************************************************************************
+	function __construct() {
 		//cDebug::enter();
-		try{
-			if(!$this->account) cDebug::error("Couldnt get account from session");
-			if(!$this->encrypted_username ) cDebug::error("Couldnt get username from session");
-			if(!$this->encrypted_password) cDebug::error("Couldnt get password from session");
+		//retrieves stored values from the session $_SESSION
+		$this->account = cCommon::get_session(self::ACCOUNT_KEY);
+		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
+		$this->encrypted_password = cCommon::get_session(self::PASSWORD_KEY); 
 
-			if (!$this->is_demo()){
-				if(!$this->host) cDebug::error("Couldnt get host from session");
-			}
-		}	
-		catch (Exception $e){
-			$sMsg = $e->getMessage();
-			if (cDebug::is_extra_debugging()){
-				cDebug::extra_debug("session:");
-				cDebug::vardump($_SESSION);
-			}
-			cDebug::error($sMsg);
-		}
-		//cDebug::leave();
+		$this->host = cCommon::get_session(self::HOST_KEY);
+		$this->use_https = cCommon::get_session(self::USE_HTTPS_KEY);
+
+		$this->restricted_login = cCommon::get_session(self::RESTRICTED_LOGIN_KEY);
+		$this->mbLogged_in = cCommon::get_session(self::LOGGEDIN_KEY);  
+		$this->jsessionid = cCommon::get_session(self::JSESSION_KEY);  
+		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
+		$this->api_secret = cCommon::get_session(self::API_SECRET_KEY);  
+		$this->api_app = cCommon::get_session(self::API_APP_KEY);  
+		$this->api_token = cCommon::get_session(self::API_TOKEN_KEY);  
+		$this->analytics_api_key = cCommon::get_session(self::ANALYTICS_API_KEY);  
+		$this->analytics_api_app = cCommon::get_session(self::ANALYTICS_API_APP);  
+		$this->global_account_name = cCommon::get_session(self::GLOBAL_ACCOUNT_NAME);
+		$this->analytics_host = cCommon::get_session(self::ANALYTICS_HOST);
 		
+		//if (cDebug::is_extra_debugging()) cDebug::vardump($this);
+		//cDebug::leave();
 	}
 	
 	//**************************************************************************************
@@ -156,46 +174,119 @@ class cADCredentials{
 	}
 	
 	//**************************************************************************************
-	//this performs the login
-	public function save(){
-		cDebug::enter();
-		cDebug::write("saving TO SESSION");
+	//* utility functions
+	//**************************************************************************************
+	function check(){
+		global $_SESSION;
+		//cDebug::enter();
+		try{
+			if(!cCommon::is_string_set($this->account)) cDebug::error("missing account");
+			if(!cCommon::is_string_set($this->encrypted_username)) cDebug::error("missing username");
+			
+			if (cCommon::is_string_set($this->analytics_api_key)){
+				//cDebug::extra_debug("checking for analytics api credentials");
+				if(!cCommon::is_string_set($this->analytics_api_app)) cDebug::error("missing analytics API app");
+				if(!cCommon::is_string_set($this->global_account_name)) cDebug::error("missing global account name ");
+				if(!cCommon::is_string_set($this->analytics_host)) cDebug::error("missing analytics host ");
+			}else{
+				if (!$this->is_demo() && !cCommon::is_string_set($this->host)) cDebug::error("missing host");
+				if (cCommon::is_string_set($this->api_secret)){
+					//cDebug::extra_debug("checking for api credentials");
+					if(!cCommon::is_string_set($this->api_app)) cDebug::error("missing api_app ");
+				}else{
+					//cDebug::extra_debug("checking for normal credentials");
+					if(!cCommon::is_string_set($this->encrypted_password)) cDebug::error("password ");
+				}
+			}
+		}	
+		catch (Exception $e){
+			$sMsg = $e->getMessage();
+			cDebug::error($sMsg);
+		}
+		//cDebug::leave();
 		
+	}
+		
+	//**************************************************************************************
+	//* Save
+	//**************************************************************************************
+	private function pr_save_to_session(){
+		global $_SESSION;
 		$_SESSION[self::HOST_KEY]  = $this->host;
 		$_SESSION[self::ACCOUNT_KEY]  = $this->account;
 		$_SESSION[self::USERNAME_KEY]  = $this->encrypted_username;
 		$_SESSION[self::PASSWORD_KEY]  = $this->encrypted_password;
 		$_SESSION[self::USE_HTTPS_KEY]  = $this->use_https;
 		$_SESSION[self::RESTRICTED_LOGIN_KEY]  = $this->restricted_login;
+		$_SESSION[self::API_SECRET_KEY]  = $this->api_secret;
+		$_SESSION[self::API_APP_KEY]  = $this->api_app;
+		$_SESSION[self::API_TOKEN_KEY]  = $this->api_token;
+		$_SESSION[self::ANALYTICS_API_KEY]  = $this->analytics_api_key;
+		$_SESSION[self::ANALYTICS_API_APP]  = $this->analytics_api_app;
+		$_SESSION[self::GLOBAL_ACCOUNT_NAME]  = $this->global_account_name;
+		$_SESSION[self::ANALYTICS_HOST]  = $this->analytics_host;
+		$_SESSION[self::JSESSION_KEY]  = $this->jsessionid;
+		$_SESSION[self::CSRF_TOKEN_KEY]  = $this->csrftoken;
+	}
+	
+	//**************************************************************************************
+	//this performs the login
+	public function save(){
+		//cDebug::enter();
+		//cDebug::write("saving TO SESSION");
+		global $_SESSION;
 		
+		$this->pr_save_to_session();
+
 		//try to login - if it worked you are logged in
-		cADCore::login();
-		cDebug::write("logged in");
-		cAudit::audit($this, "login"); //audit on success
-		
-		$_SESSION[self::LOGGEDIN_KEY] = true;
-		$this->mbLogged_in = true;
-		cDebug::leave();
+		if($this->analytics_api_key){
+			cAdAnalytics::list_schemas();
+			$this->mbLogged_in = false; //having an analytics key doesnt mean you are logged in
+		}else{
+			if ($this->api_secret){
+				//try and get a temporary access token
+				$this->get_access_token();
+			}else{
+				cADCore::login();
+				cDebug::write("logged in");
+				cAudit::audit($this, "login"); //audit on success
+				
+				$_SESSION[self::LOGGEDIN_KEY] = true;
+			}
+			$this->mbLogged_in = false;
+		}
+		//cDebug::leave();
+	}
+	
+	//**************************************************************************************
+	public function save_api_access_token( $poData){
+		$_SESSION[self::API_TOKEN_KEY]  = $poData->access_token;
 	}
 	
 	//**************************************************************************************
 	public function save_restui_auth( $poHttp){
+		cDebug::enter();
+		global $_SESSION;
+		
 		$aHeaders = $poHttp->response_headers;
 		
-		foreach ($poHttp->response_headers as $oTuple)
+		foreach ($aHeaders as $oTuple)
 			if ($oTuple->key === "Set-Cookie"){
 				$aSplit = preg_split("/=/",$oTuple->value);
-				if (count($aSplit) == 2)
-					if ($aSplit[0] === "JSESSIONID"){
+				if (count($aSplit) == 2){
+					if ($aSplit[0] === "JSESSIONID")
 						$this->jsessionid = $aSplit[1];
-						$_SESSION[self::JSESSION_KEY] = $aSplit[1];
-					}elseif($aSplit[0] === "X-CSRF-TOKEN"){
+					elseif($aSplit[0] === "X-CSRF-TOKEN")
 						$this->csrftoken = $aSplit[1];
-						$_SESSION[self::CSRF_TOKEN_KEY] = $aSplit[1];
-					}
+				}
 			}
+		$this->pr_save_to_session();
+		//cDebug::vardump($this);
+		cDebug::leave();
 	}
 
+	//**************************************************************************************
+	//* Getters
 	//**************************************************************************************
 	public function logged_in(){
 		if (!$this->mbLogged_in)
@@ -225,24 +316,6 @@ class cADCredentials{
 		return urlencode($this->get_username()."@".$this->account);
 	}
 
-	//**************************************************************************************
-	function __construct() {
-		//cDebug::enter();
-		//retrieves stored values from the session $_SESSION
-		$this->account = cCommon::get_session(self::ACCOUNT_KEY);
-		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
-		$this->encrypted_password = cCommon::get_session(self::PASSWORD_KEY); 
-
-		$this->host = cCommon::get_session(self::HOST_KEY);
-		$this->use_https = cCommon::get_session(self::USE_HTTPS_KEY);
-
-		$this->restricted_login = cCommon::get_session(self::RESTRICTED_LOGIN_KEY);
-		$this->mbLogged_in = cCommon::get_session(self::LOGGEDIN_KEY);  
-		$this->jsessionid = cCommon::get_session(self::JSESSION_KEY);  
-		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
-		//if (cDebug::is_extra_debugging()) cDebug::vardump($this);
-		//cDebug::leave();
-	}
 	
 	//**************************************************************************************
 	public function is_demo(){
@@ -259,8 +332,49 @@ class cADCredentials{
 	}
 	
 	//**************************************************************************************
-	//* STATICS
-	//**************************************************************************************	
+	public function clear(){
+		$this->host = null;
+		$this->account = null;
+		$this->encrypted_username = null;
+		$this->encrypted_password = null;
+		$this->use_https = null;
+		$this->restricted_login = null;
+		$this->api_secret = null;
+		$this->api_app = null;
+		$this->api_token = null;
+		$this->analytics_api_key = null;
+		$this->analytics_api_app = null;
+		$this->global_account_name = null;
+		$this->analytics_host = null;
+		$this->pr_save_to_session();
+	}
+	
+	//**************************************************************************************
+	//* Access Tokens 
+	//**************************************************************************************
+	public function get_access_token(){
+		//cDebug::enter();
+		$this->check();
+		
+		$oHttp = new cHttp();
+		$oHttp->USE_CURL = false;
+		$oHttp->request_payload =
+			"grant_type=client_credentials&" .
+			"client_id=$oCred->api_app@$oCred->account&" .
+			"client_secret=$oCred->api_secret";
+		//cDebug::write("payload: $oHttp->request_payload");
+		
+		$sUrl = self::GET_controller().self::API_TOKEN_ACCESS_URL;
+		$oResponse = $oHttp->getJson($sUrl);
+		//cDebug::vardump($oResponse);
+		
+		$this->save_api_access_token($oResponse);
+		//cDebug::leave();
+		return $oResponse;
+	}
+
+	//**************************************************************************************
+	//* Tokens - do these need to be static TODO
 	//**************************************************************************************
 	public static function get_login_token(){
 		cDebug::enter();
