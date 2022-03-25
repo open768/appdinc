@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-Copyright (C) Chicken Katsu 2013 
+Copyright (C) Chicken Katsu 2013 - 2022
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -29,21 +29,22 @@ class cADTimes{
 			$this->start = $piTime - 5000; //5secs either way
 			$this->end = $piTime + 5000;
 		}else{
-			$this->time_type = SELF::BEFORE_NOW;
+		$this->time_type = SELF::BEFORE_NOW;
 			$this->set_duration(60);
 		}
 	}
 	
 	//************************************************************************************
+	//*
+	//************************************************************************************
 	public function start_time(){
 		$iTime = $this->start/1000;
-		cDebug::extra_debug("time is $iTime");
-		return  new DateTime("@$iTime");
+		return  new DateTime("@$iTime");				//@means epoch
 	}
 	
 	public function end_time(){
 		$iTime = $this->end/1000;
-		return  new DateTime("@$iTime");
+		return  new DateTime("@$iTime");			//@means epoch
 	}
 	
 	public function set_start_time($pdDate){		//datetime object
@@ -52,17 +53,47 @@ class cADTimes{
 	}
 	
 	public function set_end_time($pdDate){ 		//datetime object
-		if (! $pdDate instanceof DateTime) cDebu::error("expecting datetime object");
-		$this->start = ($pdDate->getTimeStamp())*1000;
+		if (! $pdDate instanceof DateTime) cDebug::error("expecting datetime object");
+		$this->end = ($pdDate->getTimeStamp())*1000;
 	}
 	
 	//************************************************************************************
+	//*
+	//************************************************************************************
 	public function set_all_today(){
-		$dStart = new DateTime();
-		$dStart->setTime(0,0);
-		$this->set_start_time($dStart);
-		$dEnd = new DateTime();
-		$this->set_end_time($dStart);
+		$dDate = new DateTime();
+		$this->set_end_time($dDate);
+		$dDate->setTime(0,0);
+		$this->set_start_time($dDate);
+		cDebug::extra_debug($this->toString());
+	}
+	
+	public function last_hour($piHours=1){
+		$dDate = new DateTime();
+		$this->set_end_time($dDate);
+		$dDate->modify("-$piHours Hour");
+		$this->set_start_time($dDate);
+	}
+	
+	public function last_day($piDays=1){
+		$dDate = new DateTime();
+		$this->set_end_time($dDate);
+		$dDate->modify("-$piDays Day");
+		$this->set_start_time($dDate);
+	}
+	
+	public function last_week(){
+		$dDate = new DateTime();
+		$this->set_end_time($dDate);
+		$dDate->modify("-7 Day");
+		$this->set_start_time($dDate);
+	}
+	
+	public function last_month(){
+		$dDate = new DateTime();
+		$this->set_end_time($dDate);
+		$dDate->modify("-1 Month");
+		$this->set_start_time($dDate);
 	}
 	
 	//************************************************************************************
@@ -72,7 +103,7 @@ class cADTimes{
 			$this->start = $this->end - ($piMins*60*1000); //past hour
 			$this->duration = $piMins;
 		}else{
-			//TBD not sure how this works
+			//TODO not sure how this works
 			$this->end = $this->start + ($piMins*60*1000);
 		}
 	}

@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-Copyright (C) Chicken Katsu 2013 
+Copyright (C) Chicken Katsu 2013 - 2022
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -283,30 +283,40 @@ class cADAppCheckup {
 			$poOut->general[] = new cAppCheckupMessage(true, "this is a non production application", "test");
 		
 		//-------------general --------------------------------
-		$aDiagnotics = $poApp->GET_diagnostic_stats();
-		if (!array_key_exists( "numberOfMetricsUploaded", $aDiagnotics))
-			$poOut->general[] = new cAppCheckupMessage(true, "unable to get Diagnostic stats", "Metrics");
-		else{
-			$iCount = $aDiagnotics["numberOfMetricsUploaded"];
-			if ( $iCount == 0)
-				$poOut->general[] = new cAppCheckupMessage(true, "no metrics uploaded", "Metrics");
-			else
-				$poOut->general[] = new cAppCheckupMessage(false, "$iCount metrics uploaded in the last hr", "Metrics");
-			
-			$iCount = $aDiagnotics["numberOfMetricsUploadRequestsExceedingLimit"];
-			if ( $iCount > 0)
-				$poOut->general[] = new cAppCheckupMessage(true, "$iCount metrics Exceeded limit in the last hr", "Metrics");
-					
-			$iCount = $aDiagnotics["numberOfMetricsUploadRequestLicenseErrors"];
-			if ( $iCount > 0)
-				$poOut->general[] = new cAppCheckupMessage(true, "$iCount metrics rejected due license issue in the last hr", "Metrics");
-		}	
+		try{
+			$aDiagnotics = $poApp->GET_diagnostic_stats();
+		}catch (Exception $e){
+			cDebug::extra_debug_warning("unable to get diagnostic stats");
+			$poOut->general[] = new cAppCheckupMessage(true, "unable to get diagnostic stats", "Metrics");
+			$aDiagnotics = null;
+		}
+		
+		if ($aDiagnotics){
+			if (!array_key_exists( "numberOfMetricsUploaded", $aDiagnotics))
+				$poOut->general[] = new cAppCheckupMessage(true, "unable to get Diagnostic stats", "Metrics");
+			else{
+				$iCount = $aDiagnotics["numberOfMetricsUploaded"];
+				if ( $iCount == 0)
+					$poOut->general[] = new cAppCheckupMessage(true, "no metrics uploaded", "Metrics");
+				else
+					$poOut->general[] = new cAppCheckupMessage(false, "$iCount metrics uploaded in the last hr", "Metrics");
+				
+				$iCount = $aDiagnotics["numberOfMetricsUploadRequestsExceedingLimit"];
+				if ( $iCount > 0)
+					$poOut->general[] = new cAppCheckupMessage(true, "$iCount metrics Exceeded limit in the last hr", "Metrics");
+						
+				$iCount = $aDiagnotics["numberOfMetricsUploadRequestLicenseErrors"];
+				if ( $iCount > 0)
+					$poOut->general[] = new cAppCheckupMessage(true, "$iCount metrics rejected due license issue in the last hr", "Metrics");
+			}	
+		}
 		
 		//----- check lockdown------------------------------
 		try{
 			$oConfig = $poApp->GET_AppLevel_BT_Detection_Config();
 		}catch (Exception $e){
 			$oConfig = null;
+			cDebug::extra_debug_warning("unable to check whether Business Transaction lockdown is enabled");
 			$poOut->general[] = new cAppCheckupMessage(true, "unable to check whether Business Transaction lockdown is enabled", "config");
 		}
 		if ($oConfig)

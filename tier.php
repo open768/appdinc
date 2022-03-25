@@ -1,7 +1,7 @@
 <?php
 
 /**************************************************************************
-Copyright (C) Chicken Katsu 2013 
+Copyright (C) Chicken Katsu 2013 - 2022
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -122,7 +122,7 @@ class cADTier{
 		cADUtil::flushprint(".");
 		$oHeirarchy = $this->GET_ext_calls();
 			
-		//get the transaction IDs TBD
+		//get the transaction IDs TODO
 		$trid=1;
 		
 		//for each row in the browser get external calls per minute

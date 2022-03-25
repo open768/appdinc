@@ -30,7 +30,7 @@ class cADAudit{
 		cDebug::enter();
 		if (! $poTimes instanceof cADTimes) cDebug::error("not a cADTimes");
 		
-		//get the start and end times //tbd need to get the time zone of the controller
+		//get the start and end times //TODO need to get the time zone of the controller
 		$dStart = $poTimes->start_time();
 		$dEnd = $poTimes->end_time();
 		$sStart = $dStart->format('Y-m-d\TH:i').":00.000-0000"; //-0000 is the timezone
