@@ -46,15 +46,15 @@ class cAppCheckupAnalysis{
 class cADAppCheckup {
 	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator"];
 
-	public static function checkup($poApp){
+	public static function checkup($poApp, $poTimes){
 		cDebug::enter();
 
-		$aTrans = $poApp->GET_Transactions();
+		$aTrans = $poApp->GET_BTs();
 		$oOut = new cAppCheckupAnalysis;
 		
 		//---------------------------------------------
 		self::pr__check_general($poApp,$oOut);
-		self::pr__check_BTs($poApp,$aTrans, $oOut);
+		self::pr__check_BTs($poApp,$aTrans, $poTimes, $oOut);
 		self::pr__check_DCs($poApp, $oOut);
 		self::pr__check_Tiers($poApp,$aTrans, $oOut);
 		self::pr__check_Backends($poApp, $oOut);
@@ -101,6 +101,7 @@ class cADAppCheckup {
 		if ($iIDCount >0 )
 			$poOut->sendpoints[] = new cAppCheckupMessage(true, "$iIDCount x names found containing IDs", "Names");
 			 
+		
 		cDebug::leave();
 	}
 	
@@ -159,7 +160,7 @@ class cADAppCheckup {
 				if ($iCount >=50)
 					$sCaption .= " This must be below 50. <b>Investigate instrumentation</b>";
 				elseif ($iCount >=10)
-					$sCaption .= " The number of transactions is on the high side. we recommend around a max of 10 BTs per tier ";
+					$sCaption .= " The number of BTs is on the high side. we recommend around a max of 10 BTs per tier ";
 				else
 					$bBad = false;
 				$poOut->tiers[] = new cAppCheckupMessage($bBad,$sCaption,$sTier) ;
@@ -201,7 +202,32 @@ class cADAppCheckup {
 	}
 	
 	//**************************************************************************
-	private static function pr__check_BTs($poApp, $paTrans, $poOut){
+	private static function pr__check_BTs($poApp, $paTrans, $poTimes, $poOut){
+		//-------------check BT rules--------------------------------
+		$aData = $poApp->GET_app_BT_configs();
+		//cDebug::vardump($aData);
+		$iCount = 0;
+		foreach ($aData as $oItem){
+			$oRule = $oItem->rule;
+			if ($oRule->type !== "TX_MATCH_RULE") continue;
+			
+			$oTxRule = $oRule->txMatchRule;
+			if ($oTxRule->type !== "CUSTOM") continue;
+			
+			//cDebug::vardump($oTxRule);
+			if ($oTxRule->txCustomRule->type !== "INCLUDE") continue;
+			
+			$iCount ++;			
+		}
+		if ($iCount == 0)
+			$poOut->BTs[] = new cAppCheckupMessage(true, "no custom BT detection rules", "BT Rules");
+		elseif ($iCount > 100)
+			$poOut->BTs[] = new cAppCheckupMessage(true, "there are $iCount custom BT detection rules, thats a lot. Investigate", "BT Rules");
+		else
+			$poOut->BTs[] = new cAppCheckupMessage(false, "There are $iCount BT detection rules", "BT Rules");
+		
+		//TODO
+		
 		//-------------BTs --------------------------------
 		cDebug::extra_debug("analysing app $poApp->name");
 		$iCount = count($paTrans);
@@ -211,17 +237,18 @@ class cADAppCheckup {
 		if ($iCount >=250)
 			$sCaption .= " This must be below 250. <b>Investigate configuration</b>";
 		elseif ($iCount >=100)
-			$sCaption .= " The number of transactions is <b>very</b> high";
+			$sCaption .= " The number of BTs is <b>very</b> high";
 		elseif ($iCount >=50)
-			$sCaption .= " The number of transactions is high";
+			$sCaption .= " The number of BTs is high";
 		elseif ($iCount >=30)
-			$sCaption .= " The number of transactions is on the high side. we recommend no more than about 30 BTs per application";
+			$sCaption .= " The number of BTs is on the high side. we recommend no more than about 30 BTs per application";
 		elseif ($iCount < 5)
 			$sCaption .= " There are too few BTs - check BT detection configuration";
 		else
 			$bBad = false;
 		
 		$poOut->BTs[] = new cAppCheckupMessage($bBad, $sCaption, "Count");
+		if ($iCount == 0) return;
 		
 		//-------------known bad BT names --------------------------------
 		$aBadBTs = [];
@@ -267,6 +294,19 @@ class cADAppCheckup {
 		if ($iIDCount >0 )	$poOut->BTs[] = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", "BTs with IDs");
 		if ($iAtCount >0 )	$poOut->BTs[] = new cAppCheckupMessage(true, "$iAtCount x BTs found containing '@' - possibly an email", "BTs with IDs");
 		cDebug::leave();
+
+		//----------------check for BTS with low number of calls ------------------
+		$aBTCalls = $poApp->GET_BT_Calls($poTimes);
+		$iBTCount = 0;
+		foreach ($aBTCalls as $oTrans)
+			if ($oTrans->data[cADApp::CALLS_DATA] < 2)
+				if (!strstr("All Other", $oTrans->name))
+					$iBTCount ++;
+		
+		if ($iBTCount > 0)
+			$poOut->BTs[] = new cAppCheckupMessage(true, "$iBTCount BTs had no calls", "inactive BTs");	
+		else
+			$poOut->BTs[] = new cAppCheckupMessage(false, "All BTs were active", "inactive BTs");	
 	}
 	
 	//**************************************************************************

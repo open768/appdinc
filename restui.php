@@ -200,6 +200,18 @@ class cADRestUI{
 		return $aData;
 	}
 	
+	//****************************************************************
+	public static function get_app_BT_Summary($poApp, $poTimes){
+		cDebug::enter();
+		
+		$sUrl = "/v1/bt/listViewDataByColumns";
+		$sPayload = '{"requestFilter":['.$poApp->id.'],"searchFilters":null,"timeRangeStart":'.$poTimes->start.',"timeRangeEnd":'.$poTimes->end.',"columnSorts":null,"resultColumns":["NAME","BT_HEALTH","CALL_PER_MIN"],"offset":0,"limit":-1}"';
+		$oData = cADCore::GET_restUI_with_payload($sUrl,$sPayload);
+		
+		cDebug::leave();
+		return $oData->btListEntries;
+	}
+	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Agents 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -555,7 +567,7 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* BT config
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function GET_transaction_configs($poApp){
+	public static function GET_app_BT_configs($poApp){
 		cDebug::enter();
 		$sURL = "transactionConfigProto/getRules/$poApp->id";
 		$oData = cADCore::GET_restUI($sURL,true);

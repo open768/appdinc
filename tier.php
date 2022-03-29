@@ -166,13 +166,13 @@ class cADTier{
 
 	//*****************************************************************
 	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $pbRollup){
-		$sMetricpath= cADMetricPaths::tierExtCallsPerMin($this->name, $psTier2);
+		$sMetricpath= cADTierMetrics::tierExtCallsPerMin($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}	
 
 	//*****************************************************************
 	public function GET_ExtResponseTimes($psTier2, $poTimes, $pbRollup){
-		$sMetricpath= cADMetricPaths::tierExtResponseTimes($this->name, $psTier2);
+		$sMetricpath= cADTierMetrics::tierExtResponseTimes($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}
 	
@@ -225,7 +225,7 @@ class cADTier{
 		$aResults = []; 
 		
 		try{
-			$sMetricPath = cADMetricPaths::tierTransactions($this->name);
+			$sMetricPath = cADTierMetrics::tierTransactions($this->name);
 			$aTierTransactions = $this->app->GET_Metric_heirarchy($sMetricPath, false);	
 			if (!$aTierTransactions) return null;
 			
@@ -258,7 +258,7 @@ class cADTier{
 		$bContinue = true;
 		cDebug::enter();
 		
-		$oTrans = new cADTrans( $this, "*", null, true);
+		$oTrans = new cADBT( $this, "*", null, true);
 		$sMetricpath = cADMetricPaths::transResponseTimes($oTrans);
 		cDebug::extra_debug($sMetricpath);
 		
@@ -282,7 +282,7 @@ class cADTier{
 					
 					$oItem = new cADTierTransResult;
 					$oItem->name = $sName;
-					$oTrans = new cADTrans($this,$oItem->name,$sID);
+					$oTrans = new cADBT($this,$oItem->name,$sID);
 					$oItem->url= cADControllerUI::transaction($oTrans);
 					$oItem->id = $sID;
 					$oItem->max = $oStats->max;

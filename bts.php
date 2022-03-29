@@ -23,8 +23,9 @@ function sort_timetaken($a, $b){
 //#################################################################
 //# 
 //#################################################################
-class cADTrans{
+class cADBT{
 	public $name, $id, $tier;
+	public $data = [];
 
    function __construct($poTier, $psName, $psID, $pbIDCanBeNull = false) {	
 		if (!$poTier ) cDebug::error("must provide a tier");
@@ -47,7 +48,7 @@ class cADTrans{
 	
 	//*****************************************************************
 	public function GET_snapshots($poTimes){
-		/*should use instead
+		/*TODO should use instead
 		eg https://xxx.saas.appdynamics.com/controller/restui/snapshot/snapshotListDataWithFilterHandle		{"firstInChain":false,"maxRows":600,"applicationIds":[xxx],"businessTransactionIds":[],"applicationComponentIds":[4561],"applicationComponentNodeIds":[],"errorIDs":[],"errorOccured":null,"userExperience":[],"executionTimeInMilis":null,"endToEndLatency":null,"url":null,"sessionId":null,"userPrincipalId":null,"dataCollectorFilter":null,"archived":null,"guids":[],"diagnosticSnapshot":null,"badRequest":null,"deepDivePolicy":[],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":15}}		
 		*/
 		
@@ -135,7 +136,7 @@ class cADTrans{
 		if ($this->id) 
 			cDebug::extra_debug("there is allready an ID");
 		else{
-			$oTrans = new cADTrans($this->tier, $this->name, null, true);
+			$oTrans = new cADBT($this->tier, $this->name, null, true);
 			$oResponse = $oTrans->GET_response_times($poTimes);
 			if ($oResponse)
 				if (count($oResponse->metricValues) >0){

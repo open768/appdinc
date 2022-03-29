@@ -35,6 +35,7 @@ class cADApp{
 	public static $server_app = null;
 	public $name = null, $id = null;
 	const NO_APP = "*noapp";
+	const CALLS_DATA = "calls";
 	
 	function __construct($psAppName, $psAppId=null) {	
 		if (!$psAppName  && !$psAppId) cDebug::error("no app details provided");
@@ -100,9 +101,9 @@ class cADApp{
 	
 	//#################################################################
 	//#################################################################
-	public function checkup(){
+	public function checkup($poTimes){
 		cDebug::enter();
-		$oOut =  cADAppCheckup::checkup($this);
+		$oOut =  cADAppCheckup::checkup($this, $poTimes);
 		cDebug::leave();
 		return $oOut;
 	}
@@ -129,8 +130,7 @@ class cADApp{
 	//*****************************************************************
 	public function GET_CallsPerMin($poTimes){
 		cDebug::enter();
-		$oTimes = new cADTimes();
-		$sMetric = cADMetricPaths::appCallsPerMin();
+		$sMetric = cADAppMetrics::appCallsPerMin();
 		$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
 		cDebug::leave();
 		return $aData;
@@ -171,7 +171,7 @@ class cADApp{
 	public function GET_ExtTiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_AppExtTiers(null);
 		cDebug::enter();
-		$sMetricPath= cADMetricPaths::appBackends();
+		$sMetricPath= cADAppMetrics::appBackends();
 		$aMetrics = cADMetricData::GET_Metric_heirarchy($this,$sMetricPath,false); //dont cache
 		if ($aMetrics) usort($aMetrics,"AD_name_sort_fn");
 		cDebug::leave();
@@ -210,11 +210,6 @@ class cADApp{
 		return $oData;
 	}
 
-	//*****************************************************************
-	public function GET_ServiuceEndPoints($poTimes){
-		https://appdcontrol.tele2.com/controller/restui/serviceEndpoint/list2/1073/1073/APPLICATION?time-range=last_3_hours.BEFORE_NOW.-1.-1.180
-		return cADMetricData::GET_Metric_heirarchy($this, cADMetricPaths::INFORMATION_POINTS, false, $poTimes);
-	}
 	
 	//*****************************************************************
 	public function GET_InfoPoints($poTimes){
@@ -299,7 +294,9 @@ class cADApp{
 
 
 	//*****************************************************************
-	public function GET_Transactions(){		
+	//* transactions
+	//*****************************************************************
+	public function GET_BTs(){		
 		cDebug::enter();
 		$sApp = rawurlencode($this->name);
 		$aData =cADCore::GET("$sApp/business-transactions?" );
@@ -307,6 +304,23 @@ class cADApp{
 		
 		return $aData;
 		
+	}
+	//*****************************************************************
+	public function GET_BT_Calls($poTimes){
+		cDebug::enter();
+		$aData = cADRestUI::get_app_BT_Summary($this, $poTimes);
+		
+		$aOut = [];
+		foreach ($aData as $oItem){
+			if ($oItem->componentId){
+				$oTier = new cAdTier($this, $oItem->applicationComponentName, $oItem->componentId);
+				$oTrans = new cADBT($oTier, $oItem->name, $oItem->id);
+				$oTrans->data[ self::CALLS_DATA] = $oItem->numberOfCalls;
+				$aOut[] = $oTrans;
+			}
+		}
+		cDebug::leave();
+		return $aOut;
 	}
 	
 	//*****************************************************************
@@ -317,9 +331,9 @@ class cADApp{
 		return $oData;
 	}
 	
-	public function GET_Transaction_configs(){		
+	public function GET_app_BT_configs(){		
 		cDebug::enter();
-		$oData = cADRestUI::GET_transaction_configs($this);
+		$oData = cADRestUI::GET_app_BT_configs($this);
 		$aData = $oData->ruleScopeSummaryMappings;
 		usort($aData,"bt_config_sort_function" );
 		cDebug::leave();

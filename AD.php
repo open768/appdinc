@@ -33,7 +33,7 @@ require_once("$ADlib/controller.php");
 require_once("$ADlib/app.php");
 require_once("$ADlib/appcheckup.php");
 require_once("$ADlib/tier.php");
-require_once("$ADlib/trans.php");
+require_once("$ADlib/bts.php");
 require_once("$ADlib/snapshot.php");
 require_once("$ADlib/db.php");
 require_once("$ADlib/server.php");

@@ -13,6 +13,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 require_once("$ADlib/core.php");
 
+//######################################################################
+function ad_sort_by_metric_short($po1, $po2){
+	return strcasecmp ($po1->metric->short, $po2->metric->short);
+}
+
 //#################################################################
 //# CLASSES
 //#################################################################
@@ -41,13 +46,10 @@ class cMetricOutput{
 	}
 }
 
+//######################################################################
 class cADInfraMetricTypeDetails{
 	public $type;
 	public $metric;
-}
-
-function ad_sort_by_metric_short($po1, $po2){
-	return strcasecmp ($po1->metric->short, $po2->metric->short);
 }
 
 //######################################################################
@@ -70,7 +72,7 @@ class cADInfraMetric{
 	
 	//**************************************************************************
 	public static function getInfrastructureMetricDetails($poTier){
-		$aTypes = self::getInfrastructureMetricTypes();
+		$aTypes = cADMetricPaths::getInfrastructureMetricTypes();
 		$aOut = [];
 		foreach ( $aTypes as $sType){
 			$oMetric = cADInfraMetric::getInfrastructureMetric($poTier->name,null,$sType);
@@ -86,9 +88,9 @@ class cADInfraMetric{
 	//**************************************************************************
 	public static function getInfrastructureMetricTypes(){
 		$aMetricTypes = [cADMetricPaths::METRIC_TYPE_ACTIVITY, cADMetricPaths::METRIC_TYPE_RESPONSE_TIMES];
-		$aMiscInfraMetricTypes = self::getInfrastructureMiscMetricTypes();
-		$aAgentMetricTypes = self::getInfrastructureAgentMetricTypes();
-		$aMemoryMetricTypes = self::getInfrastructureMemoryMetricTypes();
+		$aMiscInfraMetricTypes = cADMetricPaths::getInfrastructureMiscMetricTypes();
+		$aAgentMetricTypes = cADMetricPaths::getInfrastructureAgentMetricTypes();
+		$aMemoryMetricTypes = cADMetricPaths::getInfrastructureMemoryMetricTypes();
 		$aMetricTypes = array_merge($aMetricTypes, $aMiscInfraMetricTypes,$aAgentMetricTypes, $aMemoryMetricTypes);
 		return $aMetricTypes;
 	}
@@ -97,16 +99,16 @@ class cADInfraMetric{
 	public static function getInfrastructureAgentMetricTypes(){
 		$aTypes = 
 		 [
-			self::METRIC_TYPE_INFR_AVAIL,
-			self::METRIC_TYPE_INFR_AGENT_METRICS,
-			self::METRIC_TYPE_INFR_AGENT_INVALID_METRICS,
-			self::METRIC_TYPE_INFR_AGENT_LICENSE_ERRORS,
+			cADMetricPaths::METRIC_TYPE_INFR_AVAIL,
+			cADMetricPaths::METRIC_TYPE_INFR_AGENT_METRICS,
+			cADMetricPaths::METRIC_TYPE_INFR_AGENT_INVALID_METRICS,
+			cADMetricPaths::METRIC_TYPE_INFR_AGENT_LICENSE_ERRORS,
 		];
 		
 		//sort the list
 		$aSortedList = [];
 		foreach ($aTypes as $sMetricType){
-			$oDetails = self::getInfrastructureMetric(null,null,$sMetricType);
+			$oDetails = cADMetricPaths::getInfrastructureMetric(null,null,$sMetricType);
 			$aSortedList[$oDetails->caption] = $oDetails;
 		}
 		uksort($aSortedList, "strnatcasecmp");
@@ -121,18 +123,18 @@ class cADInfraMetric{
 	public static function getInfrastructureMemoryMetricTypes(){
 		$aTypes = 
 		 [
-			self::METRIC_TYPE_INFR_MEM_FREE,
-			self::METRIC_TYPE_INFR_JAVA_HEAP_USEDPCT,
-			self::METRIC_TYPE_INFR_JAVA_HEAP_USED,
-			self::METRIC_TYPE_INFR_JAVA_GC_TIME,
-			self::METRIC_TYPE_INFR_DOTNET_HEAP_USED,
-			self::METRIC_TYPE_INFR_DOTNET_GC_PCT
+			cADMetricPaths::METRIC_TYPE_INFR_MEM_FREE,
+			cADMetricPaths::METRIC_TYPE_INFR_JAVA_HEAP_USEDPCT,
+			cADMetricPaths::METRIC_TYPE_INFR_JAVA_HEAP_USED,
+			cADMetricPaths::METRIC_TYPE_INFR_JAVA_GC_TIME,
+			cADMetricPaths::METRIC_TYPE_INFR_DOTNET_HEAP_USED,
+			cADMetricPaths::METRIC_TYPE_INFR_DOTNET_GC_PCT
 		];
 		
 		//sort the list
 		$aSortedList = [];
 		foreach ($aTypes as $sMetricType){
-			$oDetails = self::getInfrastructureMetric(null,null,$sMetricType);
+			$oDetails = cADMetricPaths::getInfrastructureMetric(null,null,$sMetricType);
 			$aSortedList[$oDetails->caption] = $oDetails;
 		}
 		uksort($aSortedList, "strnatcasecmp");
@@ -147,17 +149,17 @@ class cADInfraMetric{
 	public static function getInfrastructureMiscMetricTypes(){
 		$aTypes = 
 		 [
-			self::METRIC_TYPE_INFR_CPU_BUSY,
-			self::METRIC_TYPE_INFR_JAVA_CPU_USAGE,
-			self::METRIC_TYPE_INFR_DOTNET_ANON_REQ,
-			self::METRIC_TYPE_INFR_NETWORK_IN,
-			self::METRIC_TYPE_INFR_NETWORK_OUT
+			cADMetricPaths::METRIC_TYPE_INFR_CPU_BUSY,
+			cADMetricPaths::METRIC_TYPE_INFR_JAVA_CPU_USAGE,
+			cADMetricPaths::METRIC_TYPE_INFR_DOTNET_ANON_REQ,
+			cADMetricPaths::METRIC_TYPE_INFR_NETWORK_IN,
+			cADMetricPaths::METRIC_TYPE_INFR_NETWORK_OUT
 		];
 		
 		//sort the list
 		$aSortedList = [];
 		foreach ($aTypes as $sMetricType){
-			$oDetails = self::getInfrastructureMetric(null,null,$sMetricType);
+			$oDetails = cADMetricPaths::getInfrastructureMetric(null,null,$sMetricType);
 			$aSortedList[$oDetails->caption] = $oDetails;
 		}
 		uksort($aSortedList, "strnatcasecmp");
@@ -173,99 +175,99 @@ class cADInfraMetric{
 			switch($psMetricType){
 				case cADMetricPaths::METRIC_TYPE_ERRORS:
 					if ($psTier)
-						$sMetricUrl = cADMetricPaths::tierErrorsPerMin($psTier,$psNode);
+						$sMetricUrl = cADTierMetrics::tierErrorsPerMin($psTier,$psNode);
 					else
-						$sMetricUrl = cADMetricPaths::appErrorsPerMin();
+						$sMetricUrl = cADAppMetrics::appErrorsPerMin();
 					$sCaption = "Errors per min";
 					$sShortCaption = "Errors";
 					break;
 				case cADMetricPaths::METRIC_TYPE_ACTIVITY:
 					if ($psTier)
-						$sMetricUrl = cADMetricPaths::tierNodeCallsPerMin($psTier,$psNode);
+						$sMetricUrl = cADTierMetrics::tierNodeCallsPerMin($psTier,$psNode);
 					else
-						$sMetricUrl = cADMetricPaths::appCallsPerMin();
+						$sMetricUrl = cADAppMetrics::appCallsPerMin();
 					$sCaption = "Calls per min";
 					$sShortCaption = "Activity";
 					break;
 				case cADMetricPaths::METRIC_TYPE_RESPONSE_TIMES:
 					if ($psTier)
-						$sMetricUrl = cADMetricPaths::tierNodeResponseTimes($psTier,$psNode);
+						$sMetricUrl = cADTierMetrics::tierNodeResponseTimes($psTier,$psNode);
 					else
-						$sMetricUrl = cADMetricPaths::appResponseTimes();
+						$sMetricUrl = cADAppMetrics::appResponseTimes();
 					$sCaption = "response times in ms";
 					$sShortCaption = "Response";
 					break;
-				case self::METRIC_TYPE_INFR_AVAIL:
+				case cADMetricPaths::METRIC_TYPE_INFR_AVAIL:
 					$sMetricUrl = cADMetricPaths::InfrastructureAgentAvailability($psTier,$psNode);
 					$sCaption = "Agent Availailability";
 					$sShortCaption = "Availability";
 					break;
-				case self::METRIC_TYPE_INFR_CPU_BUSY:
-					$sMetricUrl = cADMetricPaths::InfrastructureCpuBusy($psTier,$psNode);
+				case cADMetricPaths::METRIC_TYPE_INFR_CPU_BUSY:
+				$sMetricUrl = cADMetricPaths::InfrastructureCpuBusy($psTier,$psNode);
 					$sCaption = "CPU Busy";
 					$sShortCaption = "CPU Busy";
 					break;
-				case self::METRIC_TYPE_INFR_MEM_FREE:
+				case cADMetricPaths::METRIC_TYPE_INFR_MEM_FREE:
 					$sMetricUrl = cADMetricPaths::InfrastructureMemoryFree($psTier,$psNode);
 					$sCaption = "Server memory free in MB";
 					$sShortCaption = "Server Memory free (MB)";
 					break;
-				case self::METRIC_TYPE_INFR_NETWORK_IN:
+				case cADMetricPaths::METRIC_TYPE_INFR_NETWORK_IN:
 					$sMetricUrl = cADMetricPaths::InfrastructureNetworkIncoming($psTier,$psNode);
 					$sCaption = "incoming network traffic in KB/sec ";
 					$sShortCaption = "Network-in";
 					break;
-				case self::METRIC_TYPE_INFR_NETWORK_OUT:
+				case cADMetricPaths::METRIC_TYPE_INFR_NETWORK_OUT:
 					$sMetricUrl = cADMetricPaths::InfrastructureNetworkOutgoing($psTier,$psNode);
 					$sCaption = "outgoing network traffic in KB/sec ";
 					$sShortCaption = "Network-out";
 					break;
-				case self::METRIC_TYPE_INFR_JAVA_HEAP_USED:
+				case cADMetricPaths::METRIC_TYPE_INFR_JAVA_HEAP_USED:
 					$sMetricUrl = cADMetricPaths::InfrastructureJavaHeapUsed($psTier,$psNode);
 					$sCaption = "memory - Java Heap used ";
 					$sShortCaption = "Java Heap used";
 					break;
-				case self::METRIC_TYPE_INFR_JAVA_HEAP_USEDPCT:
+				case cADMetricPaths::METRIC_TYPE_INFR_JAVA_HEAP_USEDPCT:
 					$sMetricUrl = cADMetricPaths::InfrastructureJavaHeapUsedPct($psTier,$psNode);
 					$sCaption = "memory - Java Heap %Used ";
 					$sShortCaption = "Java Heap %Used";
 					break;
-				case self::METRIC_TYPE_INFR_JAVA_GC_TIME:
+				case cADMetricPaths::METRIC_TYPE_INFR_JAVA_GC_TIME:
 					$sMetricUrl = cADMetricPaths::InfrastructureJavaGCTime($psTier,$psNode);
 					$sCaption = "Java GC Time ";
 					$sShortCaption = "Java GC Time";
 					break;
-				case self::METRIC_TYPE_INFR_JAVA_CPU_USAGE:
+				case cADMetricPaths::METRIC_TYPE_INFR_JAVA_CPU_USAGE:
 					$sMetricUrl = cADMetricPaths::InfrastructureJavaCPUUsage($psTier,$psNode);
 					$sCaption = "CPU - Java Usage ";
 					$sShortCaption = "Java CPU";
 					break;
-				case self::METRIC_TYPE_INFR_DOTNET_HEAP_USED:
+				case cADMetricPaths::METRIC_TYPE_INFR_DOTNET_HEAP_USED:
 					$sMetricUrl = cADMetricPaths::InfrastructureDotnetHeapUsed($psTier,$psNode);
 					$sCaption = "memory - dotNet heap used ";
 					$sShortCaption = ".Net heap used";
 					break;
-				case self::METRIC_TYPE_INFR_DOTNET_GC_PCT:
+				case cADMetricPaths::METRIC_TYPE_INFR_DOTNET_GC_PCT:
 					$sMetricUrl = cADMetricPaths::InfrastructureDotnetGCTime($psTier,$psNode);
 					$sCaption = "percent DotNet GC time  ";
 					$sShortCaption = ".Net-GC";
 					break;
-				case self::METRIC_TYPE_INFR_DOTNET_ANON_REQ:
+				case cADMetricPaths::METRIC_TYPE_INFR_DOTNET_ANON_REQ:
 					$sMetricUrl = cADMetricPaths::InfrastructureDotnetAnonRequests($psTier,$psNode);
 					$sCaption = "DotNet Anonymous Requests  ";
 					$sShortCaption = ".Net-Anonymous";
 					break;
-				case self::METRIC_TYPE_INFR_AGENT_METRICS:
+				case cADMetricPaths::METRIC_TYPE_INFR_AGENT_METRICS:
 					$sMetricUrl = cADMetricPaths::InfrastructureAgentMetricsUploaded($psTier,$psNode);
 					$sCaption = "Agent - Metrics uploaded  ";
 					$sShortCaption = "Agent-Metrics";
 					break;
-				case self::METRIC_TYPE_INFR_AGENT_INVALID_METRICS:
+				case cADMetricPaths::METRIC_TYPE_INFR_AGENT_INVALID_METRICS:
 					$sMetricUrl = cADMetricPaths::InfrastructureAgentInvalidMetrics($psTier,$psNode);
 					$sCaption = "Agent - Invalid Metrics  ";
 					$sShortCaption = "Agent-Invalid Metrics";
 					break;
-				case self::METRIC_TYPE_INFR_AGENT_LICENSE_ERRORS:
+				case cADMetricPaths::METRIC_TYPE_INFR_AGENT_LICENSE_ERRORS:
 					$sMetricUrl = cADMetricPaths::InfrastructureAgentMetricsLicenseErrors($psTier,$psNode);
 					$sCaption = "Agent - License Errors ";
 					$sShortCaption = "Agent-License errors";
@@ -340,6 +342,121 @@ class cADMetricData{
 }
 
 //######################################################################
+class cADAppMetrics{
+	public static function app(){
+		return cADMetricPaths::APPLICATION;
+	}
+	
+	public static function appResponseTimes(){
+		return self::app()."|".cADMetricPaths::RESPONSE_TIME;
+	}
+	
+	public static function appCallsPerMin(){
+		return self::app()."|".cADMetricPaths::CALLS_PER_MIN;
+	}
+
+	public static function appSlowCalls(){
+		return self::app()."|".cADMetricPaths::SLOW_CALLS;
+	}
+
+	public static function appVerySlowCalls(){
+		return self::app()."|".cADMetricPaths::VSLOW_CALLS;
+	}
+
+	public static function appStalledCount(){
+		return self::app()."|".cADMetricPaths::STALL_COUNT;
+	}
+	public static function appErrorsPerMin(){
+		return self::app()."|".cADMetricPaths::ERRS_PER_MIN;
+	}
+	public static function appExceptionsPerMin(){
+		return self::app()."|".cADMetricPaths::EXCEP_PER_MIN;
+	}
+
+	public static function appBackends(){
+		return cADMetricPaths::backends();
+	}
+	public static function appExtCalls(){
+		return self::app()."|*|".cADMetricPaths::EXT_CALLS;
+	}
+}
+
+//######################################################################
+class cADTierMetrics{
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* tiers
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function tier($psTier){
+		return cADMetricPaths::APPLICATION."|$psTier";
+	}
+	
+	public static function tierCallsPerMin($psTier){
+		return self::tier($psTier)."|".cADMetricPaths::CALLS_PER_MIN;
+	}
+	public static function tierResponseTimes($psTier){
+		return self::tier($psTier)."|".cADMetricPaths::RESPONSE_TIME;
+	}
+	public static function tierErrorsPerMin($psTier){
+		return self::tier($psTier)."|".cADMetricPaths::ERRS_PER_MIN;
+	}
+	public static function tierExceptionsPerMin($psTier){
+		return self::tier($psTier)."|Exceptions per Minute";
+	}
+	public static function tierSlowCalls($psTier){
+		return self::tier($psTier)."|".cADMetricPaths::SLOW_CALLS;
+	}
+	
+	public static function tierNodes($psTier){
+		return self::tier($psTier)."|Individual Nodes";
+	}
+
+	public static function tierVerySlowCalls($psTier){
+		return self::tier($psTier)."|".cADMetricPaths::VSLOW_CALLS;
+	}
+	public static function tierTransactions($psTier){
+		$sMetric = cADMetricPaths::TRANSACTIONS."|Business Transactions|$psTier";
+		return $sMetric;
+	}
+	public static function tierTransaction($psTier, $psName){
+		$sMetric = cADMetricPaths::TRANSACTIONS."|Business Transactions|$psTier|$psName";
+		return $sMetric;
+	}
+	
+	public static function tierExt($psTier1,$psTier2){
+		return self::tier($psTier1)."|".cADMetricPaths::EXT_CALLS."|$psTier2";
+	}
+	
+	public static function tierExtCallsPerMin($psTier1,$psTier2){
+		return self::tierExt($psTier1,$psTier2)."|".cADMetricPaths::CALLS_PER_MIN;
+	}
+
+	public static function tierExtResponseTimes($psTier1,$psTier2){
+		return self::tierExt($psTier1,$psTier2)."|".cADMetricPaths::RESPONSE_TIME;
+	}
+	public static function tierExtErrorsPerMin($psTier1,$psTier2){
+		return self::tierExt($psTier1,$psTier2)."|".cADMetricPaths::ERRS_PER_MIN;
+	}
+
+	public static function tierNodeCallsPerMin($psTier, $psNode=null){
+		if ($psNode)
+			return self::tierNodes($psTier)."|$psNode|".cADMetricPaths::CALLS_PER_MIN;
+		else
+			return self::tierCallsPerMin($psTier);
+	}
+	
+	public static function tierNodeResponseTimes($psTier, $psNode=null){
+		if ($psNode)
+			return self::tierNodes($psTier)."|$psNode|".cADMetricPaths::RESPONSE_TIME;
+		else
+			return self::tierResponseTimes($psTier);
+	}
+	
+	public static function tierServiceEndPoints($psTier){
+		return cADMetricPaths::SERVICE_END_POINTS. "|$psTier";
+	}
+}
+
+//######################################################################
 class cADMetricPaths{
 	const METRIC_TYPE_QS ="mt";
 	const METRIC_TYPE_RUMCALLS = "mrc";
@@ -357,6 +474,7 @@ class cADMetricPaths{
 	const RESPONSE_TIME = "Average Response Time (ms)";
 	const CALLS_PER_MIN = "Calls per Minute";
 	const ERRS_PER_MIN = "Errors per Minute";
+	const EXCEP_PER_MIN = "Exceptions per Minute";
 	const SLOW_CALLS = "Number of Slow Calls";
 	const VSLOW_CALLS = "Number of Very Slow Calls";
 	const STALL_COUNT = "Stall Count";
@@ -383,46 +501,6 @@ class cADMetricPaths{
 		return self::USAGE_METRIC."/$psModule/$piMonths";
 	}
 	
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* Application
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function app(){
-		return self::APPLICATION;
-	}
-	
-	public static function appResponseTimes(){
-		return self::APPLICATION."|".self::RESPONSE_TIME;
-	}
-	
-	public static function appCallsPerMin(){
-		return self::APPLICATION."|".self::CALLS_PER_MIN;
-	}
-
-	public static function appSlowCalls(){
-		return self::APPLICATION."|".self::SLOW_CALLS;
-	}
-
-	public static function appVerySlowCalls(){
-		return self::APPLICATION."|".self::VSLOW_CALLS;
-	}
-
-	public static function appStalledCount(){
-		return self::APPLICATION."|".self::STALL_COUNT;
-	}
-	public static function appErrorsPerMin(){
-		return self::APPLICATION."|".self::ERRS_PER_MIN;
-	}
-	public static function appExceptionsPerMin(){
-		return self::APPLICATION."|Exceptions per Minute";
-	}
-
-	public static function appBackends(){
-		return self::backends();
-	}
-	public static function appExtCalls(){
-		return self::APPLICATION."|*|External Calls";
-	}
-
 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Service End  Points
@@ -648,77 +726,6 @@ class cADMetricPaths{
 		return self::serverMQQueue($psNode, $psManager, $psQueue)."|Max Queue Depth";
 	}
 	
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* tiers
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function tier($psTier){
-		return self::APPLICATION."|$psTier";
-	}
-	
-	public static function tierCallsPerMin($psTier){
-		return self::tier($psTier)."|".self::CALLS_PER_MIN;
-	}
-	public static function tierResponseTimes($psTier){
-		return self::tier($psTier)."|".self::RESPONSE_TIME;
-	}
-	public static function tierErrorsPerMin($psTier){
-		return self::tier($psTier)."|".self::ERRS_PER_MIN;
-	}
-	public static function tierExceptionsPerMin($psTier){
-		return self::tier($psTier)."|Exceptions per Minute";
-	}
-	public static function tierSlowCalls($psTier){
-		return self::tier($psTier)."|".self::SLOW_CALLS;
-	}
-	
-	public static function tierNodes($psTier){
-		return self::tier($psTier)."|Individual Nodes";
-	}
-
-	public static function tierVerySlowCalls($psTier){
-		return self::tier($psTier)."|".self::VSLOW_CALLS;
-	}
-	public static function tierTransactions($psTier){
-		$sMetric = self::TRANSACTIONS."|Business Transactions|$psTier";
-		return $sMetric;
-	}
-	public static function tierTransaction($psTier, $psName){
-		$sMetric = self::TRANSACTIONS."|Business Transactions|$psTier|$psName";
-		return $sMetric;
-	}
-	
-	public static function tierExt($psTier1,$psTier2){
-		return self::tier($psTier1)."|".self::EXT_CALLS."|$psTier2";
-	}
-	
-	public static function tierExtCallsPerMin($psTier1,$psTier2){
-		return self::tierExt($psTier1,$psTier2)."|".self::CALLS_PER_MIN;
-	}
-
-	public static function tierExtResponseTimes($psTier1,$psTier2){
-		return self::tierExt($psTier1,$psTier2)."|".self::RESPONSE_TIME;
-	}
-	public static function tierExtErrorsPerMin($psTier1,$psTier2){
-		return self::tierExt($psTier1,$psTier2)."|".self::ERRS_PER_MIN;
-	}
-
-	public static function tierNodeCallsPerMin($psTier, $psNode=null){
-		if ($psNode)
-			return self::tierNodes($psTier)."|$psNode|".self::CALLS_PER_MIN;
-		else
-			return self::tierCallsPerMin($psTier);
-	}
-	
-	public static function tierNodeResponseTimes($psTier, $psNode=null){
-		if ($psNode)
-			return self::tierNodes($psTier)."|$psNode|".self::RESPONSE_TIME;
-		else
-			return self::tierResponseTimes($psTier);
-	}
-	
-	public static function tierServiceEndPoints($psTier){
-		return self::SERVICE_END_POINTS. "|$psTier";
-	}
 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* transactions
@@ -766,47 +773,47 @@ class cADWebRumMetric{
 	//* webrum
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function jobs(){
-		return cADMetricPaths::END_USER."|Synthetic Jobs";
+		return cADAppMetrics::END_USER."|Synthetic Jobs";
 	}
 	public static function App(){
-		return cADMetricPaths::END_USER."|App";
+		return cADAppMetrics::END_USER."|App";
 	}
 	public static function CallsPerMin(){
-		return self::App()."|Page Requests per Minute";
+		return cADAppMetrics::app()."|Page Requests per Minute";
 	}
 	public static function ResponseTimes(){
-		return self::App()."|End User Response Time (ms)";
+		return cADAppMetrics::app()."|End User Response Time (ms)";
 	}
 	public static function JavaScriptErrors(){
-		return self::App()."|Page views with JavaScript Errors per Minute";
+		return cADAppMetrics::app()."|Page views with JavaScript Errors per Minute";
 	}
 	public static function FirstByte(){
-		return self::App()."|First Byte Time (ms)";
+		return cADAppMetrics::app()."|First Byte Time (ms)";
 	}
 	public static function ServerTime(){
-		return self::App()."|Application Server Time (ms)";
+		return cADAppMetrics::app()."|Application Server Time (ms)";
 	}
 	public static function TCPTime(){
-		return self::App()."|TCP Connect Time (ms)";
+		return cADAppMetrics::app()."|TCP Connect Time (ms)";
 	}
 
 	public static function Ajax(){
-		return cADMetricPaths::END_USER."|AJAX Requests";
+		return cADAppMetrics::END_USER."|AJAX Requests";
 	}
 	public static function Pages(){
-		return cADMetricPaths::END_USER."|Base Pages";
+		return cADAppMetrics::END_USER."|Base Pages";
 	}
 	
 	public Static function Metric($psKind, $psPage, $psMetric)
 	{
 		switch ($psKind){
-			case cADMetricPaths::BASE_PAGES:
-			case cADMetricPaths::AJAX_REQ:
+			case cADAppMetrics::BASE_PAGES:
+			case cADAppMetrics::AJAX_REQ:
 				break;
 			default:
 				cDebug::error("unknown kind");
 		}
-		return cADMetricPaths::END_USER."|$psKind|$psPage|$psMetric";
+		return cADAppMetrics::END_USER."|$psKind|$psPage|$psMetric";
 	}
 	
 	

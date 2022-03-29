@@ -62,7 +62,7 @@ function AD_title_sort_fn($po1, $po2){
 //#################################################################
 //# 
 //#################################################################
-class cADTransFlow{
+class cADBTFlow{
 	public $name = null;
 	public $children = [];
 	
@@ -88,7 +88,7 @@ class cADTransFlow{
 			if ($oCall->type == "folder") {
 				$sMetricPath = $psMetricPath . "|".$oCall->name."|".cADMetricPaths::EXT_CALLS;
 				
-				$oChild = new cADTransFlow();
+				$oChild = new cADBTFlow();
 				$this->children[] = $oChild;
 				$oChild->name = $oCall->name;
 				$oChild->walk_metric($poApp, $sMetricPath);
@@ -137,7 +137,7 @@ class cADUtil {
 	public static function get_trans_assoc_array($poApp)
 	{	
 		$aData = [];
-		$aTrans = $poApp->GET_Transactions();
+		$aTrans = $poApp->GET_BTs();
 		foreach ($aTrans as $oTrans)
 			$aData[$oTrans->name] = $oTrans->id;
 			
@@ -182,7 +182,7 @@ class cADUtil {
 	
 	//################################################################
 	public static function extract_bt_name($psMetric, $psTier){
-		$sLeft = cADMetricPaths::tierTransactions($psTier);
+		$sLeft = cADTierMetrics::tierTransactions($psTier);
 		$sOut = substr($psMetric, strlen($sLeft)+1);
 		$iPos = strpos($sOut, cADMetricPaths::RESPONSE_TIME);
 		$sOut = substr($sOut, 0, $iPos -1);
