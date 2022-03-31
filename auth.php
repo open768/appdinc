@@ -26,14 +26,18 @@ require_once("$phpinc/extra/php-openssl-crypt/cryptor.php");
 //# 
 //#################################################################
 //##################################################################
-class cLogin{
-	const KEY_HOST = "h";
-	const KEY_ACCOUNT = "a";
-	const KEY_USERNAME = "u";
-	const KEY_PASSWORD = "p";
-	const KEY_HTTPS = "ss";
-	const KEY_REFERRER = "r";
-	const KEY_SUBMIT = "s";
+class cADLogin{
+	const KEY_HOST = "ho";
+	const KEY_ACCOUNT = "ac";
+	const KEY_USERNAME = "us";
+	const KEY_PASSWORD = "pw";
+	const KEY_REFERRER = "rf";
+	const KEY_SUBMIT = "go";
+	const KEY_APISECRET = "as";
+	const KEY_APIAPP = "aa";
+	const KEY_APITOKEN = "at";
+	const KEY_JSESSION_ID = "js";
+	const KEY_XCSRFTOKEN = "xc";
 }
 
 //#################################################################
@@ -156,18 +160,20 @@ class cADCredentials{
 		$username = null;
 		$password = null;
 		
-		$this->host = cHeader::get(cLogin::KEY_HOST);
-		$this->account  = cHeader::get(cLogin::KEY_ACCOUNT);
+		$this->host = cHeader::get(cADLogin::KEY_HOST);
+		$this->account  = cHeader::get(cADLogin::KEY_ACCOUNT);
 		cADCrypt::$credentials = $this;
 		
-		$username  = cHeader::get(cLogin::KEY_USERNAME);
+		$username  = cHeader::get(cADLogin::KEY_USERNAME);
 		if ($username)	$this->encrypted_username = cADCrypt::encrypt($username);
-		$password  = cHeader::get(cLogin::KEY_PASSWORD);
+		$password  = cHeader::get(cADLogin::KEY_PASSWORD);
 		if ($password)	$this->encrypted_password = cADCrypt::encrypt($password);
 		
-		$sUse_https = cHeader::get(cLogin::KEY_HTTPS);
 		
-		$this->use_https = ($sUse_https=="yes");		
+		$this->api_token  = cHeader::get(cADLogin::KEY_APITOKEN);
+		$this->jsessionid  = cHeader::get(cADLogin::KEY_JSESSION_ID);
+		$this->csrftoken  = cHeader::get(cADLogin::KEY_XCSRFTOKEN);
+		$this->use_https = true;		
 		
 		$this->save();		//populate the session
 		cDebug::leave();
@@ -193,9 +199,13 @@ class cADCredentials{
 				if (cCommon::is_string_set($this->api_secret)){
 					//cDebug::extra_debug("checking for api credentials");
 					if(!cCommon::is_string_set($this->api_app)) cDebug::error("missing api_app ");
+				}elseif (cCommon::is_string_set($this->jsessionid)){
+					if(!cCommon::is_string_set($this->csrftoken)) cDebug::error("missing csrftoken ");
+				}elseif (cCommon::is_string_set($this->api_token)){
+					//ok, thats all we need
 				}else{
 					//cDebug::extra_debug("checking for normal credentials");
-					if(!cCommon::is_string_set($this->encrypted_password)) cDebug::error("password ");
+					if(!cCommon::is_string_set($this->encrypted_password)) cDebug::error("missing password ");
 				}
 			}
 		}	

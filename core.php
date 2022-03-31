@@ -101,10 +101,20 @@ class cADCore{
 		
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
-		$oHttp->set_credentials($sCred,$oCred->get_password());
+		if (cCommon::is_string_set($oCred->api_token))
+			$oHttp->extra_headers = ["Authorization" => "Bearer $oCred->api_token"];
+		else	
+			$oHttp->set_credentials($sCred,$oCred->get_password());
 		$sUrl = self::GET_controller(). self::LOGIN_URL;
 
-		$oHttp->fetch_url($sUrl);	//will throw an error if unauthorised	
+		try{
+			$oHttp->fetch_url($sUrl);	//will throw an error if unauthorised	
+		} catch (Exception $e){
+			cDebug::vardump($oHttp);
+			throw($e);
+		}
+		
+		
 		$oCred->save_restui_auth($oHttp);
 		cDebug::leave();
 	}
