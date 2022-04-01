@@ -101,10 +101,14 @@ class cADCore{
 		
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
-		if (cCommon::is_string_set($oCred->api_token))
+		if (cCommon::is_string_set($oCred->api_token)){
+			cDebug::extra_debug("using token in header");
 			$oHttp->extra_headers = ["Authorization" => "Bearer $oCred->api_token"];
-		else	
+		}else{	
+			cDebug::vardump($oCred);
+			cDebug::extra_debug("no token - reverting back to password");
 			$oHttp->set_credentials($sCred,$oCred->get_password());
+		}
 		$sUrl = self::GET_controller(). self::LOGIN_URL;
 
 		try{
