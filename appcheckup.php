@@ -44,9 +44,9 @@ class cAppCheckupAnalysis{
 //#################################################################
 
 class cADAppCheckup {
-	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator"];
+	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png"];
 
-	public static function checkup($poApp, $poTimes){
+	public static function checkup($poApp, $poTimes){ //TODO this takes too long, separate into distinct calls
 		cDebug::enter();
 
 		$aTrans = $poApp->GET_BTs();
@@ -68,10 +68,18 @@ class cADAppCheckup {
 	//**************************************************************************
 	private static function pr__check_ServiceEndpoints($poApp, $poOut){
 		cDebug::enter();
-		$aEndPoints = $poApp->GET_ServiceEndPoints();
+		try{
+			$oEndPoints = $poApp->GET_ServiceEndPoints();
+		}catch (Exception $e){
+			cDebug::extra_debug("unable to get service end points");
+			$poOut->sendpoints[] = new cAppCheckupMessage(true,"unable to get service end points","endpoints") ;
+			cDebug::leave();
+			return;
+		}
+		//cDebug::vardump($oEndPoints);
 		
 		//-----------------------------------------------------------------
-		$iCount = count($aEndPoints);
+		$iCount = $oEndPoints->totalCount;
 		cDebug::extra_debug("there are :$iCount endpoints");
 		$sCaption = "There are $iCount Service endpoints. ";
 		$bBad = false;
@@ -86,6 +94,7 @@ class cADAppCheckup {
 		
 		//-------------known bad BT names --------------------------------
 		$aBadNames = [];
+		$aEndPoints = $oEndPoints->data;
 		foreach ($aEndPoints as $oEndPoint){
 			foreach (self::$badnames as $sNeedle)
 				if (stripos($oEndPoint->name, $sNeedle )) cArrayUtil::add_count_to_array($aBadNames, $sNeedle);
@@ -109,7 +118,15 @@ class cADAppCheckup {
 	private static function pr__check_Backends($poApp, $poOut){
 		cDebug::enter();
 		//-------------backends --------------------------------
-		$aBackends = $poApp->GET_Backends();
+		try{
+			$aBackends = $poApp->GET_Backends();
+		}
+		catch(Exception $e){
+			$poOut->backends[] = new cAppCheckupMessage(true,"unable to get backends","backends") ;
+			cDebug::leave();
+			return;
+		}
+		
 		$iCount = count($aBackends);
 		if ($iCount ==0){
 			$sCaption = "There no remote services detected.";
@@ -136,8 +153,13 @@ class cADAppCheckup {
 		cDebug::extra_debug("counting tiers");
 		$aTierCount = []; 	//counts the transactions per tier
 		$aTierTrans = [];
+		
 		foreach ($paTrans as $oTrans){
-			$sTier = $oTrans->tierName;
+			if (property_exists($oTrans, "tier"))
+				$sTier = $oTrans->tier->name;
+			else
+				$sTier = $oTrans->tierName;
+		
 			if (! isset($aTierCount[$sTier])) {
 				$aTierCount[$sTier] = 0;
 				$aTierTrans[$sTier] = [];

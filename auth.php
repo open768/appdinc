@@ -59,7 +59,7 @@ class cADCrypt{
 		$sKey = "##key is not set##";
 		if (cHash::exists($sHash)){
 			$sKey = cHash::get($sHash);
-		}else{
+			}else{
 			$sKey = uniqid("",true);
 			cHash::put($sHash, $sKey);
 		}
@@ -99,7 +99,6 @@ class cADCredentials{
 	const PROXY_KEY 		= "o";
 	const PROXY_PORT_KEY 	= "p";
 	const RESTRICTED_LOGIN_KEY = "q";
-	const REST_ACCESS_KEY 	= "r";
 	const USERNAME_KEY 		= "s";
 	const USE_HTTPS_KEY 	= "t";
 	
@@ -116,7 +115,7 @@ class cADCredentials{
 	public $encrypted_password;
 	public $use_https;
 	public $restricted_login = null;
-	private $mbLogged_in = false;
+	public $is_logged_in = false;
 	public $encryption_key = "no encryption key set";
 	public $api_app;
 	public $api_secret;
@@ -125,45 +124,46 @@ class cADCredentials{
 	public $analytics_api_app;
 	public $global_account_name;
 	public $analytics_host;
-	public $rest_access;
 	
 	//**************************************************************************************
 	//* construct
 	//**************************************************************************************
 	function __construct() {
 		//cDebug::enter();
-		//retrieves stored values from the session $_SESSION
-		
-		$this->account = cCommon::get_session(self::ACCOUNT_KEY);
-		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
-		$this->encrypted_password = cCommon::get_session(self::PASSWORD_KEY); 
-
-		$this->host = cCommon::get_session(self::HOST_KEY);
-		$this->use_https = cCommon::get_session(self::USE_HTTPS_KEY);
-
-		$this->restricted_login = cCommon::get_session(self::RESTRICTED_LOGIN_KEY);
-		$this->mbLogged_in = cCommon::get_session(self::LOGGEDIN_KEY);  
-		$this->jsessionid = cCommon::get_session(self::JSESSION_KEY);  
-		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
-		$this->api_secret = cCommon::get_session(self::API_SECRET_KEY);  
-		$this->api_app = cCommon::get_session(self::API_APP_KEY);  
-		$this->api_token = cCommon::get_session(self::API_TOKEN_KEY);  
-		$this->analytics_api_key = cCommon::get_session(self::ANALYTICS_API_KEY);  
-		$this->analytics_api_app = cCommon::get_session(self::ANALYTICS_API_APP);  
-		$this->global_account_name = cCommon::get_session(self::GLOBAL_ACCOUNT_NAME);
-		$this->analytics_host = cCommon::get_session(self::ANALYTICS_HOST);
-		$this->rest_access = cCommon::get_session(self::REST_ACCESS_KEY);
-		
+		$this->load_from_session();
 		//cDebug::leave();
 	}
 	
 	//**************************************************************************************
+	function load_from_session(){
+		$this->account = cCommon::get_session(self::ACCOUNT_KEY);
+		$this->analytics_api_app = cCommon::get_session(self::ANALYTICS_API_APP);  
+		$this->analytics_api_key = cCommon::get_session(self::ANALYTICS_API_KEY);  
+		$this->analytics_host = cCommon::get_session(self::ANALYTICS_HOST);
+		$this->api_app = cCommon::get_session(self::API_APP_KEY);  
+		$this->api_secret = cCommon::get_session(self::API_SECRET_KEY);  
+		$this->api_token = cCommon::get_session(self::API_TOKEN_KEY);  
+		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
+		$this->encrypted_password = cCommon::get_session(self::PASSWORD_KEY); 
+		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
+		$this->global_account_name = cCommon::get_session(self::GLOBAL_ACCOUNT_NAME);
+		$this->host = cCommon::get_session(self::HOST_KEY);
+		$this->jsessionid = cCommon::get_session(self::JSESSION_KEY);  
+		$this->is_logged_in = cCommon::get_session(self::LOGGEDIN_KEY);  
+		$this->restricted_login = cCommon::get_session(self::RESTRICTED_LOGIN_KEY);
+		$this->use_https = cCommon::get_session(self::USE_HTTPS_KEY);
+	}
+	
+	//**************************************************************************************
 	function load_from_header(){
-		cDebug::enter();
+		//cDebug::enter();
 		$username = null;
 		$password = null;
 		
 		$this->host = cHeader::get(cADLogin::KEY_HOST);
+		if (strstr($this->host , "http")) cDebug::error("host mustnt contain http");
+		if (strstr($this->host , "/")) cDebug::error("host mustnt contain slashes");
+		
 		$this->account  = cHeader::get(cADLogin::KEY_ACCOUNT);
 		cADCrypt::$credentials = $this;
 		
@@ -182,7 +182,7 @@ class cADCredentials{
 		$this->use_https = true;		
 		
 		$this->save();		//populate the session
-		cDebug::leave();
+		//cDebug::leave();
 	}
 	
 	//**************************************************************************************
@@ -190,8 +190,9 @@ class cADCredentials{
 	//**************************************************************************************
 	function check(){
 		global $_SESSION, $_GET, $_POST;
-		cDebug::enter();
+		//cDebug::enter();
 		try{
+			if(!cCommon::is_string_set($this->host)) cDebug::error("missing host");
 			if(!cCommon::is_string_set($this->account)) cDebug::error("missing account");
 			if(!cCommon::is_string_set($this->encrypted_username)) cDebug::error("missing username");
 			
@@ -219,7 +220,7 @@ class cADCredentials{
 			$sMsg = $e->getMessage();
 			cDebug::error($sMsg);
 		}
-		cDebug::leave();
+		//cDebug::leave();
 		
 	}
 		
@@ -241,10 +242,9 @@ class cADCredentials{
 		cCommon::save_to_session(self::GLOBAL_ACCOUNT_NAME, $this->global_account_name);
 		cCommon::save_to_session(self::HOST_KEY, $this->host);
 		cCommon::save_to_session(self::JSESSION_KEY, $this->jsessionid);
-		cCommon::save_to_session(self::LOGGEDIN_KEY, $this->mbLogged_in);
+		cCommon::save_to_session(self::LOGGEDIN_KEY, $this->is_logged_in);
 		cCommon::save_to_session(self::PASSWORD_KEY, $this->encrypted_password);
 		cCommon::save_to_session(self::RESTRICTED_LOGIN_KEY, $this->restricted_login);
-		cCommon::save_to_session(self::REST_ACCESS_KEY, $this->rest_access);
 		cCommon::save_to_session(self::USERNAME_KEY, $this->encrypted_username);
 		cCommon::save_to_session(self::USE_HTTPS_KEY, $this->use_https);
 		
@@ -256,8 +256,7 @@ class cADCredentials{
 	public function save(){
 		cDebug::enter();
 		//cDebug::write("saving TO SESSION");
-		$this->mbLogged_in = false; 
-		$this->rest_access = false; 
+		$this->is_logged_in = false; 
 		$this->pr_save_to_session();
 		
 
@@ -266,18 +265,24 @@ class cADCredentials{
 			cAdAnalytics::list_schemas();
 		}else{
 			if ($this->jsessionid){
-				cADController::get_all_Applications(); //TODO not implmented will fail
+				//cDebug::on(true);
+				try{
+					cADRestUI::GET_application_ids(); 
+				}catch(Exception $e){
+					cDebug::error("JsessionID or CSRF_TOKEN invalid");
+				}
+				$this->restricted_login = true;
 			}else{
 				if ($this->api_secret){
 					cDebug::extra_debug("getting temporary access token");
 					$this->get_api_token();
 				}
-				cADCore::login();
+				cADCore::login(); //will save jsession and csrf to the session
 				cDebug::write("logged in");
+				$this->load_from_session();
 				cAudit::audit($this, "login"); //audit on success
 				
-				$this->mbLogged_in = true;
-				$this->rest_access = true; 
+				$this->is_logged_in = true;
 			}
 		}
 
@@ -313,7 +318,7 @@ class cADCredentials{
 	//* Getters
 	//**************************************************************************************
 	public function logged_in(){
-		if (!$this->mbLogged_in)
+		if (!$this->is_logged_in)
 			cDebug::error("not logged in");
 			
 		if ($this->restricted_login)

@@ -58,7 +58,12 @@ class cADController{
 		cDebug::enter(null,true);
 		if ( cAD::is_demo()) return cADDemo::GET_Applications();
 		
-		$aData = cADCore::GET('?',true);
+		$oAuth = new cADCredentials;
+		if ($oAuth->is_logged_in)
+			$aData = cADCore::GET('?',true);
+		else
+			$aData = cADRestUI::GET_applications();
+	
 		if ($aData)	usort($aData,"AD_name_sort_fn");
 		$aOut = [];
 		foreach ($aData as $oItem)

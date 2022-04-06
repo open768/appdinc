@@ -119,19 +119,28 @@ class cADApp{
 	
 	//*****************************************************************
 	public function GET_Backends(){
+		cDebug::enter();
 		if ( cAD::is_demo()) return cADDemo::GET_Backends(null);
-		$sMetricpath= cADMetricPaths::backends();
-		
-		$aData = cADMetricData::GET_Metric_heirarchy($this,$sMetricpath, false); //dont cache
+		$oAuth = new cADCredentials;
+		if ($oAuth->is_logged_in){
+			$sMetricpath= cADMetricPaths::backends();
+			$aData = cADMetricData::GET_Metric_heirarchy($this,$sMetricpath, false); //dont cache
+		}else
+			$aData = cADRestUI::get_app_backends($this);
 		usort( $aData, "AD_name_sort_fn");
+		cDebug::leave();
 		return $aData;
 	}
 
 	//*****************************************************************
 	public function GET_CallsPerMin($poTimes){
 		cDebug::enter();
-		$sMetric = cADAppMetrics::appCallsPerMin();
-		$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
+		$oCred = new cADCredentials;
+		if ($oCred->is_logged_in){
+			$sMetric = cADAppMetrics::appCallsPerMin();
+			$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
+		}else
+			$aData = cADRestUI::pr__do_get_applications_from_ids([$this->id]);
 		cDebug::leave();
 		return $aData;
 	}
@@ -260,9 +269,9 @@ class cADApp{
 	//*****************************************************************
 	public function GET_ServiceEndPoints(){	
 		cDebug::enter();
-		$aData = cADRestUI::GET_service_end_points($this);
+		$oData = cADRestUI::GET_service_end_points($this);
 		cDebug::leave();
-		return $aData;
+		return $oData;
 	}
 
 	//*****************************************************************
@@ -298,8 +307,14 @@ class cADApp{
 	//*****************************************************************
 	public function GET_BTs(){		
 		cDebug::enter();
-		$sApp = rawurlencode($this->name);
-		$aData =cADCore::GET("$sApp/business-transactions?" );
+		$oAuth = new cADCredentials();
+		if ($oAuth->is_logged_in){
+			$sApp = rawurlencode($this->name);
+			$aData =cADCore::GET("$sApp/business-transactions?" );
+		}else{
+			$oTimes = new cADTimes;
+			$aData = $this->GET_BT_Calls($oTimes);
+		}
 		cDebug::leave();
 		
 		return $aData;
@@ -309,7 +324,7 @@ class cADApp{
 	public function GET_BT_Calls($poTimes){
 		cDebug::enter();
 		$aData = cADRestUI::get_app_BT_Summary($this, $poTimes);
-		
+		//cDebug::vardump($aData);
 		$aOut = [];
 		foreach ($aData as $oItem){
 			if ($oItem->componentId){
@@ -331,11 +346,16 @@ class cADApp{
 		return $oData;
 	}
 	
+	//*****************************************************************
 	public function GET_app_BT_configs(){		
 		cDebug::enter();
 		$oData = cADRestUI::GET_app_BT_configs($this);
-		$aData = $oData->ruleScopeSummaryMappings;
-		usort($aData,"bt_config_sort_function" );
+		$aData = [];
+		if ($oData && property_exists($oData,"ruleScopeSummaryMappings")){
+			$aData = $oData->ruleScopeSummaryMappings;
+			usort($aData,"bt_config_sort_function" );
+		}else
+			cDebug::extra_debug("unable to get BT configs");
 		cDebug::leave();
 		return $aData;
 	}

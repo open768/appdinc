@@ -34,16 +34,17 @@ class cADTier{
 		if ($poApp == null) cDebug::error("no App provided");
 		$this->app = $poApp;
 		
-		if (!$psTierName  && !$psTierId) 
-			cDebug::error("no tier details provided");
-		
-		if ($psTierName){
+		if ($psTierName && $psTierId){
+			$this->name = $psTierName; 
+			$this->id = $psTierId;
+		}elseif ($psTierName){
 			$this->name = $psTierName; 
 			$this->pr_get_tier_id();
-		}else{
+		}elseif ($psTierId){
 			$this->id = $psTierId;
 			$this->pr_get_tier_name();
-		}
+		}else
+			cDebug::error("no tier details provided");
    }
    
 	//##############################################################################

@@ -285,7 +285,7 @@ class cADMetricData{
 	//*****************************************************************
 	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
-		cDebug::enter();
+		//cDebug::enter();
 		if ($poTimes == null) cDebug::error("times are missing");
 		$sApp = $poApp->name;
 		
@@ -307,7 +307,7 @@ class cADMetricData{
 		$aOutput = $oData;
 		if (!$pbMulti && (count($oData) >0)) $aOutput = $oData[0]->metricValues; //watch out this will knobble the data
 		
-		cDebug::leave();
+		//cDebug::leave();
 		return $aOutput;		
 	}
 	

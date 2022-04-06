@@ -19,6 +19,7 @@ require_once("$phpinc/ckinc/hash.php");
 require_once("$phpinc/ckinc/http.php");
 require_once("$ADlib/common.php");
 require_once("$ADlib/time.php");
+require_once("$ADlib/time.php");
 
 
 //#################################################################
@@ -58,6 +59,7 @@ class cADCore{
 	const APPDYN_OVERFLOWING_BT = "_APPDYNAMICS_DEFAULT_TX_";
 	
 	public static $URL_PREFIX = self::USUAL_METRIC_PREFIX;
+	public static $debug = false;
 	
 	const DATE_FORMAT="Y-m-d\TG:i:s\Z";
 
@@ -105,8 +107,10 @@ class cADCore{
 			cDebug::extra_debug("using token in header");
 			$oHttp->extra_headers = ["Authorization" => "Bearer $oCred->api_token"];
 		}else{	
-			cDebug::vardump($oCred);
+			//cDebug::vardump($oCred);
 			cDebug::extra_debug("no token - reverting back to password");
+			if (!cCommon::is_string_set($oCred->encrypted_password))
+				cDebug::error("no password set, cant login");
 			$oHttp->set_credentials($sCred,$oCred->get_password());
 		}
 		$sUrl = self::GET_controller(). self::LOGIN_URL;
@@ -145,20 +149,20 @@ class cADCore{
 	public static function  GET_restUI_with_payload($psCmd,  $psPayload, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX ){
 		global $oData;
 
-		cDebug::enter();
+		//cDebug::enter();
 		
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
 		if (!$oCred->csrftoken || !$oCred->jsessionid ){
-			//cDebug::vardump($oCred);
+			//cDebug::leave();
 			cDebug::error("missing  csrftoken or jsessionid in credentials");
 		}
 		
 		//-------------- convert object
 		if (is_object($psPayload) || is_array($psPayload))
-		$psPayload = json_encode($psPayload);
-		//cDebug::vardump($psPayload);
+			$psPayload = json_encode($psPayload);
+		if (self::$debug) cDebug::vardump($psPayload);
 		
 		//-------------- check the cache
 		cDebug::write("getting $psCmd with payload");
@@ -167,7 +171,7 @@ class cADCore{
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) ){
 			$oData = self::$oObjStore->get($sCacheCmd, true);
 			if ($oData !== null){
-				cDebug::leave();
+				//zcDebug::leave();
 				return $oData;
 			}else
 				cDebug::extra_debug("$sCacheCmd not in cache");
@@ -207,15 +211,15 @@ class cADCore{
 			self::$oObjStore->put($sCacheCmd, $oData,true);
 		}
 
-		cDebug::leave();
+		//cDebug::leave();
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public static function  GET_restUI($psCmd, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX){
-		cDebug::enter();
+		//cDebug::enter();
 		$oData = self::GET_restUI_with_payload($psCmd, null, $pbCacheable, $psUIPrefix);
-		cDebug::leave();
+		//cDebug::leave();
 		return $oData;
 	}
 
@@ -225,6 +229,7 @@ class cADCore{
 		//cDebug::enter();
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
+		if (!$oCred->is_logged_in) cDebug::error("not logged in");
 		$oCred->check();
 		
 		//-------------- check the cache

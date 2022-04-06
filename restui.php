@@ -170,6 +170,79 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Application
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_application_ids(){
+		cDebug::enter();
+		$oTimes = new cADTimes;
+		$oPayload = (object)[
+			"requestFilter" => (object)[
+				"filters" => [
+					(object)[
+						"field" => "TYPE",
+						"criteria" => "APM",
+						"operator" => "EQUAL_TO"
+					]
+				],
+				"queryParams" => null
+			],
+			"searchFilters" => [],
+			"timeRangeStart" => $oTimes->start,
+			"timeRangeEnd" => $oTimes->end,
+			"columnSorts" => [],
+			"resultColumns" => ["NAME"],
+			"offset"=> 0,
+			"limit"=> -1
+		];
+		$oData = cADCore::GET_restUI_with_payload("v1/app/list/all", $oPayload); //cant be cached as time is set
+		cDebug::leave();
+		return $oData->data;
+	}
+	
+	//********************************************************************************************
+	static function pr__do_get_applications_from_ids($paIDs){
+		cDebug::enter();
+		$oTimes = new cADTimes;
+		
+		$oPayload = (object)[
+			"requestFilter" => $paIDs,
+			"timeRangeStart"=> $oTimes->start,
+			"timeRangeEnd" => $oTimes->end,
+			"searchFilters"=> null,
+			"columnSorts" => null,
+			"resultColumns" => [ "NAME", "CALLS_PER_MINUTE"],
+			"offset" => 0,
+			"limit" => -1
+		];
+		$oData = cADCore::GET_restUI_with_payload("v1/app/list/ids", $oPayload); //cant be cached as time is set
+		cDebug::leave();
+		
+		return $oData->data;
+	}
+	
+	//********************************************************************************************
+	private static function pr__get_applications_from_ids($paIDs){
+		cDebug::enter();
+		$aData = self::pr__do_get_applications_from_ids($paIDs);
+		$aOut = [];
+		foreach ($aData as $oItem){
+			$oApp = new cADApp( $oItem->name, $oItem->id);
+			$aOut[] = $oApp;
+		}
+		cDebug::leave();
+		return $aOut;
+	}
+
+	//********************************************************************************************
+	public static function GET_applications(){
+		cDebug::enter();
+		
+		$aIDs = self::GET_application_ids();
+		$aApps = self::pr__get_applications_from_ids($aIDs);
+		
+		cDebug::leave();
+		return $aApps;
+	}
+	
+	//********************************************************************************************
 	public static function GET_app_flowmap($poApp){
 		cDebug::enter();
 		$sTime = cADTime::last_hour();
@@ -179,8 +252,30 @@ class cADRestUI{
 		$oFlowMap = new cADFlowMap;
 		$oFlowMap->parse($oData);
 		
+	}
+	
+	//****************************************************************
+	public static function get_app_backends($poApp){
+		cDebug::enter();
+		$oTimes = new cADTimes;
+		$oPayload = (object)[
+			"requestFilter"=> (object)[
+				"queryParams"=> (object)[
+					"applicationId"=> $poApp->id
+				],
+				"filters"=> []
+			],
+			"resultColumns"=> ["ID", "NAME"],
+			"offset"=> 0,
+			"limit"=> -1,
+			"searchFilters"=> [],
+			"columnSorts"=> [],
+			"timeRangeStart"=> $oTimes->start,
+			"timeRangeEnd"=> $oTimes->end
+		];
+		$oData = cADCore::GET_restUI_with_payload("backend/list/remoteService",$oPayload);
 		cDebug::leave();
-		return $oFlowMap;
+		return $oData->data;
 	}
 	
 	//****************************************************************
@@ -204,9 +299,19 @@ class cADRestUI{
 	public static function get_app_BT_Summary($poApp, $poTimes){
 		cDebug::enter();
 		
-		$sUrl = "/v1/bt/listViewDataByColumns";
-		$sPayload = '{"requestFilter":['.$poApp->id.'],"searchFilters":null,"timeRangeStart":'.$poTimes->start.',"timeRangeEnd":'.$poTimes->end.',"columnSorts":null,"resultColumns":["NAME","BT_HEALTH","CALL_PER_MIN"],"offset":0,"limit":-1}"';
-		$oData = cADCore::GET_restUI_with_payload($sUrl,$sPayload);
+		$sUrl = "v1/bt/listViewDataByColumns";
+		$oPayload = (object)[
+			"requestFilter"=>[$poApp->id],
+			"searchFilters"=>null,
+			"timeRangeStart"=>$poTimes->start,
+			"timeRangeEnd"=>$poTimes->end,
+			"columnSorts"=>null,
+			"resultColumns"=>["NAME","BT_HEALTH","CALL_PER_MIN"],
+			"offset"=>0,
+			"limit"=>-1
+		];
+		
+		$oData = cADCore::GET_restUI_with_payload($sUrl,$oPayload);
 		
 		cDebug::leave();
 		return $oData->btListEntries;
@@ -477,20 +582,43 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_service_end_points($poApp){
 		cDebug::enter();
-		$iAid = $poApp->id;
-		$sURL = "serviceEndpoint/list2/$iAid/$iAid/APPLICATION?time-range=last_1_hour.BEFORE_NOW.-1.-1.60";
-		$oResult = cADCore::GET_restUI($sURL,true);
+		$sURL = "serviceEndpoint/list";
+		$oTimes = new cADTimes;
+		$oPayload = (object)[
+			"requestFilter" => (object)[
+				"queryParams" => (object)[
+					"applicationId" => $poApp->id,
+					"mode" => "FILTER_EXCLUDED"
+				],
+				"searchText"=> "",
+				"filters" => (object)[
+					"type" => [],
+					"sepName" => []
+				]
+			],
+			"columnSorts" => [
+				(object)[
+					"column" => "NAME",
+					"direction" => "ASC"
+				]
+			],
+			"timeRangeStart" => $oTimes->start,
+			"timeRangeEnd"=> $oTimes->end
+		];
+		$oResult = cADCore::GET_restUI_with_payload($sURL,$oPayload);
 		cDebug::leave();
-		return $oResult->serviceEndpointListEntries;
+		return $oResult;
 	}
 	
-	public static function GET_Tier_service_end_points($poTier){
+	//************************************************************************************
+	public static function GET_Tier_service_end_points($poTier){ //this can use metric heirarchy
 		cDebug::enter();
-		$aResult = self::GET_service_end_points($poTier->app);
+		$oResult = self::GET_service_end_points($poTier->app);
+		$aData = $oResult->data;
 		
 		//now filter the results for the tier id
 		$aEndPoints = [];
-		foreach( $aResult as $oService){
+		foreach( $aData as $oService){
 			if ($oService->applicationComponentId == $poTier->id){
 				$oItem = new cADDetails($oService->name, $oService->id, null,null);
 				$oItem->type = $oService->type;

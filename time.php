@@ -29,7 +29,7 @@ class cADTimes{
 			$this->start = $piTime - 5000; //5secs either way
 			$this->end = $piTime + 5000;
 		}else{
-		$this->time_type = SELF::BEFORE_NOW;
+			$this->time_type = SELF::BEFORE_NOW;
 			$this->set_duration(60);
 		}
 	}
