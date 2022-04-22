@@ -46,7 +46,7 @@ class cAppCheckupAnalysis{
 class cADAppCheckup {
 	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png"];
 
-	public static function checkup($poApp, $poTimes){ //TODO this takes too long, separate into distinct calls
+	public static function checkup($poApp, $poTimes, $psCheckOnly){ //TODO this takes too long, separate into distinct calls
 		cDebug::enter();
 
 		$aTrans = $poApp->GET_BTs();
@@ -55,10 +55,14 @@ class cADAppCheckup {
 		//---------------------------------------------
 		self::pr__check_general($poApp,$oOut);
 		self::pr__check_BTs($poApp,$aTrans, $poTimes, $oOut);
-		self::pr__check_DCs($poApp, $oOut);
-		self::pr__check_Tiers($poApp,$aTrans, $oOut);
-		self::pr__check_Backends($poApp, $oOut);
-		self::pr__check_ServiceEndpoints($poApp, $oOut);
+		if (!$psCheckOnly)
+			self::pr__check_DCs($poApp, $oOut);
+		if (!$psCheckOnly)
+			self::pr__check_Tiers($poApp,$aTrans, $oOut);
+		if (!$psCheckOnly)
+			self::pr__check_Backends($poApp, $oOut);
+		if (!$psCheckOnly)
+			self::pr__check_ServiceEndpoints($poApp, $oOut);
 		
 		//---------------------------------------------
 		cDebug::leave();

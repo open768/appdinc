@@ -101,9 +101,9 @@ class cADApp{
 	
 	//#################################################################
 	//#################################################################
-	public function checkup($poTimes){
+	public function checkup($poTimes, $psCheckOnly=null){
 		cDebug::enter();
-		$oOut =  cADAppCheckup::checkup($this, $poTimes);
+		$oOut =  cADAppCheckup::checkup($this, $poTimes, $psCheckOnly);
 		cDebug::leave();
 		return $oOut;
 	}
@@ -279,7 +279,11 @@ class cADApp{
 	public function GET_raw_tiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_Tiers($this);
 		$sApp = rawurlencode($this->name);
-		$aData = cADCore::GET("$sApp/tiers?",true );
+		try{
+			$aData = cADCore::GET("$sApp/tiers?",true );
+		}catch (Exception $e){
+			$aData = cADCore::GET("$this->id/tiers?",true );
+		}
 		return $aData; 
 	}
 	
@@ -292,11 +296,12 @@ class cADApp{
 		$aOutTiers = [];
 
 		//convert to tier objects and populate the app
-		foreach ($aData as $oInTier){
-			$oOutTier = new cADTier($this, $oInTier->name, $oInTier->id);
-			$aOutTiers[] = $oOutTier;
-		}
-		
+		foreach ($aData as $oInTier)
+			if (strtolower($oInTier->name) !== "machine agent"){
+				$oOutTier = new cADTier($this, $oInTier->name, $oInTier->id);
+				$aOutTiers[] = $oOutTier;
+			}
+				
 		cDebug::leave();
 		return $aOutTiers;
 	}

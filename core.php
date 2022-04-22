@@ -129,7 +129,7 @@ class cADCore{
 	
 	
 	//*****************************************************************
-	private static function pr__get_extra_header(){
+	private static function pr__get_extra_restui_header(){
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
@@ -139,7 +139,7 @@ class cADCore{
 			"Accept" => "application/json, text/plain, */*",
 			"User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36",
 			"X-CSRF-TOKEN" => $oCred->csrftoken,
-			"Cookie" => "JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN: $oCred->csrftoken;"	
+			"Cookie" => "JSESSIONID=$oCred->jsessionid; X-CSRF-TOKEN=$oCred->csrftoken;"	
 		];
 		
 		return $aExtraHeader;
@@ -185,8 +185,9 @@ class cADCore{
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
 		//$oHttp->debug = true; //debug
-		$oHttp->extra_headers = self::pr__get_extra_header();
+		$oHttp->extra_headers = self::pr__get_extra_restui_header();
 		$oHttp->request_payload= $psPayload;
+
 		try{
 			$oData = $oHttp->getjson($url);
 		}catch (Exception $e){
@@ -253,10 +254,10 @@ class cADCore{
 		//----- actually do it
 		$sUrl = $sAD_REST.$psCmd;
 		if ($pbSuffix) $sUrl.=self::$SUFFIX;
-		//cDebug::extra_debug("Url: $sUrl");
+		cDebug::extra_debug("Url: $sUrl");
 		
 		$oHttp = new cHttp();
-		//$sExtraHeader = self::pr__get_extra_header();
+		//$sExtraHeader = self::pr__get_extra_restui_header();
 		//$oHttp->extra_header = $sExtraHeader;
 		$oHttp->USE_CURL = false;
 		

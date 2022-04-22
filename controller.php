@@ -68,10 +68,11 @@ class cADController{
 		$aOut = [];
 		foreach ($aData as $oItem)
 			if ($oItem->name !== null)
-				if (strtolower($oItem->name) !== "analytics"){
-					$oApp = new cADApp($oItem->name, $oItem->id);
-					$aOut[] = $oApp;
-				}
+				if (strtolower($oItem->name) !== "analytics")
+					if (strtolower($oItem->name) !== "pleasechangeme"){
+						$oApp = new cADApp($oItem->name, $oItem->id);
+						$aOut[] = $oApp;
+					}
 		
 		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
 		cDebug::leave(null,true);
