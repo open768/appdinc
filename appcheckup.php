@@ -44,7 +44,8 @@ class cAppCheckupAnalysis{
 //#################################################################
 
 class cADAppCheckup {
-	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png", "/health", "/admin"];
+	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png", "/health", "/admin", "robots", "maven"];
+	static $pentestnames = ["phpnuke"];
 
 	public static function checkup($poApp, $poTimes, $psCheckOnly){ //TODO this takes too long, separate into distinct calls
 		cDebug::enter();
@@ -57,8 +58,7 @@ class cADAppCheckup {
 		self::pr__check_BTs($poApp,$aTrans, $poTimes, $oOut);
 		if (!$psCheckOnly)
 			self::pr__check_DCs($poApp, $oOut);
-		if (!$psCheckOnly)
-			self::pr__check_Tiers($poApp,$aTrans, $oOut);
+		self::pr__check_Tiers($poApp,$aTrans, $oOut);
 		if (!$psCheckOnly)
 			self::pr__check_Backends($poApp, $oOut);
 		if (!$psCheckOnly)
@@ -200,6 +200,8 @@ class cADAppCheckup {
 				if ($iIDCount >0 )
 					$poOut->tiers[] = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", $sTier);
 
+				//- - -check for bts that dont belong. eg if its a java tier there should be no PHP, nsf
+				//TBD
 			}
 		}	
 		cDebug::leave();
