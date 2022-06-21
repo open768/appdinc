@@ -44,8 +44,8 @@ class cAppCheckupAnalysis{
 //#################################################################
 
 class cADAppCheckup {
-	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png", "/health", "/admin", "robots", "maven"];
-	static $pentestnames = ["phpnuke"];
+	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png", "/health", "/admin", "robots", "maven", "solr", "wordpress", "hawtio", "weblogic"];
+	static $pentestnames = ["phpnuke", "wp-content", "vti_bin", "cgi-bin"];
 
 	public static function checkup($poApp, $poTimes, $psCheckOnly){ //TODO this takes too long, separate into distinct calls
 		cDebug::enter();

@@ -88,6 +88,41 @@ class cADTier{
 	}
 	
 	//*****************************************************************
+	public function GET_Inactive_App_Agents($poTimes){
+		cDebug::enter();
+		
+		$aNodeNames = [];
+		$aAvailData = $this->GET_All_App_Agent_availability($poTimes, "*"); //get availability for all nodes in the tier
+		if (!cArrayUtil::array_is_empty($aAvailData)){
+			cDebug::extra_debug("total app agents found for: $this->name = ". count($aAvailData));
+			foreach ($aAvailData as $oItem){ //loop through nodes
+				$bInactive=true;
+				if (count($oItem->metricValues) > 0){
+					$iSum = $oItem->metricValues[0]->sum;
+					$bInactive = ($iSum == 0); //only historical if the sum is 0
+				}
+				
+				if ($bInactive){
+					$sNode = cAdUtil::extract_node_name($oItem->metricPath);
+					$aNodeNames[] = $sNode;
+				}
+			}
+		}
+		
+		$iCount = count($aNodeNames);
+		$aNodes = [];
+		if ($iCount == 0)
+			cDebug::extra_debug("no inactive nodes found");
+		else{
+			cDebug::extra_debug(" $iCount inactive app agents found");
+			$aNodes = cADUtil::get_nodes_from_names($this->app, $aNodeNames);
+		}
+		
+		cDebug::leave();
+		return $aNodes;
+	}
+		
+	//*****************************************************************
 	public function GET_DiskMetrics(){
 		cDebug::enter();
 		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, null);

@@ -88,18 +88,29 @@ class cADAccount{
 	}
 	
 	//*****************************************************************
-	private static function pr__get($psURLAdd){
+	public static function GET_LicenseRules(){
+		cDebug::enter();
+		
+		$aRules=cADRestUI::GET_allocationRules();
+		
+		cDebug::leave();
+		return $aRules;
+	}
+	
+	//*****************************************************************
+	private static function pr__get($psURL){
 		cDebug::enter();
 		$sID = self::GET_account_id();
 		
 		cADCore::$URL_PREFIX="/api/accounts/$sID";
 		cADCore::$CONTROLLER_PREFIX=null;
-		$oJson = cADCore::GET($psURLAdd);
+		$oJson = cADCore::GET($psURL);
 
 		
 		cDebug::leave();
 		return $oJson;
 	}
+	
 }
 
 ?>

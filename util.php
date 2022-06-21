@@ -272,6 +272,31 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
+	public static function get_nodes_from_names($poApp, $paNames){
+		cDebug::enter();
+
+		$aMachines = $poApp->GET_Nodes();
+		
+		//------------make into an associative list
+		$aNodesAssoc = [];
+		foreach ($aMachines as $aNodes)
+			foreach ($aNodes as $oNode)
+				$aNodesAssoc[ $oNode->name] = $oNode;
+		
+		//-------------work though list
+		$aOut = [];
+		foreach ($paNames as $sName){
+			if (array_key_exists($sName,$aNodesAssoc))
+				$aOut[] = $aNodesAssoc[$sName];
+			else
+				cDebug::write("unable to find node with name $sName");
+		}
+		
+		cDebug::leave();
+		return $aOut;
+	}
+	
+	//*****************************************************************
 	public static function get_node_name($poApp, $psNodeID){
 		$aMachines = $poApp->GET_Nodes();
 		$sNodeName = null;

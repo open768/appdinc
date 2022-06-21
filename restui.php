@@ -441,15 +441,22 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_allocationRules(){
 		cDebug::enter();
-		$iAccount = self::GET_account();
-		$sDate=date(cCommon::UTC_DATE_FORMAT);
-		$sUrl ="license/accounts/$iAccount/allocations?dateFrom=$sDate&dateTo=$sDate&granularityMinutes=0";
-		$oData = cADCore::GET_restUI($sUrl);
-		$aRules = $oData->allocationRules;
-		cDebug::extra_debug("count of allocation rules:". count($aRules));
+		$oPayload = (object)[
+			"durationInMinutes" => 60,
+			"endTime" => null,
+			"startTime" => null,
+			"timeRange" => null,
+			"timeRangeAdjusted" => false,
+			"type" => "BEFORE_NOW"
+		];
+		
+		$sUrl ="licenseRule/getAllRulesSummary";
+		$oData = cADCore::GET_restUI_with_payload($sUrl, $oPayload);
 		cDebug::leave();
-		return $aRules;
+		
+		return($oData);
 	}
+	
 	public static function GET_allocationID($piRuleID){
 		cDebug::enter();
 		$aRules = self::GET_allocationRules();

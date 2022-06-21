@@ -57,6 +57,7 @@ class cADCore{
 	const ALL_EVENT_TYPES = "POLICY_OPEN_CRITICAL,POLICY_OPEN_WARNING,POLICY_CLOSE,POLICY_CLOSE_CRITICAL,POLICY_CLOSE_WARNING,POLICY_CONTINUES_CRITICAL";
 	const ALL_SEVERITIES = "WARN,ERROR,INFO";
 	const APPDYN_OVERFLOWING_BT = "_APPDYNAMICS_DEFAULT_TX_";
+	const CACHE_EXPIRY_TIME = 300; // 5 mins cache timeout
 	
 	public static $URL_PREFIX = self::USUAL_METRIC_PREFIX;
 	public static $debug = false;
@@ -68,7 +69,7 @@ class cADCore{
 		if (!self::$oObjStore){
 			$oObjStore = new cObjStoreDB();
 			$oObjStore->realm = "ADCORE";
-			$oObjStore->expire_time = 300;	// 5 mins
+			$oObjStore->expire_time = self::CACHE_EXPIRY_TIME;
 			$oObjStore->set_table("ADCORE");
 			
 			self::$oObjStore = $oObjStore;
@@ -184,7 +185,6 @@ class cADCore{
 		
 		$oHttp = new cHttp();
 		$oHttp->USE_CURL = false;
-		//$oHttp->debug = true; //debug
 		$oHttp->extra_headers = self::pr__get_extra_restui_header();
 		$oHttp->request_payload= $psPayload;
 
@@ -236,7 +236,7 @@ class cADCore{
 		//-------------- check the cache
 		$sCacheCmd = $oCred->host.$oCred->account.$psCmd;
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE)){
-			$oData = self::$oObjStore->get($sCacheCmd);
+			$oData = self::$oObjStore->get($sCacheCmd,true);
 			if ($oData !== null){
 				cDebug::extra_debug("$sCacheCmd cached", true);
 				//cDebug::leave();

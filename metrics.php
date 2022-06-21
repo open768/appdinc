@@ -731,7 +731,7 @@ class cADMetricPaths{
 	//* transactions
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function Transaction($psTier, $psTrans, $psNode=null){
-		$sMetric = self::tierTransactions($psTier)."|$psTrans";
+		$sMetric = cADTierMetrics::tierTransactions($psTier)."|$psTrans";
 		if ($psNode) $sMetric .= "|Individual Nodes|$psNode";
 		return $sMetric;
 	}

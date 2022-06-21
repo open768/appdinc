@@ -40,6 +40,7 @@ class cADApp{
 	function __construct($psAppName, $psAppId=null) {	
 		if (!$psAppName  && !$psAppId) cDebug::error("no app details provided");
 		if ($psAppName === self::NO_APP) return;
+		if ($psAppId === self::NO_APP) return;
 
 		if ($psAppName){
 			$this->name = $psAppName;
