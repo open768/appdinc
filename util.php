@@ -182,7 +182,7 @@ class cADUtil {
 	
 	//################################################################
 	public static function extract_bt_name($psMetric, $psTier){
-		$sLeft = cADTierMetrics::tierTransactions($psTier);
+		$sLeft = cADTierMetricPaths::tierTransactions($psTier);
 		$sOut = substr($psMetric, strlen($sLeft)+1);
 		$iPos = strpos($sOut, cADMetricPaths::RESPONSE_TIME);
 		$sOut = substr($sOut, 0, $iPos -1);
@@ -315,15 +315,20 @@ class cADUtil {
 	}
 	
 	//*****************************************************************
-	public static function get_matching_extcall($poApp, $psExt){
-		$aTiers = $poApp->GET_Tiers();
-		foreach ($aTiers as $oTier){
-			$aTierExt = $oTier->GET_ext_calls();
-			foreach ($aTierExt as $oExt)
-				if ( strpos($oExt->name, $psExt) !== false )
-					return $oExt->name;
-		}
-		return null;
+	public static function get_matching_tier_extcalls($poTier, $psExt){
+		cDebug::enter();
+		
+		$aMatches = [];
+		cDebug::extra_debug("looking for ext calls in all tiers that matches $psExt");
+		
+		$aTierExt = $poTier->GET_ext_calls();
+		foreach ($aTierExt as $oExt)
+			if ( strpos($oExt->name, $psExt) !== false )
+				$aMatches[] = $oExt->name;
+		
+		cDebug::leave();
+		return $aMatches;
+		
 	}
 	
 	//*****************************************************************

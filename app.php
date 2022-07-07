@@ -138,7 +138,7 @@ class cADApp{
 		cDebug::enter();
 		$oCred = new cADCredentials;
 		if ($oCred->is_logged_in){
-			$sMetric = cADAppMetrics::appCallsPerMin();
+			$sMetric = cADAppMetricPaths::appCallsPerMin();
 			$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
 		}else
 			$aData = cADRestUI::pr__do_get_applications_from_ids([$this->id]);
@@ -181,7 +181,7 @@ class cADApp{
 	public function GET_ExtTiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_AppExtTiers(null);
 		cDebug::enter();
-		$sMetricPath= cADAppMetrics::appBackends();
+		$sMetricPath= cADAppMetricPaths::appBackends();
 		$aMetrics = cADMetricData::GET_Metric_heirarchy($this,$sMetricPath,false); //dont cache
 		if ($aMetrics) usort($aMetrics,"AD_name_sort_fn");
 		cDebug::leave();
@@ -231,9 +231,9 @@ class cADApp{
 	//this function belongs elsewhere as it is common to AD objects
 	public function GET_MetricData($psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
-		cDebug::enter();
+		//cDebug::enter();
 		$aOutput = cADMetricData::GET_MetricData($this,$psMetricPath, $poTimes , $pbRollup, $pbCacheable, $pbMulti);
-		cDebug::leave();
+		//cDebug::leave();
 		return $aOutput;		
 	}
 	
@@ -241,9 +241,9 @@ class cADApp{
 	//this function belongs elsewhere as it is common to AD objects
 	public function GET_Metric_heirarchy($psMetricPath, $pbCached=true, $poTimes = null)
 	{
-		cDebug::enter();
+		//cDebug::enter();
 		$oData = cADMetricData::GET_Metric_heirarchy($this,$psMetricPath, $pbCached, $poTimes );
-		cDebug::leave();
+		//cDebug::leave();
 		return $oData;
 	}
 	

@@ -193,22 +193,40 @@ class cADTier{
    	public function GET_ext_calls(){
 		$sTier = $this->name;
 		cDebug::enter();
-			$sMetricPath = "Overall Application Performance|$sTier|External Calls";
-			$aData = $this->app->GET_Metric_heirarchy($sMetricPath, false);
-			usort ($aData, "AD_name_sort_fn");
+			cDebug::extra_debug("Getting external calls for tier $this->name");
+			$sMetricPath = cADTierMetricPaths::extCalls($this->name); //doesntwork for 4.5!!
+			$aData = $this->app->GET_Metric_heirarchy($sMetricPath, true);
+			if (count($aData) > 0)
+				usort ($aData, "AD_name_sort_fn");
+			else{	
+				$aData  =[];
+				cDebug::extra_debug("nothing found - trying a different approach"); //for 4.5
+				$sMetricPath = cADTierMetricPaths::threadTasks($this->name); //old!!
+				$aTasks = $this->app->GET_Metric_heirarchy($sMetricPath, true);
+				foreach ($aTasks as $oTask)
+					if ( preg_match("/_Exit$/", $oTask->name) ){
+						$sMetricPath = cADTierMetricPaths::threadTaskExtCallNames($this->name,$oTask->name); 
+						$aExt = $this->app->GET_Metric_heirarchy($sMetricPath, true);
+						foreach ($aExt as $oExt){
+							$oExt->name = cADTierMetricPaths::threadTaskExtCallName($this->name,$oTask->name,$oExt->name);
+							$aData[] = $oExt;
+						}
+					}
+				//cDebug::vardump($aData);
+			}
 		cDebug::leave();
 		return $aData;
 	}
 
 	//*****************************************************************
 	public  function GET_ExtCallsPerMin($psTier2, $poTimes, $pbRollup){
-		$sMetricpath= cADTierMetrics::tierExtCallsPerMin($this->name, $psTier2);
+		$sMetricpath= cADTierMetricPaths::toTierCallsPerMin($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}	
 
 	//*****************************************************************
 	public function GET_ExtResponseTimes($psTier2, $poTimes, $pbRollup){
-		$sMetricpath= cADTierMetrics::tierExtResponseTimes($this->name, $psTier2);
+		$sMetricpath= cADTierMetricPaths::toTierResponseTimes($this->name, $psTier2);
 		return $this->app->GET_MetricData($sMetricpath, $poTimes, $pbRollup);
 	}
 	
@@ -261,7 +279,7 @@ class cADTier{
 		$aResults = []; 
 		
 		try{
-			$sMetricPath = cADTierMetrics::tierTransactions($this->name);
+			$sMetricPath = cADTierMetricPaths::tierTransactions($this->name);
 			$aTierTransactions = $this->app->GET_Metric_heirarchy($sMetricPath, false);	
 			if (!$aTierTransactions) return null;
 			
