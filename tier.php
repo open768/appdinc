@@ -204,7 +204,7 @@ class cADTier{
 				$sMetricPath = cADTierMetricPaths::threadTasks($this->name); //old!!
 				$aTasks = $this->app->GET_Metric_heirarchy($sMetricPath, true);
 				foreach ($aTasks as $oTask)
-					if ( preg_match("/_Exit$/", $oTask->name) ){
+					if ( preg_match("/_Exit$/", $oTask->name) || ($oTask->name === "AsyncRun")){
 						$sMetricPath = cADTierMetricPaths::threadTaskExtCallNames($this->name,$oTask->name); 
 						$aExt = $this->app->GET_Metric_heirarchy($sMetricPath, true);
 						foreach ($aExt as $oExt){
@@ -212,8 +212,8 @@ class cADTier{
 							$aData[] = $oExt;
 						}
 					}
-				//cDebug::vardump($aData);
 			}
+		//cDebug::vardump($aData);
 		cDebug::leave();
 		return $aData;
 	}

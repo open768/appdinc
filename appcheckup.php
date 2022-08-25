@@ -44,8 +44,35 @@ class cAppCheckupAnalysis{
 //#################################################################
 
 class cADAppCheckup {
-	static 	$badnames = ["swagger", "well-known", "WEB-INF", ".axd", "favicon", "actuator", ".svg", ".jpg", ".png", "/health", "/admin", "robots", "maven", "solr", "wordpress", "hawtio", "weblogic"];
-	static $pentestnames = ["phpnuke", "wp-content", "vti_bin", "cgi-bin"];
+	static 	$badnames = [
+		".axd", 
+		".jpg", 
+		".png", 
+		".ping", 
+		".svg", 
+		"/admin", 
+		"/health", 
+		"/ping", 
+		"WEB-INF", 
+		"actuator", 
+		"favicon", 
+		"hawtio", 
+		"heartbeat", 
+		"keepalive",
+		"maven", 
+		"robots", 
+		"solr", 
+		"swagger", 
+		"weblogic",
+		"well-known", 
+		"wordpress" 
+	];
+	static $pentestnames = [
+		"cgi-bin", 
+		"phpnuke", 
+		"vti_bin",
+		"wp-content"
+	];
 
 	public static function checkup($poApp, $poTimes, $psCheckOnly){ //TODO this takes too long, separate into distinct calls
 		cDebug::enter();
@@ -254,16 +281,14 @@ class cADAppCheckup {
 		else
 			$poOut->BTs[] = new cAppCheckupMessage(false, "There are $iCount BT detection rules", "BT Rules");
 		
-		//TODO
-		
 		//-------------BTs --------------------------------
 		cDebug::extra_debug("analysing app $poApp->name");
 		$iCount = count($paTrans);
 		$sCaption  = "There are $iCount BTs.";
 		$bBad = true;
 		
-		if ($iCount >=250)
-			$sCaption .= " This must be below 250. <b>Investigate configuration</b>";
+		if ($iCount >=200)
+			$sCaption .= " This must be below 200. <b>Investigate configuration</b>";
 		elseif ($iCount >=100)
 			$sCaption .= " The number of BTs is <b>very</b> high";
 		elseif ($iCount >=50)

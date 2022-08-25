@@ -170,7 +170,7 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Application
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function GET_application_ids(){
+	public static function GET_application_ids($paColumns=["NAME"]){
 		cDebug::enter();
 		$oTimes = new cADTimes;
 		$oPayload = (object)[
@@ -188,7 +188,7 @@ class cADRestUI{
 			"timeRangeStart" => $oTimes->start,
 			"timeRangeEnd" => $oTimes->end,
 			"columnSorts" => [],
-			"resultColumns" => ["NAME"],
+			"resultColumns" => $paColumns,
 			"offset"=> 0,
 			"limit"=> -1
 		];
@@ -198,7 +198,7 @@ class cADRestUI{
 	}
 	
 	//********************************************************************************************
-	static function pr__do_get_applications_from_ids($paIDs){
+	static function get_applications_status_from_ids($paIDs, $paCols=["NAME", "CALLS_PER_MINUTE"]){
 		cDebug::enter();
 		$oTimes = new cADTimes;
 		
@@ -208,7 +208,7 @@ class cADRestUI{
 			"timeRangeEnd" => $oTimes->end,
 			"searchFilters"=> null,
 			"columnSorts" => null,
-			"resultColumns" => [ "NAME", "CALLS_PER_MINUTE"],
+			"resultColumns" => $paCols,
 			"offset" => 0,
 			"limit" => -1
 		];
@@ -219,9 +219,9 @@ class cADRestUI{
 	}
 	
 	//********************************************************************************************
-	private static function pr__get_applications_from_ids($paIDs){
+	private static function pr__get_app_objs_from_ids($paIDs){
 		cDebug::enter();
-		$aData = self::pr__do_get_applications_from_ids($paIDs);
+		$aData = self::get_applications_status_from_ids($paIDs);
 		$aOut = [];
 		foreach ($aData as $oItem){
 			$oApp = new cADApp( $oItem->name, $oItem->id);
@@ -236,7 +236,7 @@ class cADRestUI{
 		cDebug::enter();
 		
 		$aIDs = self::GET_application_ids();
-		$aApps = self::pr__get_applications_from_ids($aIDs);
+		$aApps = self::pr__get_app_objs_from_ids($aIDs);
 		
 		cDebug::leave();
 		return $aApps;

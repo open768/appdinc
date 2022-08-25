@@ -38,6 +38,7 @@ class cADLogin{
 	const KEY_APITOKEN = "at";
 	const KEY_JSESSION_ID = "js";
 	const KEY_XCSRFTOKEN = "xc";
+	const KEY_LOGINTOKEN = "lt";
 }
 
 //#################################################################
@@ -90,6 +91,7 @@ class cADCredentials{
 	const API_SECRET_KEY 	= "f";
 	const API_TOKEN_KEY 	= "g";
 	const CSRF_TOKEN_KEY 	= "h";
+	const LOGIN_TOKEN_KEY 	= "u";
 	const GLOBAL_ACCOUNT_NAME = "i";
 	const HOST_KEY 			= "j";
 	const JSESSION_KEY 		= "k";
@@ -108,22 +110,23 @@ class cADCredentials{
 	
 	public $account;
 	public $account_id;
-	public $host;
-	public $encrypted_username;
-	public $jsessionid;
-	public $csrftoken;
-	public $encrypted_password;
-	public $use_https;
-	public $restricted_login = null;
-	public $is_logged_in = false;
-	public $encryption_key = "no encryption key set";
+	public $analytics_api_app;
+	public $analytics_api_key;
+	public $analytics_host;
 	public $api_app;
 	public $api_secret;
 	public $api_token;
-	public $analytics_api_key;
-	public $analytics_api_app;
+	public $csrftoken;
+	public $encrypted_password;
+	public $encrypted_username;
+	public $encryption_key = "no encryption key set";
 	public $global_account_name;
-	public $analytics_host;
+	public $host;
+	public $is_logged_in = false;
+	public $jsessionid;
+	public $login_token;
+	public $restricted_login = null;
+	public $use_https;
 	
 	//**************************************************************************************
 	//* construct
@@ -144,6 +147,7 @@ class cADCredentials{
 		$this->api_secret = cCommon::get_session(self::API_SECRET_KEY);  
 		$this->api_token = cCommon::get_session(self::API_TOKEN_KEY);  
 		$this->csrftoken = cCommon::get_session(self::CSRF_TOKEN_KEY);  
+		$this->login_token = cCommon::get_session(self::LOGIN_TOKEN_KEY);  
 		$this->encrypted_password = cCommon::get_session(self::PASSWORD_KEY); 
 		$this->encrypted_username = cCommon::get_session(self::USERNAME_KEY);
 		$this->global_account_name = cCommon::get_session(self::GLOBAL_ACCOUNT_NAME);
@@ -175,6 +179,7 @@ class cADCredentials{
 		$this->api_secret  = cHeader::get(cADLogin::KEY_APISECRET);
 		$this->api_app  = cHeader::get(cADLogin::KEY_APIAPP);
 		$this->api_token  = cHeader::get(cADLogin::KEY_APITOKEN);
+		$this->login_token  = cHeader::get(cADLogin::KEY_LOGINTOKEN);
 		
 		$this->jsessionid  = cHeader::get(cADLogin::KEY_JSESSION_ID);
 		$this->csrftoken  = cHeader::get(cADLogin::KEY_XCSRFTOKEN);
@@ -192,27 +197,29 @@ class cADCredentials{
 		global $_SESSION, $_GET, $_POST;
 		//cDebug::enter();
 		try{
-			if(!cCommon::is_string_set($this->host)) cDebug::error("missing host");
-			if(!cCommon::is_string_set($this->account)) cDebug::error("missing account");
-			if(!cCommon::is_string_set($this->encrypted_username)) cDebug::error("missing username");
-			
-			if (cCommon::is_string_set($this->analytics_api_key)){
-				//cDebug::extra_debug("checking for analytics api credentials");
-				if(!cCommon::is_string_set($this->analytics_api_app)) cDebug::error("missing analytics API app");
-				if(!cCommon::is_string_set($this->global_account_name)) cDebug::error("missing global account name ");
-				if(!cCommon::is_string_set($this->analytics_host)) cDebug::error("missing analytics host ");
-			}else{
-				if (!$this->is_demo() && !cCommon::is_string_set($this->host)) cDebug::error("missing host");
-				if (cCommon::is_string_set($this->api_secret)){
-					//cDebug::extra_debug("checking for api credentials");
-					if(!cCommon::is_string_set($this->api_app)) cDebug::error("missing api_app ");
-				}elseif (cCommon::is_string_set($this->jsessionid)){
-					if(!cCommon::is_string_set($this->csrftoken)) cDebug::error("missing csrftoken ");
-				}elseif (cCommon::is_string_set($this->api_token)){
-					//ok, thats all we need
+			if (!cCommon::is_string_set($this->login_token)){
+				if(!cCommon::is_string_set($this->host)) cDebug::error("missing host");
+				if(!cCommon::is_string_set($this->account)) cDebug::error("missing account");
+				if(!cCommon::is_string_set($this->encrypted_username)) cDebug::error("missing username");
+				
+				if (cCommon::is_string_set($this->analytics_api_key)){
+					//cDebug::extra_debug("checking for analytics api credentials");
+					if(!cCommon::is_string_set($this->analytics_api_app)) cDebug::error("missing analytics API app");
+					if(!cCommon::is_string_set($this->global_account_name)) cDebug::error("missing global account name ");
+					if(!cCommon::is_string_set($this->analytics_host)) cDebug::error("missing analytics host ");
 				}else{
-					//cDebug::extra_debug("checking for normal credentials");
-					if(!cCommon::is_string_set($this->encrypted_password)) cDebug::error("missing password ");
+					if (!$this->is_demo() && !cCommon::is_string_set($this->host)) cDebug::error("missing host");
+					if (cCommon::is_string_set($this->api_secret)){
+						//cDebug::extra_debug("checking for api credentials");
+						if(!cCommon::is_string_set($this->api_app)) cDebug::error("missing api_app ");
+					}elseif (cCommon::is_string_set($this->jsessionid)){
+						if(!cCommon::is_string_set($this->csrftoken)) cDebug::error("missing csrftoken ");
+					}elseif (cCommon::is_string_set($this->api_token)){
+						//ok, thats all we need
+					}else{
+						//cDebug::extra_debug("checking for normal credentials");
+						if(!cCommon::is_string_set($this->encrypted_password)) cDebug::error("missing password ");
+					}
 				}
 			}
 		}	
@@ -375,6 +382,8 @@ class cADCredentials{
 		$this->analytics_api_app = null;
 		$this->global_account_name = null;
 		$this->analytics_host = null;
+		$this->jsessionid = null;
+		
 		$this->pr_save_to_session();
 	}
 	
@@ -431,6 +440,9 @@ class cADCredentials{
 		if ($oCred == null) cDebug::error("token not found");
 		if (get_class($oCred) !== "cADCredentials") cDebug::error("unexpected class");
 
+		//remove jsession ID from session 
+		$oCred->jsessionid = null;
+		
 		//perform the login
 		$oCred->save();
 	}

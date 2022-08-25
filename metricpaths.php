@@ -411,19 +411,28 @@ class cADTierMetricPaths{
 		return $sMetric;
 	}
 	
+	//----------------------------------------------------------------------------------
 	public static function toTier($psTier1,$psTier2){
-		return self::tier($psTier1)."|".cADMetricPaths::EXT_CALLS."|$psTier2";
+		if (strstr($psTier2, "|"))
+			$sMetric = $psTier2;
+		else
+			$sMetric = self::tier($psTier1)."|".cADMetricPaths::EXT_CALLS."|$psTier2";
+		return $sMetric;
 	}
 	
 	public static function toTierCallsPerMin($psTier1,$psTier2){
-		return self::toTier($psTier1,$psTier2)."|".cADMetricPaths::CALLS_PER_MIN;
+		$sMetric = self::toTier($psTier1,$psTier2)."|".cADMetricPaths::CALLS_PER_MIN;
+		return $sMetric;
 	}
 
 	public static function toTierResponseTimes($psTier1,$psTier2){
-		return self::toTier($psTier1,$psTier2)."|".cADMetricPaths::RESPONSE_TIME;
+		$sMetric = self::toTier($psTier1,$psTier2)."|".cADMetricPaths::RESPONSE_TIME;
+		return $sMetric;
 	}
+
 	public static function toTierErrorsPerMin($psTier1,$psTier2){
-		return self::toTier($psTier1,$psTier2)."|".cADMetricPaths::ERRS_PER_MIN;
+		$sMetric = self::toTier($psTier1,$psTier2)."|".cADMetricPaths::ERRS_PER_MIN;
+		return $sMetric;
 	}
 	
 	public static function extCalls($psTier){
@@ -446,11 +455,17 @@ class cADTierMetricPaths{
 		return $sMetric;
 	}
 	
+	public static function threadTasksAsyncExtCalls($psTier){
+		$sMetric = self::threadTasks($psTier)."|AsyncRun|".cADMetricPaths::EXT_CALLS;
+		return $sMetric;
+	}
+	
 	public static function extCallsPerMin($psTier, $psExt){
 		$sMetric = self::tier($psTier)."|Thread Tasks|$psExt|".cADMetricPaths::EXT_CALLS."|*|".cADMetricPaths::CALLS_PER_MIN;
 		return $sMetric;
 	}
 
+	//----------------------------------------------------------------------------------
 	public static function tierNodeCallsPerMin($psTier, $psNode=null){
 		if ($psNode)
 			return self::tierNodes($psTier)."|$psNode|".cADMetricPaths::CALLS_PER_MIN;
