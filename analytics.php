@@ -63,25 +63,12 @@ class cADAnalytics{
 	
 	//*************************************************************
 	static function list_schemas(){
-		cDebug::enter();
-		
-		// http request
-		$oData = self::pr_GET("events/schema");
-		cDebug::vardump($oData);
-		
-		cDebug::leave();
-		return $oData;
+		return  cADRestUI::GET_analytics_schemas();
 	}
+	
 	//*************************************************************
-	static function get_schema($psSchemaName){
-		cDebug::enter();
-
-		
-		// http request
-		$oData = self::pr_GET("events/schema/$psSchemaName");
-		
-		cDebug::leave();
-		return $oData;
+	static function schema_fields($psSchemaName){
+		return  cADRestUI::GET_analytics_schema_fields($psSchemaName);
 	}
 	
 	//*************************************************************

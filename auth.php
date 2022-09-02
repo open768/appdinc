@@ -263,7 +263,7 @@ class cADCredentials{
 	public function save(){
 		cDebug::enter();
 		//cDebug::write("saving TO SESSION");
-		$this->is_logged_in = false; 
+		$this->is_logged_in = false; 			//always disregard previous flag
 		$this->pr_save_to_session();
 		
 
@@ -272,7 +272,6 @@ class cADCredentials{
 			cAdAnalytics::list_schemas();
 		}else{
 			if ($this->jsessionid){
-				//cDebug::on(true);
 				try{
 					cADRestUI::GET_application_ids(); 
 				}catch(Exception $e){
@@ -295,6 +294,7 @@ class cADCredentials{
 
 		//-------------------------------------------------------------------------
 		// save after successful login. wont get here if there is an exception
+		cDebug::extra_debug("logged in successfully");
 		$this->pr_save_to_session();
 		cDebug::leave();
 	}
@@ -325,8 +325,10 @@ class cADCredentials{
 	//* Getters
 	//**************************************************************************************
 	public function logged_in(){
-		if (!$this->is_logged_in)
+		if (!$this->is_logged_in){
+			cDebug::vardump($this);
 			cDebug::error("not logged in");
+		}
 			
 		if ($this->restricted_login)
 			if (!cHttp::page_matches($this->restricted_login))
@@ -369,20 +371,20 @@ class cADCredentials{
 	
 	//**************************************************************************************
 	public function clear(){
-		$this->host = null;
 		$this->account = null;
-		$this->encrypted_username = null;
-		$this->encrypted_password = null;
-		$this->use_https = null;
-		$this->restricted_login = null;
-		$this->api_secret = null;
-		$this->api_app = null;
-		$this->api_token = null;
-		$this->analytics_api_key = null;
 		$this->analytics_api_app = null;
-		$this->global_account_name = null;
+		$this->analytics_api_key = null;
 		$this->analytics_host = null;
+		$this->api_app = null;
+		$this->api_secret = null;
+		$this->api_token = null;
+		$this->encrypted_password = null;
+		$this->encrypted_username = null;
+		$this->global_account_name = null;
+		$this->host = null;
 		$this->jsessionid = null;
+		$this->restricted_login = null;
+		$this->use_https = null;
 		
 		$this->pr_save_to_session();
 	}

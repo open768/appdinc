@@ -138,6 +138,17 @@ class cADControllerUI{
 	
 	//###############################################################################################
 	//home
+	public static function get_image($psFilename){
+		$sBaseUrl = cADCore::GET_controller();
+		return $sBaseUrl."/images/health/$psFilename";		
+	}
+	
+	public static function health_image($psStatus){
+		return self::get_image(strtolower($psStatus).".svg");
+	}
+	
+	//###############################################################################################
+	//home
 	public static function home(){
 		$sURL = self::pr__get_location("AD_HOME");
 		return $sURL;

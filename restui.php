@@ -129,6 +129,25 @@ class cADRestUI{
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* analyTICS
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function GET_analytics_schemas(){
+		cDebug::enter();
+		$sUrl = "analytics/schema";
+		$oData = cADCore::GET_restUI($sUrl, true);
+		$aData = json_decode($oData->rawResponse);
+		sort ($aData);
+		
+		cDebug::leave();
+		return $aData;
+	}
+	
+	public static function GET_analytics_schema_fields($psSchemaName){
+		cDebug::enter();
+		$sUrl = "analytics/v1/store/metadata/getFieldDefinitions?eventType=$psSchemaName";
+		$oData = cADCore::GET_restUI($sUrl, true);
+		cDebug::leave();
+		return $oData;
+	}
+	
 	public static function GET_log_analytics_sources(){
 		cDebug::enter();
 		$sUrl = "analytics/logsources";
@@ -436,6 +455,17 @@ class cADRestUI{
 		return $aOutput;
 	}
 
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//* health rules
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	public static function get_app_healthrules($poApp){
+		cDebug::enter();
+		$sUrl = "policy2/policies/$poApp->id";
+		$aData = cADCore::GET_restUI($sUrl);
+		cDebug::leave();
+		return $aData;
+	}
+	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Licenses
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

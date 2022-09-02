@@ -200,13 +200,30 @@ class cADApp{
 	//*****************************************************************
 	public function GET_HealthRules(){
 		cDebug::enter();
-
-		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
+		// TODO use https://xxxx.saas.appdynamics.com/controller/restui/policy2/policies/[appid] 
+		// which gives a bit more information
+		
+		/*$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules";
 		$aData = cADCore::GET($sUrl,true,false,false);
-		if ($aData) usort($aData, "AD_name_sort_fn");
+		*/
+		$aData = cADRestUI::get_app_healthrules($this);
+		$aOut = null;
+		
+		//cDebug::vardump($aData[0]);
+		if ($aData) {
+			$aOut = [];
+			foreach ($aData as $oRule){
+				$oEntry = (object) ["id"=> $oRule->id,"name"=> $oRule->name, "enabled"=>$oRule->enabled , "description"=>$oRule->description, "createdBy" => $oRule->createdBy];
+				$aOut[] = $oEntry;
+			}
+			
+			usort($aOut, "AD_name_sort_fn");
+		}else
+			cDebug::extra_debug("no health rules found");
 		cDebug::leave();
 		
-		return $aData;
+		//cDebug::vardump($aOut);
+		return $aOut;
 	}
 	
 	//*****************************************************************
