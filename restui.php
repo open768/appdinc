@@ -158,6 +158,13 @@ class cADRestUI{
 		return $aData;
 	}
 	
+	public static function GET_analytics_metrics(){
+		cDebug::enter();
+		$sUrl = "analyticsMetric/getAnalyticsScheduledQueryReports";
+		$aData = cADCore::GET_restUI($sUrl, true);
+		cDebug::leave();
+		return $aData;
+	}
 	//*******************************************************************
 	public static function GET_log_analytics_details($psID){
 		cDebug::enter();

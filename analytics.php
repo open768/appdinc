@@ -65,6 +65,24 @@ class cADAnalytics{
 	static function list_schemas(){
 		return  cADRestUI::GET_analytics_schemas();
 	}
+
+	//*************************************************************
+	static function get_metric($psMetricName){
+		$oOutMetric = null;
+		$aMetrics = cADRestUI::GET_analytics_metrics();
+		foreach ($aMetrics as $oMetric){
+			if ($oMetric->queryName === $psMetricName){
+				$oOutMetric = $oMetric;
+				break;
+			}
+		}
+		return $oOutMetric;
+	}
+	
+	//*************************************************************
+	static function list_metrics(){
+		return  cADRestUI::GET_analytics_metrics();
+	}
 	
 	//*************************************************************
 	static function schema_fields($psSchemaName){
