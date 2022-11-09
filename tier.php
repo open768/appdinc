@@ -293,6 +293,7 @@ class cADTier{
 				
 				$sTransID = $aAppTrans[$oTierTrans->name];
 				$oDetail = new cADDetails($oTierTrans->name, $sTransID, null, null);
+				$oDetail->tier = $this;
 				$aResults[] = $oDetail;
 			}
 			
