@@ -90,11 +90,12 @@ class cADController{
 			$aBackends = $oApp->GET_Backends();
 			foreach ($aBackends as $oBackend){
 				$sBName = $oBackend->name;
+
 				if (!isset($aServices[$sBName])) $aServices[$sBName] = [];
 				$aServices[$sBName][] = new cADApp($oApp->name, $oApp->id);
 			}
 		}
-		ksort($aServices);
+		ksort($aServices, SORT_FLAG_CASE | SORT_NATURAL );
 		cDebug::leave();
 		return $aServices;
 	}
