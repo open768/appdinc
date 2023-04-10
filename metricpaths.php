@@ -143,113 +143,7 @@ class cADMetricPaths{
 		return self::INFORMATION_POINTS."|$psName|".self::ERRS_PER_MIN;
 	}
 	
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	//* infrastructure
-	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	public static function InfrastructureNodes($psTier){
-		return self::INFRASTRUCTURE."|$psTier|Individual Nodes";
-	}
-	
-	public static function InfrastructureNode($psTier, $psNode= null){
-		$sMetric = self::INFRASTRUCTURE."|$psTier";
-		if ($psNode) $sMetric .= "|Individual Nodes|$psNode";
-		
-		return $sMetric;
-	}
-	
-	public static function InfrastructureJDBCPools($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|JMX|JDBC Connection Pools";
-	}
 
-	public static function InfrastructureJDBCPoolActive($psTier, $psNode=null, $psPool){
-		return self::InfrastructureJDBCPools($psTier, $psNode)."|$psPool|Active Connections";
-	}
-	public static function InfrastructureJDBCPoolMax($psTier, $psNode=null, $psPool){
-		return self::InfrastructureJDBCPools($psTier, $psNode)."|$psPool|Maximum Connections";
-	}
-
-	public static function InfrastructureNodeDisks($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Disks";
-	}
-	public static function InfrastructureNodeDiskFree($psTier, $psNode, $psDisk){
-		return self::InfrastructureNodeDisks($psTier, $psNode)."|$psDisk|Space Available";
-	}
-	public static function InfrastructureNodeDiskUsed($psTier, $psNode, $psDisk){
-		return self::InfrastructureNodeDisks($psTier, $psNode)."|$psDisk|Space Used";
-	}
-	
-	public static function InfrastructureAppAgentAvailability($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Agent|App|Availability";
-	}
-	public static function InfrastructureAgentAvailability($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Agent|Machine|Availability";
-	}
-
-	public static function InfrastructureAgentMetricsUploaded($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Agent|Metric Upload|Metrics uploaded";
-	}
-
-	public static function InfrastructureAgentMetricsLicenseErrors($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."Agent|Metric Upload|Requests License Errors";
-	}
-
-	public static function InfrastructureAgentInvalidMetrics($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."Agent|Metric Upload|Invalid Metrics";
-	}
-
-	public static function InfrastructureMachineAvailability($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Machine|Availability";
-	}
-
-	public static function InfrastructureCpuBusy($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|CPU|%Busy";
-	}
-
-	public static function InfrastructureMemoryFree($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Memory|Free (MB)";
-	}
-
-	public static function InfrastructureDiskFree($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Disks|MB Free";
-	}
-	
-	public static function InfrastructureDiskWrites($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Disks|KB written/sec";
-	}
-
-	public static function InfrastructureNetworkIncoming($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Network|Incoming KB/sec";
-	}
-	public static function InfrastructureNetworkOutgoing($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|Hardware Resources|Network|Outgoing KB/sec";
-	}
-	
-	public static function InfrastructureJavaHeapUsed($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|JVM|Memory|Heap|Current Usage (MB)";
-	}
-	public static function InfrastructureJavaHeapUsedPct($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|JVM|Memory|Heap|Used %";
-	}
-
-	public static function InfrastructureJavaGCTime($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|JVM|Garbage Collection|GC Time Spent Per Min (ms)";
-	}
-	public static function InfrastructureJavaCPUUsage($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|JVM|Process CPU Usage %";
-	}
-	public static function InfrastructureDotnetHeapUsed($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|CLR|Memory|Heap|Current Usage (bytes)";
-	}
-	public static function InfrastructureDotnetGCTime($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|CLR|Garbage Collection|GC Time Spent (%)";
-	}
-	public static function InfrastructureDotnetAnonRequests($psTier, $psNode=null){
-		return self::InfrastructureNode($psTier, $psNode)."|ASP.NET Applications|Anonymous Requests";
-	}
-	
-	public static function InfrastructureMetric($psTier, $psNode, $psMetric){
-		return self::InfrastructureNode($psTier, $psNode)."|$psMetric";
-	}
 	
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -494,10 +388,10 @@ class cADWebRumMetricPaths{
 	//* webrum
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function jobs(){
-		return cADAppMetricPaths::END_USER."|Synthetic Jobs";
+		return cADMetricPaths::END_USER."|Synthetic Jobs";
 	}
 	public static function App(){
-		return cADAppMetricPaths::END_USER."|App";
+		return cADMetricPaths::END_USER."|App";
 	}
 	public static function CallsPerMin(){
 		return cADAppMetricPaths::app()."|Page Requests per Minute";
@@ -519,22 +413,22 @@ class cADWebRumMetricPaths{
 	}
 
 	public static function Ajax(){
-		return cADAppMetricPaths::END_USER."|AJAX Requests";
+		return cADMetricPaths::END_USER."|AJAX Requests";
 	}
 	public static function Pages(){
-		return cADAppMetricPaths::END_USER."|Base Pages";
+		return cADMetricPaths::END_USER."|Base Pages";
 	}
 	
 	public Static function Metric($psKind, $psPage, $psMetric)
 	{
 		switch ($psKind){
-			case cADAppMetricPaths::BASE_PAGES:
-			case cADAppMetricPaths::AJAX_REQ:
+			case cADMetricPaths::BASE_PAGES:
+			case cADMetricPaths::AJAX_REQ:
 				break;
 			default:
 				cDebug::error("unknown kind");
 		}
-		return cADAppMetricPaths::END_USER."|$psKind|$psPage|$psMetric";
+		return cADMetricPaths::END_USER."|$psKind|$psPage|$psMetric";
 	}
 	
 	
