@@ -82,7 +82,7 @@ class cADTier{
 	
 	//##############################################################################
 	public function GET_All_App_Agent_availability($poTimes, $psNode, $pbRollup=true){
-		$sMetricpath=cADMetricPaths::InfrastructureAppAgentAvailability($this->name, $psNode);
+		$sMetricpath=cADInfraMetric::InfrastructureAppAgentAvailability($this->name, $psNode);
 		$aData = $this->app->GET_MetricData($sMetricpath, $poTimes,$pbRollup,true,true);
 		return  $aData;
 	}
@@ -125,7 +125,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_DiskMetrics(){
 		cDebug::enter();
-		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, null);
+		$sMetricpath=cADInfraMetric::InfrastructureNodeDisks($this->name, null);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
@@ -233,7 +233,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_JDBC_Pools($psNode=null){
 		cDebug::enter();
-		$sMetricpath=cADMetricPaths::InfrastructureJDBCPools($this->name, $psNode);
+		$sMetricpath=cADInfraMetric::InfrastructureJDBCPools($this->name, $psNode);
 		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		cDebug::leave();
 		return  $oData;
@@ -242,7 +242,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_Nodes(){
 		cDebug::enter();
-		$sMetricpath=cADMetricPaths::InfrastructureNodes($this->name);
+		$sMetricpath=cADInfraMetric::InfrastructureNodes($this->name);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		usort($aData, "AD_name_sort_fn");
 		cDebug::leave();
@@ -252,7 +252,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_NodeDisks($psNode){
 		cDebug::enter();
-		$sMetricpath=cADMetricPaths::InfrastructureNodeDisks($this->name, $psNode);
+		$sMetricpath=cADInfraMetric::InfrastructureNodeDisks($this->name, $psNode);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
 		$aOut = [];
