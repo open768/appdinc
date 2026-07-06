@@ -13,32 +13,32 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/ckinc/cached_http.php");
-require_once("$ADlib/objects.php");
-require_once("$ADlib/demo.php");
-require_once("$ADlib/common.php");
-require_once("$ADlib/auth.php");
-require_once("$ADlib/core.php");
-require_once("$ADlib/account.php");
-require_once("$ADlib/util.php");
-require_once("$ADlib/analyse.php");
-require_once("$ADlib/time.php");
-require_once("$ADlib/metrics.php");
-require_once("$ADlib/controllerui.php");
-require_once("$ADlib/restui.php");
-require_once("$ADlib/website.php");
+require_once(cAppGlobals::$ckPhpInc."//http.php");
+require_once(cAppGlobals::$ckPhpInc."//cached_http.php");
+require_once(cAppGlobals::$ADlib."/objects.php");
+require_once(cAppGlobals::$ADlib."/demo.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ADlib."/auth.php");
+require_once(cAppGlobals::$ADlib."/core.php");
+require_once(cAppGlobals::$ADlib."/account.php");
+require_once(cAppGlobals::$ADlib."/util.php");
+require_once(cAppGlobals::$ADlib."/analyse.php");
+require_once(cAppGlobals::$ADlib."/time.php");
+require_once(cAppGlobals::$ADlib."/metrics.php");
+require_once(cAppGlobals::$ADlib."/controllerui.php");
+require_once(cAppGlobals::$ADlib."/restui.php");
+require_once(cAppGlobals::$ADlib."/website.php");
 
-require_once("$ADlib/controller.php");
-require_once("$ADlib/app.php");
-require_once("$ADlib/appcheckup.php");
-require_once("$ADlib/tier.php");
-require_once("$ADlib/bts.php");
-require_once("$ADlib/snapshot.php");
-require_once("$ADlib/db.php");
-require_once("$ADlib/server.php");
-require_once("$ADlib/rbac.php");
-require_once("$ADlib/analytics.php");
+require_once(cAppGlobals::$ADlib."/controller.php");
+require_once(cAppGlobals::$ADlib."/app.php");
+require_once(cAppGlobals::$ADlib."/appcheckup.php");
+require_once(cAppGlobals::$ADlib."/tier.php");
+require_once(cAppGlobals::$ADlib."/bts.php");
+require_once(cAppGlobals::$ADlib."/snapshot.php");
+require_once(cAppGlobals::$ADlib."/db.php");
+require_once(cAppGlobals::$ADlib."/server.php");
+require_once(cAppGlobals::$ADlib."/rbac.php");
+require_once(cAppGlobals::$ADlib."/analytics.php");
 
 
 //#################################################################
