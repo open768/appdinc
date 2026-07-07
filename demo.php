@@ -13,8 +13,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/common.php");
-require_once("$ADlib/metrics.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ADlib."/metrics.php");
 
 //#################################################################
 //# CLASSES

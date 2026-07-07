@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/AD.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
 
 //#####################################################################
 function sort_timetaken($a, $b){
@@ -38,11 +38,11 @@ class cADBT{
 	
 	//*****************************************************************
 	public function GET_ExtTiers(){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricPath= cADMetricPaths::transExtNames($this);
 		$oApp = $this->tier->app;
 		$aMetrics = $oApp->GET_Metric_heirarchy( $sMetricPath, false);
-		cDebug::leave();
+		cTracing::leave();
 		return $aMetrics;
 	}
 	
@@ -52,7 +52,7 @@ class cADBT{
 		eg https://xxx.saas.appdynamics.com/controller/restui/snapshot/snapshotListDataWithFilterHandle		{"firstInChain":false,"maxRows":600,"applicationIds":[xxx],"businessTransactionIds":[],"applicationComponentIds":[4561],"applicationComponentNodeIds":[],"errorIDs":[],"errorOccured":null,"userExperience":[],"executionTimeInMilis":null,"endToEndLatency":null,"url":null,"sessionId":null,"userPrincipalId":null,"dataCollectorFilter":null,"archived":null,"guids":[],"diagnosticSnapshot":null,"badRequest":null,"deepDivePolicy":[],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":15}}		
 		*/
 		
-		cDebug::enter();
+		cTracing::enter();
 		
 		$oApp = $this->tier->app;
 		$sApp = rawurlencode($oApp->name);
@@ -70,13 +70,13 @@ class cADBT{
 			
 			$aOut[] = $oSnap;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	
 	//*****************************************************************
 	public function GET_top_10_snapshots($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aSnapshots = $this->GET_snapshots($poTimes);
 		usort($aSnapshots , "sort_timetaken");	
@@ -85,14 +85,14 @@ class cADBT{
 			if (count($aTopTen) >=10) break;				
 			$aTopTen[] = $oSnapshot;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aTopTen ;
 	}
 	
 	
 	//*****************************************************************
 	public function GET_response_times($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$bOK = true;
 		$oOut = null;
@@ -124,13 +124,13 @@ class cADBT{
 			}
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return  $oOut;
 	}
 	
 	//*****************************************************************
 	public function populate_ID( $poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$sID = null;
 		if ($this->id) 
@@ -150,7 +150,7 @@ class cADBT{
 				cDebug::vardump($oResponse);
 			}
 		}
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 

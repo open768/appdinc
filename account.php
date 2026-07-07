@@ -13,10 +13,10 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/ckinc/common.php");
-require_once("$ADlib/common.php");
-require_once("$ADlib/core.php");
+require_once(cAppGlobals::$ckPhpInc."//http.php");
+require_once(cAppGlobals::$ckPhpInc."//common.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ADlib."/core.php");
 
 
 //#################################################################
@@ -37,7 +37,7 @@ class cADAccount{
 	
 	//*****************************************************************
 	public static function GET_account_id(){
-		cDebug::enter();
+		cTracing::enter();
 
 		if (!self::$account_id){
 			cADCore::$URL_PREFIX="/api/accounts";
@@ -49,17 +49,17 @@ class cADAccount{
 			cDebug::write("accountID is ".self::$account_id);
 		}
 
-		cDebug::leave();
+		cTracing::leave();
 		return self::$account_id;
 	}
 
 	//*****************************************************************
 	public static function GET_license_modules(){
-		cDebug::enter();
+		cTracing::enter();
 
 		$oJson = self::pr__get("/licensemodules?");
 
-		cDebug::leave();
+		cTracing::leave();
 		return $oJson;
 	}
 	
@@ -67,7 +67,7 @@ class cADAccount{
 	//*****************************************************************
 	//dates must be of format 2015-12-25T00:00:00Z
 	public static function GET_license_usage($psModule, $piMonths=1){
-		cDebug::enter();
+		cTracing::enter();
 		
 		cDebug::write("looking for usage of $psModule for $piMonths months");
 		
@@ -83,23 +83,23 @@ class cADAccount{
 				$aUsages[] = new cADAccountData($oData->createdOnIsoDate, $oData->maxUnitsUsed);
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aUsages;
 	}
 	
 	//*****************************************************************
 	public static function GET_LicenseRules(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aRules=cADRestUI::GET_allocationRules();
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aRules;
 	}
 	
 	//*****************************************************************
 	private static function pr__get($psURL){
-		cDebug::enter();
+		cTracing::enter();
 		$sID = self::GET_account_id();
 		
 		cADCore::$URL_PREFIX="/api/accounts/$sID";
@@ -107,7 +107,7 @@ class cADAccount{
 		$oJson = cADCore::GET($psURL);
 
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oJson;
 	}
 	

@@ -11,8 +11,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
-require_once("$ADlib/core.php");
-require_once("$ADlib/flowmap.php");
+require_once(cAppGlobals::$ADlib."/core.php");
+require_once(cAppGlobals::$ADlib."/flowmap.php");
 
 class cADRestUISynthList{
 	public $applicationId= -1;
@@ -98,10 +98,10 @@ class cADRestUI{
 	//* init data
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_init_data(){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "user/initData";
 		$oData = cADCore::GET_restUI($sUrl);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
@@ -115,14 +115,14 @@ class cADRestUI{
 	
 	//**********************************************************************
 	public static function GET_account_flowmap(){
-		cDebug::enter();
+		cTracing::enter();
 
 		$iAccount = self::GET_account();
 		$sTime = cADTime::last_hour();
 		$sUrl = "accountFlowMapUiService/account/$iAccount?$sTime&mapId=-1&baselineId=-1";
 		$oData = cADCore::GET_restUI($sUrl);
 
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
@@ -130,44 +130,44 @@ class cADRestUI{
 	//* analyTICS
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_analytics_schemas(){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "analytics/schema";
 		$oData = cADCore::GET_restUI($sUrl, true);
 		$aData = json_decode($oData->rawResponse);
 		sort ($aData);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	public static function GET_analytics_schema_fields($psSchemaName){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "analytics/v1/store/metadata/getFieldDefinitions?eventType=$psSchemaName";
 		$oData = cADCore::GET_restUI($sUrl, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	public static function GET_log_analytics_sources(){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "analytics/logsources";
 		$aData = cADCore::GET_restUI($sUrl, true);
 		usort($aData,"AD_name_sort_fn");
 
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	public static function GET_analytics_metrics(){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "analyticsMetric/getAnalyticsScheduledQueryReports";
 		$aData = cADCore::GET_restUI($sUrl, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	//*******************************************************************
 	public static function GET_log_analytics_details($psID){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = null;
 		$oFound = null;
 		
@@ -189,7 +189,7 @@ class cADRestUI{
 		cDebug::extra_debug("Request payload: $sEncoded");
 		$aData = cADCore::GET_restUI_with_payload($sUrl,$sEncoded);
 
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
@@ -197,7 +197,7 @@ class cADRestUI{
 	//* Application
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_application_ids($paColumns=["NAME"]){
-		cDebug::enter();
+		cTracing::enter();
 		$oTimes = new cADTimes;
 		$oPayload = (object)[
 			"requestFilter" => (object)[
@@ -219,13 +219,13 @@ class cADRestUI{
 			"limit"=> -1
 		];
 		$oData = cADCore::GET_restUI_with_payload("v1/app/list/all", $oPayload); //cant be cached as time is set
-		cDebug::leave();
+		cTracing::leave();
 		return $oData->data;
 	}
 	
 	//********************************************************************************************
 	static function get_applications_status_from_ids($paIDs, $paCols=["NAME", "CALLS_PER_MINUTE"]){
-		cDebug::enter();
+		cTracing::enter();
 		$oTimes = new cADTimes;
 		
 		$oPayload = (object)[
@@ -239,38 +239,38 @@ class cADRestUI{
 			"limit" => -1
 		];
 		$oData = cADCore::GET_restUI_with_payload("v1/app/list/ids", $oPayload); //cant be cached as time is set
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oData->data;
 	}
 	
 	//********************************************************************************************
 	private static function pr__get_app_objs_from_ids($paIDs){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = self::get_applications_status_from_ids($paIDs);
 		$aOut = [];
 		foreach ($aData as $oItem){
 			$oApp = new cADApp( $oItem->name, $oItem->id);
 			$aOut[] = $oApp;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 
 	//********************************************************************************************
 	public static function GET_applications(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aIDs = self::GET_application_ids();
 		$aApps = self::pr__get_app_objs_from_ids($aIDs);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aApps;
 	}
 	
 	//********************************************************************************************
 	public static function GET_app_flowmap($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sTime = cADTime::last_hour();
 		$sUrl = "applicationFlowMapUiService/application/$poApp->id?$sTime&mapId=-1&baselineId=-1";
 		$oData = cADCore::GET_restUI($sUrl);
@@ -282,7 +282,7 @@ class cADRestUI{
 	
 	//****************************************************************
 	public static function get_app_backends($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$oTimes = new cADTimes;
 		$oPayload = (object)[
 			"requestFilter"=> (object)[
@@ -300,30 +300,30 @@ class cADRestUI{
 			"timeRangeEnd"=> $oTimes->end
 		];
 		$oData = cADCore::GET_restUI_with_payload("backend/list/remoteService",$oPayload);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData->data;
 	}
 	
 	//****************************************************************
 	public static function get_app_data_collectors($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADCore::GET_restUI("MidcUiService/getAllDataGathererConfigs/$poApp->id",true);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//****************************************************************
 	public static function get_app_diagnostic_stats($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "agent/setting/agentDiagnosticStats?entityType=APPLICATION&entityId=$poApp->id&timeRange=last_1_hour.BEFORE_NOW.-1.-1.60";
 		$aData = cADCore::GET_restUI($sUrl,true);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//****************************************************************
 	public static function get_app_BT_Summary($poApp, $poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$sUrl = "v1/bt/listViewDataByColumns";
 		$oPayload = (object)[
@@ -339,7 +339,7 @@ class cADRestUI{
 		
 		$oData = cADCore::GET_restUI_with_payload($sUrl,$oPayload);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oData->btListEntries;
 	}
 	
@@ -347,29 +347,29 @@ class cADRestUI{
 	//* Agents 
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_database_agents(){
-		cDebug::enter();	
+		cTracing::enter();	
 		$sURL = "agent/setting/getDBAgents";
 		$aAgents = cADCore::GET_restUI($sURL,true);
-		cDebug::leave();	
+		cTracing::leave();	
 		return  $aAgents;
 	}
 
 	//****************************************************************
 	public static function GET_machine_agents(){
-		cDebug::enter();	
+		cTracing::enter();	
 		$aAgents = cADCore::GET_restUI("agent/setting/allMachineAgents",true);
 		cDebug::extra_debug("sorting");
 		usort($aAgents,"sort_machine_agents");
 		cDebug::extra_debug("finished sorting");
-		cDebug::leave();	
+		cTracing::leave();	
 		return  $aAgents;
 	}
 	//****************************************************************
 	public static function GET_appserver_agents(){
-		cDebug::enter();	
+		cTracing::enter();	
 		$aAgents = cADCore::GET_restUI("agent/setting/getAppServerAgents",true);
 		usort($aAgents,"sort_appserver_agents");
-		cDebug::leave();	
+		cTracing::leave();	
 		return  $aAgents;
 	}
 
@@ -377,46 +377,46 @@ class cADRestUI{
 	//* backends  
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_tier_backends($poTier){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "backendUiService/resolvedBackendsForTier/$poTier->id";
 		$aAgents = cADCore::GET_restUI($sUrl);
-		cDebug::leave();
+		cTracing::leave();
 		return $aAgents;
 	}
 	
 	public static function DELETE_backend($piID){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "backendUiService/deleteBackends";
 		$sPayload = json_encode([$piID]);
 		cADCore::GET_restUI_with_payload($sUrl,$sPayload);
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Dashboards
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_dashboards(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$sUrl = "/dashboards/getAllDashboardsByType/false";
 		$aDashboards = cADCore::GET_restUI($sUrl);
 		usort($aDashboards, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aDashboards;
 	}
 
 	public static function GET_dashboard_detail($piDashID){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "/dashboards/dashboardIfUpdated/$piDashID/-1";
 		$aData = cADCore::GET_restUI($sUrl, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	//* Events
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_correlatedEvents($paEvents){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aRequest = [];
 		foreach ($paEvents as $oEvent){
@@ -458,7 +458,7 @@ class cADRestUI{
 			}
 		//cDebug::vardump($aOutput);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOutput;
 	}
 
@@ -466,10 +466,10 @@ class cADRestUI{
 	//* health rules
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function get_app_healthrules($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "policy2/policies/$poApp->id";
 		$aData = cADCore::GET_restUI($sUrl);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
@@ -477,7 +477,7 @@ class cADRestUI{
 	//* Licenses
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_allocationRules(){
-		cDebug::enter();
+		cTracing::enter();
 		$oPayload = (object)[
 			"durationInMinutes" => 60,
 			"endTime" => null,
@@ -489,30 +489,30 @@ class cADRestUI{
 		
 		$sUrl ="licenseRule/getAllRulesSummary";
 		$oData = cADCore::GET_restUI_with_payload($sUrl, $oPayload);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return($oData);
 	}
 	
 	public static function GET_allocationID($piRuleID){
-		cDebug::enter();
+		cTracing::enter();
 		$aRules = self::GET_allocationRules();
 		$iAllocationID = $aRules[$piRuleID]->allocationId;
-		cDebug::leave();
+		cTracing::leave();
 		return $iAllocationID ;
 	}
 	public static function GET_allocationHosts($psAllocationID){
-		cDebug::enter();
+		cTracing::enter();
 		$iAccount = self::GET_account();
 		$sUrl = "license/accounts/$iAccount/allocations/$psAllocationID/hosts?offset=0&max=1000";
 		$aData = cADCore::GET_restUI($sUrl);
 		cDebug::extra_debug("count of hosts:". count($aData));
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 
 	public static function GET_license_usage($psAllocationID, $paHostIds){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$iAccount = self::GET_account();
 		
@@ -523,7 +523,7 @@ class cADRestUI{
 		
 		$oData = cADCore::GET_restUI_with_payload($sUrl, $oReq);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
@@ -539,16 +539,16 @@ class cADRestUI{
 	//* RBAC Role based Authentication
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function get_rbac_all_users(){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "userAdministrationUiService/users";
 		$aData = cAdCore::GET_restui($sUrl, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;		
 	}
 	
 	//************************************************************************************
 	public static function get_rbac_ldap_group_users($psGroup){
-		cDebug::enter();
+		cTracing::enter();
 		$oPayload = (object)[
 			"offset" =>1,
 			"resultCount"=>25,
@@ -558,15 +558,15 @@ class cADRestUI{
 		];
 		$sUrl = "ldapAdministrationUiService/users/ldapquery";
 		$oData = cADCore::GET_restUI_with_payload($sUrl, $oPayload, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;		
 	}
 	//************************************************************************************
 	public static function get_rbac_internal_group_users($psGroupID){
-		cDebug::enter();
+		cTracing::enter();
 		$sUrl = "groupAdministrationUiService/groups/userids/$psGroupID";
 		$oData = cADCore::GET_restUI($sUrl, true);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;		
 	}
 	
@@ -574,29 +574,29 @@ class cADRestUI{
 	//* Snapshots (warning this uses an undocumented API)
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_snapshot_segments($psGUID, $piSnapTime){
-		cDebug::enter();
+		cTracing::enter();
 			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getRequestSegmentData?requestGUID=$psGUID&$sTimeUrl";
 			$aResult = cADCore::GET_restUI($sURL);
-		cDebug::leave();
+		cTracing::leave();
 		return  $aResult;
 	}
 	
 	//************************************************************************************
 	public static function GET_snapshot_problems($poApp,$psGUID, $piSnapTime){
-		cDebug::enter();
+		cTracing::enter();
 			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime, "time-range");
 			$sURL = "snapshot/potentialProblems?request-guid=$psGUID&applicationId=$poApp->id&$sTimeUrl&max-problems=50&max-rsds=30&exe-time-threshold=5";
 			$aResult = cADCore::GET_restUI($sURL);
-		cDebug::leave();
+		cTracing::leave();
 		return  $aResult;
 	}
 	
 	//************************************************************************************
 	public static function GET_snapshot_flow($poSnapShot){
-		cDebug::enter();
+		cTracing::enter();
 			$oTime = new cADTimes($poSnapShot->serverStartTime);
 			$sAid = $poSnapShot->applicationId;
 			$sBtID = $poSnapShot->businessTransactionId;
@@ -604,19 +604,19 @@ class cADRestUI{
 			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshotFlowmap/distributedSnapshotFlow?applicationId=$sAid&businessTransactionId=$sBtID&requestGUID=$sGUID&eventType=&$sTimeUrl&mapId=-1";
 			$oResult = cADCore::GET_restUI($sURL);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oResult;
 	}
 
 	//************************************************************************************
 	public static function GET_snapshot_expensive_methods($psGUID, $piSnapTime){
-		cDebug::enter();
+		cTracing::enter();
 			$oTime = new cADTimes($piSnapTime);
 			$sTimeUrl = cADTime::make_short( $oTime);
 			$sURL = "snapshot/getMostExpensiveMethods?limit=30&max-rsds=30&$sTimeUrl&mapId=-1";
 			$oResult = cADCore::GET_restUI_with_payload($sURL,$psGUID);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oResult;
 	}
@@ -625,7 +625,7 @@ class cADRestUI{
 	//* service end points
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_service_end_points($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sURL = "serviceEndpoint/list";
 		$oTimes = new cADTimes;
 		$oPayload = (object)[
@@ -650,13 +650,13 @@ class cADRestUI{
 			"timeRangeEnd"=> $oTimes->end
 		];
 		$oResult = cADCore::GET_restUI_with_payload($sURL,$oPayload);
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	
 	//************************************************************************************
 	public static function GET_Tier_service_end_points($poTier){ //this can use metric heirarchy
-		cDebug::enter();
+		cTracing::enter();
 		$oResult = self::GET_service_end_points($poTier->app);
 		$aData = $oResult->data;
 		
@@ -670,13 +670,13 @@ class cADRestUI{
 			} 
 		}
 		usort($aEndPoints,"AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aEndPoints;
 	}
 	
 	//************************************************************************************
 	public static function GET_Service_end_point_snapshots($poTier, $piServiceEndPointID, $oTime){
-		cDebug::enter();
+		cTracing::enter();
 		//{"applicationIds":[1424],"applicationComponentIds":[4561],"sepIds":[6553581],"rangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":60},"maxRows":600}
 		
 		$sURL = "snapshot/snapshotListDataWithFilterHandle";
@@ -692,7 +692,7 @@ class cADRestUI{
 		cDebug::extra_debug($sPayload);
 		$oResult = cADCore::GET_restUI_with_payload($sURL,$sPayload);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	
@@ -700,7 +700,7 @@ class cADRestUI{
 	//* synthetics
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_Synthetic_jobs($poApp, $oTime, $pbDetails){
-		cDebug::enter();
+		cTracing::enter();
 		$oRequest = new cADRestUISynthList;
 		$oRequest->applicationId = (int)$poApp->id;
 		$oRequest->timeRangeString = cADTime::make_short( $oTime,null);
@@ -732,7 +732,7 @@ class cADRestUI{
 			}
 			$aSyth[] = $oSummary;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aSyth;		
 	}
 	
@@ -740,30 +740,30 @@ class cADRestUI{
 	//* BT config
 	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	public static function GET_app_BT_configs($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sURL = "transactionConfigProto/getRules/$poApp->id";
 		$oData = cADCore::GET_restUI($sURL,true);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 
 	//***************************************************************
 	public static function GET_appLevel_BT_Config($poApp){
-		cDebug::enter();
+		cTracing::enter();
 		$sURL = "transactionConfig/getAppLevelBTConfig/$poApp->id";
 		$oData = cADCore::GET_restUI($sURL,true);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//***************************************************************
 	public static function GET_dropped_overflow_transaction_traffic($poTier){
-		cDebug::enter();
+		cTracing::enter();
 		$sPayload = '{"componentId":'.$poTier->id.',"timeRangeSpecifier":{"type":"BEFORE_NOW","durationInMinutes":60,"endTime":null,"startTime":null,"timeRange":null,"timeRangeAdjusted":false}}';
 		$sURL = "overflowtraffic/event";
 		$oResult = cADCore::GET_restUI_with_payload($sURL,$sPayload,true);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 }

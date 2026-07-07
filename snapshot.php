@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/AD.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
 
 //#################################################################
 //# 
@@ -34,7 +34,7 @@ class cADSnapshot{
    }
 	//*****************************************************************
 	public function GET_segments(){
-		cDebug::enter();
+		cTracing::enter();
 
 		$oResult = null;
 		try{
@@ -42,27 +42,27 @@ class cADSnapshot{
 		}catch (Exception $e){
 			cDebug::write("no Segments found");
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	//*****************************************************************
 	public function GET_segments_flow($oSegment){
-		cDebug::enter();
+		cTracing::enter();
 		$oResult = cADRestUI::GET_snapshot_flow($oSegment);
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	
 	public function GET_expensive_methods(){
-		cDebug::enter();
+		cTracing::enter();
 		$oResult = cADRestUI::GET_snapshot_expensive_methods($this->guuid, $this->starttime);
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	
 	//*****************************************************************
 	public function count_ext_calls(){
-		cDebug::enter();
+		cTracing::enter();
 		$oFlow = null;
 		
 		//---------------- get the segments
@@ -80,7 +80,7 @@ class cADSnapshot{
 		$oExtCalls = null;
 		if ($oFlow) $oExtCalls = cADUtil::count_flow_ext_calls($oFlow);
 		
-		cDebug::leave();		
+		cTracing::leave();		
 		return $oExtCalls;
 	}
 }

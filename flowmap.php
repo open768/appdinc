@@ -55,15 +55,15 @@ class cADFlowMap{
 	public $links = [];
 	
 	public function parse($paResponse){
-		cDebug::enter();
+		cTracing::enter();
 		$this->pr__parse_nodes($paResponse->nodes);
 		$this->pr__parse_edges($paResponse->edges);
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//--------------------------------------------------------------------------------
 	private function  pr__parse_edges($paEdges){
-		cDebug::enter();
+		cTracing::enter();
 		$bDumped = true; //set this to false to dump the first edge
 		foreach ($paEdges as $poEdge ){
 			if (!$bDumped && cDebug::is_extra_debugging()) {
@@ -78,12 +78,12 @@ class cADFlowMap{
 			$oLink->stats->parse($poEdge->stats[0]);			
 			$this->links[] = $oLink ;
 		}
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 	//--------------------------------------------------------------------------------
 	private function  pr__parse_nodes($paNodes){
-		cDebug::enter();
+		cTracing::enter();
 		$bDumped = true;//set this to false to dump the first edge
 		foreach ($paNodes as $poNode ){
 			if (!$bDumped && cDebug::is_extra_debugging()) {
@@ -99,7 +99,7 @@ class cADFlowMap{
 			
 			$this->nodes[$oNode->id] = $oNode ;
 		}
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 }

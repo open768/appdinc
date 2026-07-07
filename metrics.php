@@ -11,8 +11,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
-require_once("$ADlib/core.php");
-require_once("$ADlib/metricpaths.php");
+require_once(cAppGlobals::$ADlib."/core.php");
+require_once(cAppGlobals::$ADlib."/metricpaths.php");
 
 //#################################################################
 //# sort functions
@@ -394,7 +394,7 @@ class cADMetricData{
 	//*****************************************************************
 	public static function GET_MetricData($poApp, $psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
-		//cDebug::enter();
+		//cTracing::enter();
 		if ($poTimes == null) cDebug::error("times are missing");
 		$sApp = $poApp->name;
 		
@@ -416,14 +416,14 @@ class cADMetricData{
 		$aOutput = $oData;
 		if (!$pbMulti && (count($oData) >0)) $aOutput = $oData[0]->metricValues; //watch out this will knobble the data
 		
-		//cDebug::leave();
+		//cTracing::leave();
 		return $aOutput;		
 	}
 	
 	//*****************************************************************
 	public static function GET_Metric_heirarchy($poApp, $psMetricPath, $pbCached=true, $poTimes = null)
 	{
-		//cDebug::enter();
+		//cTracing::enter();
 		cDebug::extra_debug("get Heirarchy: $psMetricPath");
 		$sApp = $poApp->name;
 		$encoded=rawurlencode($psMetricPath);	
@@ -443,7 +443,7 @@ class cADMetricData{
 		
 		$oData = cADCore::GET($sCommand, $pbCached);
 		cDebug::extra_debug("count of rows: ".count($oData));
-		//cDebug::leave();
+		//cTracing::leave();
 		return $oData;
 	}
 }

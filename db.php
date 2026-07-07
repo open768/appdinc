@@ -12,7 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 
-require_once("$ADlib/AD.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
 //see 
 
 //#################################################################
@@ -27,10 +27,10 @@ class cADDB{
 
 	//*****************************************************************
 	public static function GET_Databases(){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricPath= cADMetricPaths::databases();
 		$oData = (self::$db_app)->GET_Metric_heirarchy($sMetricPath, false);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 
@@ -42,7 +42,7 @@ class cADDB{
 	
 	//*****************************************************************
 	public static function GET_all_custom_metrics(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADCore::GET_restUI("/dbCustomQueryMetrics/getAll", true, $psUIPrefix=cADCore::DBUI_PREFIX);
 		
 		//cDebug::vardump($aData[0]);
@@ -62,7 +62,7 @@ class cADDB{
 		ksort($aOut);
 		
 		cDebug::vardump($aOut);
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 }

@@ -13,8 +13,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/AD.php");
-require_once("$ADlib/util.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
+require_once(cAppGlobals::$ADlib."/util.php");
 class cADTierTransResult{
 	public $name, $max, $id, $url, $avg, $count;
 }
@@ -49,7 +49,7 @@ class cADTier{
    
 	//##############################################################################
 	private function pr_get_tier_name(){
-		cDebug::enter();
+		cTracing::enter();
 		$aTiers = $this->app->GET_raw_tiers(); 
 		foreach ($aTiers as $oTier)
 			if ($oTier->id == $this->id){
@@ -58,11 +58,11 @@ class cADTier{
 			}
 			
 		cDebug::error("Tier ID doesnt match");
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	private function pr_get_tier_id(){
-		//cDebug::enter();
+		//cTracing::enter();
 		$aTiers = $this->app->GET_raw_tiers();
 		$sID = null;
 		$sName = strtolower($this->name);
@@ -76,7 +76,7 @@ class cADTier{
 		else	
 			cDebug::error("tier name $sName not found");
 		
-		//cDebug::leave();
+		//cTracing::leave();
 		return $sID;
 	}
 	
@@ -89,7 +89,7 @@ class cADTier{
 	
 	//*****************************************************************
 	public function GET_Inactive_App_Agents($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aNodeNames = [];
 		$aAvailData = $this->GET_All_App_Agent_availability($poTimes, "*"); //get availability for all nodes in the tier
@@ -118,13 +118,13 @@ class cADTier{
 			$aNodes = cADUtil::get_nodes_from_names($this->app, $aNodeNames);
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aNodes;
 	}
 		
 	//*****************************************************************
 	public function GET_DiskMetrics(){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricpath=cADInfraMetric::InfrastructureNodeDisks($this->name, null);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
@@ -133,7 +133,7 @@ class cADTier{
 			if ($oEntry->type === "leaf") $aOut[] = $oEntry;
 		
 		usort($aOut, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return  $aOut;
 	}
 	
@@ -192,7 +192,7 @@ class cADTier{
 	//*****************************************************************
    	public function GET_ext_calls(){
 		$sTier = $this->name;
-		cDebug::enter();
+		cTracing::enter();
 			cDebug::extra_debug("Getting external calls for tier $this->name");
 			$sMetricPath = cADTierMetricPaths::extCalls($this->name); //doesntwork for 4.5!!
 			$aData = $this->app->GET_Metric_heirarchy($sMetricPath, true);
@@ -214,7 +214,7 @@ class cADTier{
 					}
 			}
 		//cDebug::vardump($aData);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 
@@ -232,26 +232,26 @@ class cADTier{
 	
 	//*****************************************************************
 	public function GET_JDBC_Pools($psNode=null){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricpath=cADInfraMetric::InfrastructureJDBCPools($this->name, $psNode);
 		$oData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
-		cDebug::leave();
+		cTracing::leave();
 		return  $oData;
 	}
 	
 	//*****************************************************************
 	public function GET_Nodes(){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricpath=cADInfraMetric::InfrastructureNodes($this->name);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, false);
 		usort($aData, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return  $aData;
 	}
 	
 	//*****************************************************************
 	public function GET_NodeDisks($psNode){
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricpath=cADInfraMetric::InfrastructureNodeDisks($this->name, $psNode);
 		$aData = $this->app->GET_Metric_heirarchy($sMetricpath, true);
 		
@@ -260,7 +260,7 @@ class cADTier{
 			if ($oEntry->type === "folder") $aOut[] = $oEntry;
 		
 		usort($aOut, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return  $aOut;
 	}
 
@@ -275,7 +275,7 @@ class cADTier{
 	//*****************************************************************
 	public function GET_all_transaction_names(){
 		//find out the transactions in this tier - through metric heirarchy (but doesnt give the trans IDs)
-		cDebug::enter();
+		cTracing::enter();
 		$aResults = []; 
 		
 		try{
@@ -302,7 +302,7 @@ class cADTier{
 		catch (Exception $e){
 			$aResults = null;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aResults;
 	}
 
@@ -311,7 +311,7 @@ class cADTier{
 		$aActive = [];
 		$aInActive = [];
 		$bContinue = true;
-		cDebug::enter();
+		cTracing::enter();
 		
 		$oTrans = new cADBT( $this, "*", null, true);
 		$sMetricpath = cADMetricPaths::transResponseTimes($oTrans);
@@ -354,13 +354,13 @@ class cADTier{
 			usort($aActive, "trans_name_sort_fn");
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return (object)["active"=>$aActive, "inactive"=>$aInActive];
 	}
 	
 	//*****************************************************************
 	public function GET_dropped_overflow_traffic($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$oData = cADRestUI::GET_dropped_overflow_transaction_traffic($this);
 		//cDebug::vardump($oData);
@@ -375,7 +375,7 @@ class cADTier{
 		uasort($aOut, "AD_name_sort_fn");
 		$aOut = array_values($aOut);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	

@@ -212,19 +212,19 @@ class cADAnalysis {
 	
 	//*****************************************************************
 	public static function count_all_agent_types($paNodes){
-		cDebug::enter();
+		cTracing::enter();
 		$aTypes = [];
 		foreach ($paNodes as $aNodes)
 			foreach ($aNodes as $oNode)
 				cArrayUtil::add_count_to_array($aTypes, $oNode->agentType);
 		
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aTypes;
 	}
 	//*****************************************************************
 	public static function count_agent_types($paNodes){
-		cDebug::enter();
+		cTracing::enter();
 		$aTypes = [];
 		foreach ($paNodes as $oNode)
 			cArrayUtil::add_count_to_array($aTypes, $oNode->agentType);
@@ -237,13 +237,13 @@ class cADAnalysis {
 			$aOut[] = $oItem;
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	
 	//*****************************************************************
 	public static function analyse_agent_versions($paNodes){
-		cDebug::enter();
+		cTracing::enter();
 		$aMachineAgentCounts = [];
 		$aAppAgentCounts = [];
 
@@ -272,7 +272,7 @@ class cADAnalysis {
 		
 		cDebug::vardump($oOutput);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oOutput;
 	}
 	
@@ -281,7 +281,7 @@ class cADAnalysis {
 	//# 
 	//#######################################################################
 	public static function analyse_app_diagnostic_stats($paData){
-		cDebug::enter();
+		cTracing::enter();
 		$aOut= [];
 		$aData = $paData->children;
 		foreach ($aData as $oItem){
@@ -295,7 +295,7 @@ class cADAnalysis {
 		}
 		//cDebug::vardump($aOut);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	
@@ -347,7 +347,7 @@ class cADAnalysis {
 	
 	//*****************************************************************
 	public static function analyse_events($paEvents){
-		cDebug::enter();
+		cTracing::enter();
 		$aAnalysed = [];
 		$aTypes = [];
 		
@@ -380,14 +380,14 @@ class cADAnalysis {
 		$oOutput->analysis = $aAnalysed;
 		$oOutput->types = $aTypes;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oOutput;
 	}
 
 	//*****************************************************************
 	//Events
 	public static function analyse_CorrelatedEventActions($paEvents){
-		cDebug::enter();
+		cTracing::enter();
 		$aAnalysed = [];
 		$aTypes = [];
 		
@@ -419,7 +419,7 @@ class cADAnalysis {
 		$oOutput->analysis = $aAnalysed;
 		$oOutput->types = $aTypes;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oOutput;
 	}
 	
@@ -427,7 +427,7 @@ class cADAnalysis {
 	//Events
 	public static function analyse_CorrelatedEvents($paEvents, $paCorrelated)
 	{
-		cDebug::enter();
+		cTracing::enter();
 		$aOutput=[];
 		$aEventIds = [];
 		$iActionCount = 0;
@@ -466,7 +466,7 @@ class cADAnalysis {
 			cCommon::messagebox("no actions");
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOutput;
 	}	
 	
@@ -515,7 +515,7 @@ class cADAnalysis {
 	
 	//*****************************************************************
 	public static function analyse_license_usage( $poData){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aUsageData = get_object_vars($poData);	
 		$aKeys = array_keys($aUsageData);
@@ -532,7 +532,7 @@ class cADAnalysis {
 				$aTypeData[$sType][] = $sHost;
 			}
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aTypeData;
 	}
 	
@@ -547,7 +547,7 @@ class cADAnalysis {
 		$sum=0;
 		$avg=0;
 		
-		cDebug::enter();
+		cTracing::enter();
 		foreach( $paData as $oRow)
 		{
 				
@@ -579,7 +579,7 @@ class cADAnalysis {
 		$oResult->avg = round($avg,2);
 		$oResult->count= $count;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oResult;
 	}
 	
@@ -606,7 +606,7 @@ class cADAnalysis {
 	//# nodes
 	//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	public static function analyse_app_nodes($paNodes){
-		cDebug::enter();
+		cTracing::enter();
 		$aTierData = [];
 		
 		foreach ($paNodes as $aNodes)
@@ -618,7 +618,7 @@ class cADAnalysis {
 				if ($oNode->machineAgentPresent) $aTierData[$sTier]->machine ++;
 				if ($oNode->appAgentPresent) $aTierData[$sTier]->appserver++;
 			}
-		cDebug::leave();
+		cTracing::leave();
 		return $aTierData;
 	}
 	

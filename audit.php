@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see
-require_once("$ADlib/common.php");
+require_once(cAppGlobals::$ADlib."/common.php");
 
 //#################################################################
 //#
@@ -27,7 +27,7 @@ class cAuditActivity{
 class cADAudit{
 	//********************************************************************
 	static function getEntries($poTimes, $psFilter=""){
-		cDebug::enter();
+		cTracing::enter();
 		if (! $poTimes instanceof cADTimes) cDebug::error("not a cADTimes");
 		
 		//get the start and end times //TODO need to get the time zone of the controller
@@ -43,13 +43,13 @@ class cADAudit{
 		if ($psFilter !== "") $sUrl .= "&include=$psFilter";
 		$aData = cADCore::GET($sUrl,false,false,false);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//********************************************************************
 	static function getActions($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		$aEntries = self::getEntries($poTimes);
 		$aCount = [];
 		foreach ($aEntries as $oEntry)
@@ -64,20 +64,20 @@ class cADAudit{
 			$aActions[] = $oItem;
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aActions;
 	}
 	
 	//********************************************************************
 	static function getActionDetail($psAction, $poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		$aDetails = [];
 		$aEntries = self::getEntries($poTimes, "action:$psAction");
 		foreach ($aEntries as $oEntry)
 			if ($oEntry->action ==  $psAction)
 				$aDetails[] = $oEntry;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aDetails;
 	}
 	

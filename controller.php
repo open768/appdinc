@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/AD.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
 
 //#################################################################
 //# CLASSES
@@ -21,41 +21,41 @@ require_once("$ADlib/AD.php");
 class cADController{		
 	
 	public static function GET_account(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADCore::GET('/api/accounts/myaccount',true,false,false);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//****************************************************************
 	public static function GET_Controller_version(){
-		cDebug::enter();
+		cTracing::enter();
 		$aConfig = self::GET_configuration();
 		foreach ($aConfig as $oItem)
 			if ($oItem->name === "schema.version"){
 				$sVersion = preg_replace("/^0*/","",$oItem->value);
 				$sVersion = preg_replace("/-0+(\d+)/",'.$1',$sVersion);
 				$sVersion = preg_replace("/-0+/",'.0',$sVersion);
-				cDebug::leave();
+				cTracing::leave();
 				return $sVersion;
 			}
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 	//****************************************************************
 	public static function GET_configuration(){
-		cDebug::enter();
+		cTracing::enter();
 		$old_prefix = cADCore::$URL_PREFIX;
 		cADCore::$URL_PREFIX = cADCore::CONFIG_METRIC_PREFIX ;
 		$oData = cADCore::GET("?");
 		cADCore::$URL_PREFIX = $old_prefix ;
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//****************************************************************
 	public static function GET_all_Applications(){
-		cDebug::enter(null,true);
+		cTracing::enter(null,true);
 		if ( cAD::is_demo()) return cADDemo::GET_Applications();
 		
 		$oAuth = new cADCredentials;
@@ -75,14 +75,14 @@ class cADController{
 					}
 		
 		//if (cDebug::is_debugging()) cDebug::vardump($aOut);
-		cDebug::leave(null,true);
+		cTracing::leave(null,true);
 		return $aOut;		
 	}
 	
 
 	//*****************************************************************
 	public static function GET_all_Backends(){
-		cDebug::enter();
+		cTracing::enter();
 		$aServices = [];
 		
 		$oApps = self::GET_all_Applications();
@@ -96,13 +96,13 @@ class cADController{
 			}
 		}
 		ksort($aServices, SORT_FLAG_CASE | SORT_NATURAL );
-		cDebug::leave();
+		cTracing::leave();
 		return $aServices;
 	}
 	
 	//*****************************************************************
 	public static function GET_server_nodes_with_MQ(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$oTime = new cADTimes();
 		$oTime->time_type = cADTimes::BEFORE_NOW;
@@ -127,7 +127,7 @@ class cADController{
 			}
 		}
 		asort($aOut, SORT_FLAG_CASE  | SORT_STRING);
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	

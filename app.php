@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$ADlib/AD.php");
+require_once(cAppGlobals::$ADlib."/AD.php");
 
 
 
@@ -103,9 +103,9 @@ class cADApp{
 	//#################################################################
 	//#################################################################
 	public function checkup($poTimes, $psCheckOnly=null){
-		cDebug::enter();
+		cTracing::enter();
 		$oOut =  cADAppCheckup::checkup($this, $poTimes, $psCheckOnly);
-		cDebug::leave();
+		cTracing::leave();
 		return $oOut;
 	}
 	
@@ -120,7 +120,7 @@ class cADApp{
 	
 	//*****************************************************************
 	public function GET_Backends(){
-		cDebug::enter();
+		cTracing::enter();
 		if ( cAD::is_demo()) return cADDemo::GET_Backends(null);
 		$oAuth = new cADCredentials;
 		if ($oAuth->is_logged_in){
@@ -129,38 +129,38 @@ class cADApp{
 		}else
 			$aData = cADRestUI::get_app_backends($this);
 		usort( $aData, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 
 	//*****************************************************************
 	public function GET_CallsPerMin($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		$oCred = new cADCredentials;
 		if ($oCred->is_logged_in){
 			$sMetric = cADAppMetricPaths::appCallsPerMin();
 			$aData = cADMetricData::GET_MetricData($this,$sMetric, $poTimes,true);
 		}else
 			$aData = cADRestUI::pr__do_get_applications_from_ids([$this->id]);
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//*****************************************************************
 	public function GET_data_collectors(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADRestUI::get_app_data_collectors($this);
 		usort($aData, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//*****************************************************************
 	public function GET_diagnostic_stats(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADRestUI::get_app_diagnostic_stats($this);
 		$aOut = cADAnalysis::analyse_app_diagnostic_stats($aData);
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 
@@ -180,26 +180,26 @@ class cADApp{
 	//*****************************************************************
 	public function GET_ExtTiers(){
 		if ( cAD::is_demo()) return cADDemo::GET_AppExtTiers(null);
-		cDebug::enter();
+		cTracing::enter();
 		$sMetricPath= cADAppMetricPaths::appBackends();
 		$aMetrics = cADMetricData::GET_Metric_heirarchy($this,$sMetricPath,false); //dont cache
 		if ($aMetrics) usort($aMetrics,"AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aMetrics;
 	}
 
 	//*****************************************************************
 	public function GET_flowmap(){
-		cDebug::enter();
+		cTracing::enter();
 		$oData = cADRestUI::GET_app_flowmap($this);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public function GET_HealthRules(){
-		cDebug::enter();
+		cTracing::enter();
 		// TODO use https://xxxx.saas.appdynamics.com/controller/restui/policy2/policies/[appid] 
 		// which gives a bit more information
 		
@@ -220,7 +220,7 @@ class cADApp{
 			usort($aOut, "AD_name_sort_fn");
 		}else
 			cDebug::extra_debug("no health rules found");
-		cDebug::leave();
+		cTracing::leave();
 		
 		//cDebug::vardump($aOut);
 		return $aOut;
@@ -228,11 +228,11 @@ class cADApp{
 	
 	//*****************************************************************
 	public function GET_HealthRuleDetail($piRuleID){
-		cDebug::enter();
+		cTracing::enter();
 
 		$sUrl = "/alerting/rest/v1/applications/$this->id/health-rules/$piRuleID";	
 		$oData = cADCore::GET($sUrl,true,false,false);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oData;
 	}
@@ -248,9 +248,9 @@ class cADApp{
 	//this function belongs elsewhere as it is common to AD objects
 	public function GET_MetricData($psMetricPath, $poTimes , $pbRollup=false, $pbCacheable=false, $pbMulti = false)
 	{
-		//cDebug::enter();
+		//cTracing::enter();
 		$aOutput = cADMetricData::GET_MetricData($this,$psMetricPath, $poTimes , $pbRollup, $pbCacheable, $pbMulti);
-		//cDebug::leave();
+		//cTracing::leave();
 		return $aOutput;		
 	}
 	
@@ -258,15 +258,15 @@ class cADApp{
 	//this function belongs elsewhere as it is common to AD objects
 	public function GET_Metric_heirarchy($psMetricPath, $pbCached=true, $poTimes = null)
 	{
-		//cDebug::enter();
+		//cTracing::enter();
 		$oData = cADMetricData::GET_Metric_heirarchy($this,$psMetricPath, $pbCached, $poTimes );
-		//cDebug::leave();
+		//cTracing::leave();
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public function GET_Nodes(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$sID = $this->id;
 		
@@ -280,15 +280,15 @@ class cADApp{
 		}
 		ksort($aOutput );
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOutput;
 	}
 
 	//*****************************************************************
 	public function GET_ServiceEndPoints(){	
-		cDebug::enter();
+		cTracing::enter();
 		$oData = cADRestUI::GET_service_end_points($this);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 
@@ -307,7 +307,7 @@ class cADApp{
 	
 	//*****************************************************************
 	public function GET_Tiers(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = $this->GET_raw_tiers();
 		if ($aData) usort($aData,"AD_name_sort_fn");
 		
@@ -320,7 +320,7 @@ class cADApp{
 				$aOutTiers[] = $oOutTier;
 			}
 				
-		cDebug::leave();
+		cTracing::leave();
 		return $aOutTiers;
 	}
 
@@ -329,7 +329,7 @@ class cADApp{
 	//* transactions
 	//*****************************************************************
 	public function GET_BTs(){		
-		cDebug::enter();
+		cTracing::enter();
 		$oAuth = new cADCredentials();
 		if ($oAuth->is_logged_in){
 			$sApp = rawurlencode($this->name);
@@ -338,14 +338,14 @@ class cADApp{
 			$oTimes = new cADTimes;
 			$aData = $this->GET_BT_Calls($oTimes);
 		}
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $aData;
 		
 	}
 	//*****************************************************************
 	public function GET_BT_Calls($poTimes){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADRestUI::get_app_BT_Summary($this, $poTimes);
 		//cDebug::vardump($aData);
 		$aOut = [];
@@ -357,21 +357,21 @@ class cADApp{
 				$aOut[] = $oTrans;
 			}
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	
 	//*****************************************************************
 	public function GET_AppLevel_BT_Detection_Config(){
-		cDebug::enter();
+		cTracing::enter();
 		$oData = cADRestUI::GET_appLevel_BT_Config($this);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public function GET_app_BT_configs(){		
-		cDebug::enter();
+		cTracing::enter();
 		$oData = cADRestUI::GET_app_BT_configs($this);
 		$aData = [];
 		if ($oData && property_exists($oData,"ruleScopeSummaryMappings")){
@@ -379,7 +379,7 @@ class cADApp{
 			usort($aData,"bt_config_sort_function" );
 		}else
 			cDebug::extra_debug("unable to get BT configs");
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 

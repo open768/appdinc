@@ -13,14 +13,14 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$phpinc/ckinc/header.php");
-require_once("$phpinc/ckinc/hash.php");
-require_once("$phpinc/ckinc/http.php");
-require_once("$ADlib/common.php");
-require_once("$phpinc/ckinc/debug.php");
-require_once("$phpinc/ckinc/common.php");
-require_once("$phpinc/ckinc/audit.php");
-require_once("$phpinc/extra/php-openssl-crypt/cryptor.php");
+require_once(cAppGlobals::$ckPhpInc."//header.php");
+require_once(cAppGlobals::$ckPhpInc."//hash.php");
+require_once(cAppGlobals::$ckPhpInc."//http.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ckPhpInc."//debug.php");
+require_once(cAppGlobals::$ckPhpInc."//common.php");
+require_once(cAppGlobals::$ckPhpInc."//audit.php");
+require_once(cAppGlobals::$phpInc."/extra/php-openssl-crypt/cryptor.php");
 
 //#################################################################
 //# 
@@ -132,9 +132,9 @@ class cADCredentials{
 	//* construct
 	//**************************************************************************************
 	function __construct() {
-		//cDebug::enter();
+		//cTracing::enter();
 		$this->load_from_session();
-		//cDebug::leave();
+		//cTracing::leave();
 	}
 	
 	//**************************************************************************************
@@ -160,7 +160,7 @@ class cADCredentials{
 	
 	//**************************************************************************************
 	function load_from_header(){
-		//cDebug::enter();
+		//cTracing::enter();
 		$username = null;
 		$password = null;
 		
@@ -187,7 +187,7 @@ class cADCredentials{
 		$this->use_https = true;		
 		
 		$this->save();		//populate the session
-		//cDebug::leave();
+		//cTracing::leave();
 	}
 	
 	//**************************************************************************************
@@ -195,7 +195,7 @@ class cADCredentials{
 	//**************************************************************************************
 	function check(){
 		global $_SESSION, $_GET, $_POST;
-		//cDebug::enter();
+		//cTracing::enter();
 		try{
 			if (!cCommon::is_string_set($this->login_token)){
 				if(!cCommon::is_string_set($this->host)) cDebug::error("missing host");
@@ -227,7 +227,7 @@ class cADCredentials{
 			$sMsg = $e->getMessage();
 			cDebug::error($sMsg);
 		}
-		//cDebug::leave();
+		//cTracing::leave();
 		
 	}
 		
@@ -236,7 +236,7 @@ class cADCredentials{
 	//**************************************************************************************
 	private function pr_save_to_session(){
 		global $_SESSION;
-		cDebug::enter();
+		cTracing::enter();
 		
 		cCommon::save_to_session(self::ACCOUNT_KEY, $this->account);
 		cCommon::save_to_session(self::ANALYTICS_API_APP, $this->analytics_api_app);
@@ -255,13 +255,13 @@ class cADCredentials{
 		cCommon::save_to_session(self::USERNAME_KEY, $this->encrypted_username);
 		cCommon::save_to_session(self::USE_HTTPS_KEY, $this->use_https);
 		
-		cDebug::leave();
+		cTracing::leave();
 }
 	
 	//**************************************************************************************
 	//this performs the login
 	public function save(){
-		cDebug::enter();
+		cTracing::enter();
 		//cDebug::write("saving TO SESSION");
 		$this->is_logged_in = false; 			//always disregard previous flag
 		$this->pr_save_to_session();
@@ -296,13 +296,13 @@ class cADCredentials{
 		// save after successful login. wont get here if there is an exception
 		cDebug::extra_debug("logged in successfully");
 		$this->pr_save_to_session();
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	
 	//**************************************************************************************
 	public function save_restui_auth( $poHttp){
-		cDebug::enter();
+		cTracing::enter();
 		global $_SESSION;
 		
 		$aHeaders = $poHttp->response_headers;
@@ -318,7 +318,7 @@ class cADCredentials{
 				}
 			}
 		$this->pr_save_to_session();
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 	//**************************************************************************************
@@ -357,7 +357,7 @@ class cADCredentials{
 	
 	//**************************************************************************************
 	public function is_demo(){
-		//cDebug::enter();
+		//cTracing::enter();
 		if ($this->account == self::DEMO_ACCOUNT){
 			if (($this->get_username() == self::DEMO_USER) && ( $this->get_password() == self::DEMO_PASS)){
 				cDebug::write("this is a demo login");
@@ -365,7 +365,7 @@ class cADCredentials{
 			}else
 				cDebug::error("wrong demo login details");
 		}
-		//cDebug::leave();
+		//cTracing::leave();
 		return false;
 	}
 	
@@ -393,7 +393,7 @@ class cADCredentials{
 	//* Access Tokens 
 	//**************************************************************************************
 	public function get_api_token(){
-		cDebug::enter();
+		cTracing::enter();
 		$this->check();
 		
 		$oHttp = new cHttp();
@@ -412,7 +412,7 @@ class cADCredentials{
 		$this->api_token = $oResponse->access_token;
 		$this->pr_save_to_session();
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $this->api_token;
 	}
 
@@ -420,7 +420,7 @@ class cADCredentials{
 	//* Tokens - do these need to be static TODO
 	//**************************************************************************************
 	public static function get_login_token(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		//------------- check login credentials --------------------------
 		$oCred = new cADCredentials;

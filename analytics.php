@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see
-require_once("$ADlib/common.php");
+require_once(cAppGlobals::$ADlib."/common.php");
 
 
 //#################################################################
@@ -26,7 +26,7 @@ class cADAnalytics{
 	
 	//*************************************************************
 	static private function pr_GET($psFragment, $psPayload=null){
-		cDebug::enter();
+		cTracing::enter();
 		
 		//get and check credentials
 		$oCred = new cADCredentials();
@@ -56,7 +56,7 @@ class cADAnalytics{
 		
 		cDebug::write("making request");
 		$oData = $oHttp->getJson($sUrl);
-		cDebug::leave();
+		cTracing::leave();
 		
 		return $oData;
 	}
@@ -91,19 +91,19 @@ class cADAnalytics{
 	
 	//*************************************************************
 	static function create_schema($psSchemaName, $psDetails){
-		cDebug::enter();
+		cTracing::enter();
 
 		$sPayload  = "{ 'schema':{ $psDetails } }";
 		// http request
 		$oData = self::pr_GET("events/schema/$psSchemaName", $sPayload);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//*************************************************************
 	static function query($poTimes, $psQuery){
-		cDebug::enter();
+		cTracing::enter();
 		cDebug::extra_debug( $poTimes->toString());
 		
 		$sStart = $poTimes->start;
@@ -112,13 +112,13 @@ class cADAnalytics{
 		$sPayload =   "[{\"query\": \"$psQuery\"}]";
 		$oData = self::pr_GET($sFragment, $sPayload);
 		$oData = self::pr__parse_query_results($oData);
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//*************************************************************
 	private static function pr__parse_query_results($poData){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aFields = $poData[0]->fields;
 		$aResults = $poData[0]->results;
@@ -133,7 +133,7 @@ class cADAnalytics{
 			$aOut[] = (object)$aList;
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 }

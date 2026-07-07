@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see
-require_once("$ADlib/common.php");
+require_once(cAppGlobals::$ADlib."/common.php");
 
 //#################################################################
 //#
@@ -39,18 +39,18 @@ class cAD_RBAC_Group{
 	//*************************************************************
 	//theres a bug with /api/rbac/v1/groups/name/$name - gives a 500 error
 	public function get_info(){
-		cDebug::enter();
+		cTracing::enter();
 		if (! $this->id) cDebug::error ("group ID missing");
 		
 		$oData = cADCore::GET("/api/rbac/v1/groups/$this->id",true,false,false);
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $oData;
 	}
 	
 	//*************************************************************
 	public function get_security_provider_type(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		if ($this->security_type) return $this->security_type;
 		
@@ -58,7 +58,7 @@ class cAD_RBAC_Group{
 		$sType = $oInfo->security_provider_type;
 		$this->security_type = $sType;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $sType;
 	}
 	
@@ -77,30 +77,30 @@ class cAD_RBAC_Group{
 	
 	//*************************************************************
 	private function pr__get_ldap_users(){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$oRestUIData = cADRestUI::get_rbac_ldap_group_users($this->name);
 		//cDebug::vardump($oRestUIData);
 		$aData = self::pr__trim_ldap_group_users($oRestUIData, $this->name);
 		usort ($aData, "AD_name_sort_fn");
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//*************************************************************
 	//*************************************************************
 	static private function pr__trim_ldap_group_users($poData, $psGroup){
-		cDebug::enter();
+		cTracing::enter();
 		if ($poData == null){
 			cDebug::extra_debug("no raw data");
-			cDebug::leave();
+			cTracing::leave();
 			return null;
 		}
 
 		$aUsers = $poData->users;
 		if (cArrayUtil::array_is_empty($aUsers)){
 			cDebug::extra_debug("no user data");
-			cDebug::leave();
+			cTracing::leave();
 			return null;
 		}
 
@@ -133,13 +133,13 @@ class cAD_RBAC_Group{
 
 			$aData[] = $oOutUser;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 	
 	//*************************************************************
 	private function pr__get_internal_users(){
-		cDebug::enter();
+		cTracing::enter();
 		$aAllUsers = cAD_RBAC::get_all_users();
 		//get the userIDs that belong to the group
 		$aGroupUserIDs = cADRestUI::get_rbac_internal_group_users($this->id);
@@ -151,7 +151,7 @@ class cAD_RBAC_Group{
 			$aOut[] = $oUser;
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 }
@@ -162,20 +162,20 @@ class cAD_RBAC_Group{
 class cAD_RBAC{
 	//*************************************************************
 	static function get_all_groups(){
-		cDebug::enter();
+		cTracing::enter();
 
 		$aData = cADCore::GET("/api/rbac/v1/groups",true,false,false);
 		if ($aData !== null) $aData = $aData->groups;
 		usort ($aData, "AD_name_sort_fn");
 
-		cDebug::leave();
+		cTracing::leave();
 		return $aData;
 	}
 
 		
 	//*************************************************************
 	static function get_all_users(){
-		cDebug::enter();
+		cTracing::enter();
 		$aData = cADRestUI::get_rbac_all_users();
 		$aUsers = [];
 		foreach ($aData as $oInUser){
@@ -186,7 +186,7 @@ class cAD_RBAC{
 			$oOutUser->email = $oInUser->email;
 			$aOutUsers["U $oOutUser->id"] = $oOutUser;
 		}
-		cDebug::leave();
+		cTracing::leave();
 		return $aOutUsers;
 	}	
 }

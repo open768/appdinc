@@ -13,12 +13,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$phpinc/ckinc/debug.php");
-require_once("$phpinc/ckinc/common.php");
-require_once("$phpinc/ckinc/http.php");
-require_once("$ADlib/common.php");
-require_once("$ADlib/time.php");
-require_once("$ADlib/time.php");
+require_once(cAppGlobals::$ckPhpInc."//debug.php");
+require_once(cAppGlobals::$ckPhpInc."//common.php");
+require_once(cAppGlobals::$ckPhpInc."//http.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ADlib."/time.php");
+require_once(cAppGlobals::$ADlib."/time.php");
 
 
 //#################################################################
@@ -57,6 +57,7 @@ class cADCore{
 	const ALL_SEVERITIES = "WARN,ERROR,INFO";
 	const APPDYN_OVERFLOWING_BT = "_APPDYNAMICS_DEFAULT_TX_";
 	const CACHE_EXPIRY_TIME = 300; // 5 mins cache timeout
+	const REALM = "ADCore";
 	
 	public static $URL_PREFIX = self::USUAL_METRIC_PREFIX;
 	public static $debug = false;
@@ -66,7 +67,7 @@ class cADCore{
 	//*****************************************************************
 	public static function pr_init_objstore(){
 		if (!self::$oObjStore){
-			$oObjStore = new cObjStoreDB();
+			$oObjStore = new cObjStoreDB( self::REALM);
 			$oObjStore->realm = "ADCORE";
 			$oObjStore->expire_time = self::CACHE_EXPIRY_TIME;
 			$oObjStore->set_table("ADCORE");
@@ -88,7 +89,7 @@ class cADCore{
 	
 	//*****************************************************************
 	public static function login(){
-		cDebug::enter();
+		cTracing::enter();
 		//TODO "controller/auth?action=login"		
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
@@ -97,7 +98,7 @@ class cADCore{
 		
 		if ($oCred->host === self::DEMO_HOST){
 			cDebug::write("demo host detected");
-			cDebug::leave();
+			cTracing::leave();
 			return "demo";
 		}
 		
@@ -124,7 +125,7 @@ class cADCore{
 		
 		
 		$oCred->save_restui_auth($oHttp);
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	
@@ -149,13 +150,13 @@ class cADCore{
 	public static function  GET_restUI_with_payload($psCmd,  $psPayload, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX ){
 		global $oData;
 
-		//cDebug::enter();
+		//cTracing::enter();
 		
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		$oCred->check();
 		if (!$oCred->csrftoken || !$oCred->jsessionid ){
-			//cDebug::leave();
+			//cTracing::leave();
 			cDebug::error("missing  csrftoken or jsessionid in credentials");
 		}
 		
@@ -171,7 +172,7 @@ class cADCore{
 		if ($pbCacheable && (!cDebug::$IGNORE_CACHE) ){
 			$oData = self::$oObjStore->get($sCacheCmd, true);
 			if ($oData !== null){
-				//zcDebug::leave();
+				//zcTracing::leave();
 				return $oData;
 			}else
 				cDebug::extra_debug("$sCacheCmd not in cache");
@@ -211,22 +212,22 @@ class cADCore{
 			self::$oObjStore->put($sCacheCmd, $oData,true);
 		}
 
-		//cDebug::leave();
+		//cTracing::leave();
 		return $oData;
 	}
 	
 	//*****************************************************************
 	public static function  GET_restUI($psCmd, $pbCacheable = false, $psUIPrefix=self::RESTUI_PREFIX){
-		//cDebug::enter();
+		//cTracing::enter();
 		$oData = self::GET_restUI_with_payload($psCmd, null, $pbCacheable, $psUIPrefix);
-		//cDebug::leave();
+		//cTracing::leave();
 		return $oData;
 	}
 
 	//*****************************************************************
 	public static function  GET($psCmd, $pbCacheable = false, $pbPrefix=true, $pbSuffix=true){
 
-		//cDebug::enter();
+		//cTracing::enter();
 		//-------------- get authentication info
 		$oCred = new cADCredentials();
 		if (!$oCred->is_logged_in) cDebug::error("not logged in");
@@ -238,7 +239,7 @@ class cADCore{
 			$oData = self::$oObjStore->get($sCacheCmd,true);
 			if ($oData !== null){
 				cDebug::extra_debug("$sCacheCmd cached", true);
-				//cDebug::leave();
+				//cTracing::leave();
 				return $oData;
 			}else				
 				cDebug::extra_debug("$sCacheCmd not in cache");
@@ -272,7 +273,7 @@ class cADCore{
 			self::$oObjStore->put($sCacheCmd, $oData,true);
 		}
 
-		//cDebug::leave();
+		//cTracing::leave();
 		return $oData;
 	}
 	

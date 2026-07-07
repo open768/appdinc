@@ -75,7 +75,7 @@ class cADAppCheckup {
 	];
 
 	public static function checkup($poApp, $poTimes, $psCheckOnly){ //TODO this takes too long, separate into distinct calls
-		cDebug::enter();
+		cTracing::enter();
 
 		$aTrans = $poApp->GET_BTs();
 		$oOut = new cAppCheckupAnalysis;
@@ -92,19 +92,19 @@ class cADAppCheckup {
 			self::pr__check_ServiceEndpoints($poApp, $oOut);
 		
 		//---------------------------------------------
-		cDebug::leave();
+		cTracing::leave();
 		return $oOut;
 	}
 	
 	//**************************************************************************
 	private static function pr__check_ServiceEndpoints($poApp, $poOut){
-		cDebug::enter();
+		cTracing::enter();
 		try{
 			$oEndPoints = $poApp->GET_ServiceEndPoints();
 		}catch (Exception $e){
 			cDebug::extra_debug("unable to get service end points");
 			$poOut->sendpoints[] = new cAppCheckupMessage(true,"unable to get service end points","endpoints") ;
-			cDebug::leave();
+			cTracing::leave();
 			return;
 		}
 		//cDebug::vardump($oEndPoints);
@@ -142,19 +142,19 @@ class cADAppCheckup {
 			$poOut->sendpoints[] = new cAppCheckupMessage(true, "$iIDCount x names found containing IDs", "Names");
 			 
 		
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//**************************************************************************
 	private static function pr__check_Backends($poApp, $poOut){
-		cDebug::enter();
+		cTracing::enter();
 		//-------------backends --------------------------------
 		try{
 			$aBackends = $poApp->GET_Backends();
 		}
 		catch(Exception $e){
 			$poOut->backends[] = new cAppCheckupMessage(true,"unable to get backends","backends") ;
-			cDebug::leave();
+			cTracing::leave();
 			return;
 		}
 		
@@ -173,13 +173,13 @@ class cADAppCheckup {
 				$bBad = false;
 		}
 		$poOut->backends[] = new cAppCheckupMessage($bBad,$sCaption,"backends") ;
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	
 	//**************************************************************************
 	private static function pr__check_Tiers($poApp, $paTrans, $poOut){
-		cDebug::enter();
+		cTracing::enter();
 		//-------------tiers --------------------------------
 		cDebug::extra_debug("counting tiers");
 		$aTierCount = []; 	//counts the transactions per tier
@@ -231,12 +231,12 @@ class cADAppCheckup {
 				//TBD
 			}
 		}	
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//**************************************************************************
 	private static function pr__check_DCs($poApp, $poOut){
-		cDebug::enter();
+		cTracing::enter();
 		//-------------Data Collectors ----------------------
 		cDebug::extra_debug("counting data collectors");
 		$aDCs = $poApp->GET_data_collectors();
@@ -253,7 +253,7 @@ class cADAppCheckup {
 		}
 		$oMsg = new cAppCheckupMessage($bBad, $sMsg, "data collectors");
 		$poOut->DCs[] = $oMsg;
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//**************************************************************************
@@ -346,7 +346,7 @@ class cADAppCheckup {
 		}
 		if ($iIDCount >0 )	$poOut->BTs[] = new cAppCheckupMessage(true, "$iIDCount x BTs found containing IDs", "BTs with IDs");
 		if ($iAtCount >0 )	$poOut->BTs[] = new cAppCheckupMessage(true, "$iAtCount x BTs found containing '@' - possibly an email", "BTs with IDs");
-		cDebug::leave();
+		cTracing::leave();
 
 		//----------------check for BTS with low number of calls ------------------
 		$aBTCalls = $poApp->GET_BT_Calls($poTimes);
@@ -364,7 +364,7 @@ class cADAppCheckup {
 	
 	//**************************************************************************
 	private static function pr__check_general($poApp, $poOut){
-		cDebug::enter();
+		cTracing::enter();
 		//-------------Active BTs --------------------------------
 		if ($poApp->is_active())
 			$poOut->general[] = new cAppCheckupMessage(false, "active application", "BT Activity");
@@ -418,7 +418,7 @@ class cADAppCheckup {
 			else
 				$poOut->general[] = new cAppCheckupMessage(true, "we recommend that Business Transaction lockdown is enabled", "config");
 		
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 }

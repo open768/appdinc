@@ -13,11 +13,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 //see 
-require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/ckinc/array.php");
-require_once("$ADlib/common.php");
-require_once("$ADlib/core.php");
-require_once("$ADlib/account.php");
+require_once(cAppGlobals::$ckPhpInc."//http.php");
+require_once(cAppGlobals::$ckPhpInc."//array.php");
+require_once(cAppGlobals::$ADlib."/common.php");
+require_once(cAppGlobals::$ADlib."/core.php");
+require_once(cAppGlobals::$ADlib."/account.php");
 
 
 //#################################################################
@@ -68,18 +68,18 @@ class cADBTFlow{
 	
 	//*****************************************************************
 	public function walk($poApp, $psTier, $psTrans){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$sMetricPath = cADMetricPaths::transExtNames($psTier, $psTrans);
 		$this->walk_metric($poApp, $sMetricPath);
 		$this->name = $psTrans;
 		
-		cDebug::leave();
+		cTracing::leave();
 	}
 
 	//*****************************************************************
 	protected function walk_metric($poApp, $psMetricPath){
-		cDebug::enter();
+		cTracing::enter();
 
 		$aCalls = $poApp->GET_Metric_heirarchy($psMetricPath, false);
 		cDebug::write($psMetricPath);
@@ -95,7 +95,7 @@ class cADBTFlow{
 				
 			}
 			
-		cDebug::leave();
+		cTracing::leave();
 	}
 	
 	//*****************************************************************
@@ -273,7 +273,7 @@ class cADUtil {
 	
 	//*****************************************************************
 	public static function get_nodes_from_names($poApp, $paNames){
-		cDebug::enter();
+		cTracing::enter();
 
 		$aMachines = $poApp->GET_Nodes();
 		
@@ -292,7 +292,7 @@ class cADUtil {
 				cDebug::write("unable to find node with name $sName");
 		}
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aOut;
 	}
 	
@@ -316,7 +316,7 @@ class cADUtil {
 	
 	//*****************************************************************
 	public static function get_matching_tier_extcalls($poTier, $psExt){
-		cDebug::enter();
+		cTracing::enter();
 		
 		$aMatches = [];
 		cDebug::extra_debug("looking for ext calls in all tiers that matches $psExt");
@@ -326,7 +326,7 @@ class cADUtil {
 			if ( strpos($oExt->name, $psExt) !== false )
 				$aMatches[] = $oExt->name;
 		
-		cDebug::leave();
+		cTracing::leave();
 		return $aMatches;
 		
 	}
@@ -339,7 +339,7 @@ class cADUtil {
 	
 	//*****************************************************************
 	public static function count_flow_ext_calls($poFlow){
-		cDebug::enter();
+		cTracing::enter();
 		$oExtCalls = new cAssocArray;
 		$aNodes = $poFlow->nodes;
 		
@@ -374,7 +374,7 @@ class cADUtil {
 			}
 		}
 		
-		cDebug::leave();		
+		cTracing::leave();		
 		return $oExtCalls;
 	}
 	
