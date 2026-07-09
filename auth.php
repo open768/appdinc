@@ -58,11 +58,11 @@ class cADCrypt{
 		self::pr__check_credentials();
 		$sHash = "cADCrypt.key.".(self::$credentials->host).(self::$credentials->account);
 		$sKey = "##key is not set##";
-		if (cHash::exists($sHash)){
-			$sKey = cHash::get($sHash);
+		if (cFileHasher::exists($sHash)){
+			$sKey = cFileHasher::get($sHash);
 			}else{
 			$sKey = uniqid("",true);
-			cHash::put($sHash, $sKey);
+			cFileHasher::put_hash($sHash, $sKey);
 		}
 		
 		//return cADSecret::SESSION_ENCRYPTION_KEY;
@@ -429,7 +429,7 @@ class cADCredentials{
 		
 		//------------- generate the token --------------------------------
 		$sKey = cCommon::my_IP_address().$oCred->host.$oCred->account.$oCred->get_username();
-		$sHash = cHash::hash($sKey);
+		$sHash = cHasher::hash($sKey);
 		cDebug::write("Key is $sKey, hash is $sHash");
 		cHash::pr__put_obj($sHash, $oCred, true );
 			

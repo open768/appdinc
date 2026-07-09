@@ -174,7 +174,7 @@ class cADInfraMetric{
 	}
 	
 	//**************************************************************************
-	public static function getInfrastructureMetric($psTier, $psNode=null, $psMetricType){			
+	public static function getInfrastructureMetric($psTier, $psNode=null, $psMetricType=null){			
 			switch($psMetricType){
 				case cADMetricPaths::METRIC_TYPE_ERRORS:
 					if ($psTier)
@@ -276,7 +276,7 @@ class cADInfraMetric{
 					$sShortCaption = "Agent-License errors";
 					break;
 				default:
-					cDebug::error("unknown Metric type");
+					cDebug::error("unknown Metric type $psMetricType");
 			}	
 
 			return (object)["metric"=>$sMetricUrl, "caption"=>$sCaption, "short"=>$sShortCaption , "type"=>$psMetricType];
@@ -299,10 +299,12 @@ class cADInfraMetric{
 		return self::InfrastructureNode($psTier, $psNode)."|JMX|JDBC Connection Pools";
 	}
 
-	public static function InfrastructureJDBCPoolActive($psTier, $psNode=null, $psPool){
+	public static function InfrastructureJDBCPoolActive($psTier, $psNode=null, $psPool=null){
+		if ($psPool == null) cDebug::error("pool is null");
 		return self::InfrastructureJDBCPools($psTier, $psNode)."|$psPool|Active Connections";
 	}
-	public static function InfrastructureJDBCPoolMax($psTier, $psNode=null, $psPool){
+	public static function InfrastructureJDBCPoolMax($psTier, $psNode=null, $psPool=null){
+		if ($psPool == null) cDebug::error("pool is null");
 		return self::InfrastructureJDBCPools($psTier, $psNode)."|$psPool|Maximum Connections";
 	}
 
