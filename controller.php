@@ -55,7 +55,7 @@ class cADController{
 	
 	//****************************************************************
 	public static function GET_all_Applications(){
-		cTracing::enter(null,true);
+		cTracing::enter();
 		if ( cAD::is_demo()) return cADDemo::GET_Applications();
 		
 		$oAuth = new cADCredentials;
